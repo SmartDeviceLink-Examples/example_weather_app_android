@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.ford.mobileweather"
+    android:versionCode="26"
+    android:versionName="1.7.14	" >
+
+    <uses-sdk
+        android:minSdkVersion="14"
+        android:targetSdkVersion="22" />
+
+    <!-- Required for AppLink connection -->
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <!-- Required for weather data -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Required to check if WiFi is enabled -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    
+    <!-- Required for current location -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    
+    <!-- Required for ??? -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    
+    <!-- Required to keep device awake during weather data processing -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    
+    <application
+        android:name="com.ford.mobileweather.smartdevicelink.SmartDeviceLinkApplication"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme"
+        android:allowBackup="true" >
+        
+        <activity
+            android:name="com.ford.mobileweather.activity.MainActivity"
+            android:label="@string/title_activity_main"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        
+        <activity
+            android:name="com.ford.mobileweather.activity.LockScreenActivity"
+            android:label="Locked"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" >
+        </activity>
+        <activity android:name="net.hockeyapp.android.UpdateActivity" />
+
+        <service android:name="com.ford.mobileweather.smartdevicelink.SmartDeviceLinkService" >
+        </service>
+        <service android:name="com.ford.mobileweather.wunderground.WUndergroundService" >
+        </service>
+        <service android:name="com.ford.mobileweather.noaa.NOAAService" >
+        </service>
+        <service android:name="com.ford.mobileweather.forecastio.ForecastIoService" >
+        </service>
+        
+        <receiver android:name="com.ford.mobileweather.smartdevicelink.SmartDeviceLinkReceiver" >
+            <intent-filter>
+                <action android:name="android.bluetooth.device.action.ACL_CONNECTED" />
+                <action android:name="android.bluetooth.device.action.ACL_DISCONNECTED" />
+            </intent-filter>
+        </receiver>
+      
+        <receiver android:name="com.ford.mobileweather.weather.WeatherUpdateWakefulReceiver" >
+        </receiver>
+        
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+    </application>
+</manifest>

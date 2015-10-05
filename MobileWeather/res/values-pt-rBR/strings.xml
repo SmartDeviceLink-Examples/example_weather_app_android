@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">MobileWeather</string>
+    <string name="exit">Sair</string>
+    <string name="sdl">SDL</string>
+    <string name="ford">Ford</string>
+    <string name="wunderground">WUnderground</string>
+    <string name="action_settings">Opções</string>
+    <string name="title_activity_main">MobileWeather</string>
+    <string name="title_alerts">Alertas</string>
+    <string name="title_conditions">Condições</string>
+    <string name="title_forecast">Previsão</string>
+    <string name="drawer_open">Abrir navegador</string>
+    <string name="drawer_close">Fechar Navegador</string>  
+    <string name="conditions_location">"Obtendo Local.."</string>  
+    <string name="conditions_no_value">---</string>  
+    <string name="conditions_loading">"Carregando.."</string>  
+    <string name="conditions_windspeed">Velocidade do vento</string>
+    <string name="conditions_humidity">Umidade</string>
+    <string name="conditions_feelslike">Sensação</string>
+    <string name="forecast_location">"Obtendo Local.."</string>  
+    <string name="forecast_loading">"Carregando.."</string>
+    <string name="proxy_ver_not_available">"Versão do Proxy não disponível"</string>
+    <string name="mobileweather_ver_not_available">"Versão do MobileWeather não disponível"</string>
+    <string name="ver_not_available">"Versão não disponível"</string>
+    <string name="proxy_ver">"Versão do Proxy: "</string>
+    <string name="app_ver">"Versão do App"</string>
+    <string name="mobileweather_ver">"Versão do MobileWeather: "</string>
+    <string name="units_default">metric</string> 
+    
+    <!-- Nav Drawer Menu Items -->
+    <string-array name="nav_drawer_items">
+        <item >@string/drawer_item_current_location</item>
+        <item >@string/drawer_item_add_location</item>
+        <item >@string/drawer_item_settings</item>
+        <item >@string/drawer_item_update_weather</item>
+        <item >@string/drawer_item_reset_sync</item>
+        <item >@string/drawer_item_about</item>
+    </string-array>    
+     
+    <!-- Nav Drawer strings -->
+    <string name="drawer_item_current_location">"Local atual"</string>
+    <string name="drawer_item_add_location">"Adicionar local"</string>
+    <string name="drawer_item_settings">"Opções"</string>
+    <string name="drawer_item_update_weather">"Atualizar Tempo"</string>
+    <string name="drawer_item_reset_sync">"Reiniciar Sync"</string>
+    <string name="drawer_item_about">"Sobre"</string>
+    
+    <!-- imperial/metric units -->
+    <string name="units_imperial">"Imperial"</string>
+    <string name="units_imp_temp_short">"F"</string>
+    <string name="units_imp_speed_short">"MPH"</string>
+    <string name="units_imp_speed_full">"milhas por hora"</string>
+    <string name="units_imp_length_full">"polegadas"</string>	    
+    <string name="units_metric">"Métrico"</string>
+    <string name="units_metric_temp_short">"C"</string>
+    <string name="units_metric_speed_short">"km/h"</string>
+    <string name="units_metric_speed_full">"kilometros por hora"</string>
+    <string name="units_metric_length_full">"milímetros"</string>	
+        
+    <!-- VR commands -->
+    <string name="vr_current">"Atual"</string> 
+    <string name="vr_current_cond">"Condições atuais"</string>
+    <!-- 
+    <string name="vr_three_day">"Três dias"</string>
+    <string name="vr_three_day_forecast">"Previsão para três dias"</string>
+    <string name="vr_3_day">"3 dias"</string>
+    <string name="vr_3_day_forecast">"Previsão para 3 dias"</string>
+    <string name="vr_ten_day">"Dez dias"</string>
+    <string name="vr_ten_day_forecast">"Previsão para dez dias"</string>
+    <string name="vr_10_day">"10 dias"</string>
+    <string name="vr_10_day_forecast">"Previsão para 10 dias"</string>
+     -->
+    <string name="vr_daily">"daily"</string>
+    <string name="vr_daily_forecast">"daily forecast"</string>
+    <string name="vr_change_units">"Mudar unidades"</string>
+    <string name="vr_units">"Unidades"</string>
+    <string name="vr_hourly">"De hora em hora"</string>
+    <string name="vr_hourly_forecast">"Previsão horária"</string>   
+    <string name="vr_alerts">"Alertas"</string>
+    <string name="vr_back">"back"</string>
+    <string name="vr_today">"today"</string>
+    <string name="vr_tomorrow">"tomorrow"</string>
+    <string name="vr_now">"now"</string>
+        
+    <!-- In-App menue commands -->
+    <string name="cmd_current_cond">"Condições atuais"</string>
+    <string name="cmd_3d_forecast">"Previsão para 3-dias"</string>
+    <string name="cmd_10d_forecast">"Previsão para 10-dias"</string>
+    <string name="cmd_daily_forecast">"Daily Forecast"</string>
+    <string name="cmd_change_units">"Mudar unidades"</string>
+    <string name="cmd_hourly_forecast">"Previsão horária"</string>
+    <string name="cmd_alerts">"Alertas"</string>
+    
+    
+    <!-- ChoiceSet items for switching units -->
+    <string name="choice_imperial_menue">"Imperial"</string>
+    <string name="choice_imperial_vr">"Imperial"</string>
+    <string name="choice_metric_menue">"Métrico"</string>
+    <string name="choice_metric_vr">"Métrico"</string>
+    
+    <!-- PerformInteraction for switching units -->
+    <string name="interaction_units_prompt">"Escolha a unidade em métrico ou imperial"</string>
+    <string name="interaction_units_displaytext">"Unidades"</string>
+    
+    <!-- Weather alerts - no alerts available -->
+    <string name="weather_alerts_txt_field1">"Não"</string>
+    <string name="weather_alerts_txt_field2">"Alertas"</string>
+    <string name="weather_alerts_txt_field3">""</string>
+    <string name="weather_alerts_txt_field4">""</string>
+    <string name="weather_alerts_speak">"Nenhum alerta neste período"</string>
+    <!-- Weather alerts - formattings -->
+    <string name="weather_alerts_simpleDateFormat">"hh:mm a"</string>
+    <string formatted="false" name="weather_alerts_expires_at">"%s .Expira em %s ,,"</string>
+    <string name="weather_alerts_expires">"exp %s"</string>
+      
+    <!-- Conditions - not available -->
+    <string name="conditions_txt_field1">"Condições"</string>
+    <string name="conditions_txt_field2">"Não disponíveis"</string>
+    <string name="conditions_txt_field3">""</string>
+    <string name="conditions_txt_field4">""</string>
+    <string name="conditions_speak">"Condições atuais não disponíveis"</string>
+        
+    <!-- Forecast - not available -->
+    <string name="forecast_txt_field1">"Previsão"</string>
+    <string name="forecast_txt_field2">"Não disponível"</string>
+    <string name="forecast_txt_field3">""</string>
+    <string name="forecast_txt_field4">""</string>
+    <string name="forecast_speak">"Previsão não disponível"</string>
+    
+    <!-- Network - not available -->
+    <string name="network_txt_field1">"Rede indponível"</string>
+    <string name="network_txt_field2">"Conexão"</string>
+    <string name="network_txt_field3">""</string>
+    <string name="network_txt_field4">""</string>
+    <string name="network_speak">"Conexão de rede não disponível"</string>
+    
+    <!-- Location Service - not available -->
+    <string name="location_txt_field1">"Serviço local"</string>
+    <string name="location_txt_field2">"Não disponível"</string>
+    <string name="location_txt_field3">""</string>
+    <string name="location_txt_field4">""</string>
+    <string name="location_speak">"Serviço local não disponível"</string>
+    
+    <!-- Weather API - not available -->
+    <string name="weather_api_txt_field1">"API de clima"</string>
+    <string name="weather_api_txt_field2">"Não disponível"</string>
+    <string name="weather_api_txt_field3">""</string>
+    <string name="weather_api_txt_field4">""</string>
+    <string name="weather_api_speak">"API de clima não disponível"</string>
+    
+    <!-- Speak for conditions and forecast --> 
+    <string name="weather_conditions_speak">Tempo atual de %1$s e %2$.0f graus com %3$.0f de humidade percentual, e velocidade do vento de %4$.0f %5$s</string>
+    <string name="weather_conditions_neg_temp_speak">Temperatura atual negativa de %1$s e %2$.0f graus com %3$.0f de humidade percentual, e velocidade do vento de %4$.0f %5$s</string>
+    <string name="weather_forecast_percip_speak">%1$d porcento de chance de precipitação e </string>
+    <string name="weather_forecast_hourly_speak">Em %1$s será(ão) %2$s com %3$s %4$s ,, </string> <!--At %s it will be %s with %s %s ,, ",-->  
+    <string name="weather_forecast_more3_speak">%1$s será(ão) %2$s com %3$s %4$s ,, </string> <!-- "%s will be %s with %s %s ,, ",-->      
+    <string name="weather_forecast_neg_temp_speak">temperatura negativa de %1$.0f,,</string>
+    <string name="weather_forecast_pos_temp_speak">temperatura de %1$.0f ,,</string>             
+    <string name="weather_forecast_neg_temp_high_speak">uma diminuição de %1$.0f,,</string>
+    <string name="weather_forecast_pos_temp_high_speak">um aumento de %1$.0f ,,</string>               
+    <string name="weather_forecast_title_partly">Parcialmente</string>
+    <string name="weather_forecast_title_mostly">Maior parte</string>
+    <string name="weather_forecast_title_light">Leve</string>
+    <string name="weather_forecast_title_heavy">Pesado</string>
+       
+    <!-- Forecast text & formattings--> 
+    <string name="weather_forecast_simpleDateFormat">"MM/dd"</string>
+    <string name="weather_forecast_simpleTimeFormat">"h a"</string>
+    <string name="weather_forecast_day_simpleDateFormat">"E MM/dd"</string>   
+    <string name="weather_forecast_fullDayOfWeekFormat">"EEEE"</string>
+    <string name="weather_forecast_shortDayOfWeekFormat">"E"</string>    
+    <string name="weather_forecast_high_temp">"H: "</string>
+    <string name="weather_forecast_low_temp">"L: "</string>
+    <string name="weather_forecast_hourly">"De hora em hora"</string>
+           
+    <!-- Global properties -->
+    <string name="gp_help_prompt">"condições atuais, três dias, dez dias, mudar unidades, De hora em hora, ou alertas, ou pressione um para repetir as informações do tempo"</string>
+    <string name="gp_timeout_prompt">"ajuda do Mobile Weather"</string>
+    
+    <!-- Welcome message -->
+    <string name="welcome_textfield1">"Bem vindo ao"</string>
+    <string name="welcome_textfield2">"MobileWeather"</string>    
+    <string name="welcome_textfield3">""</string>
+    <string name="welcome_textfield4">""</string>
+    <string name="welcome_speak">"Bem vindo ao Mobile Weather"</string>
+     
+    <!-- Softbuttons -->
+    <string name="sb1">"Atual"</string>
+    <string name="sb2">"3-dias"</string>
+     <!-- <string name="sb3">"10-Day"</string>--> 
+    <string name="sb3">"Daily"</string>
+    <string name="sb4">"De hora em hora"</string>
+    <string name="sb5">"Alertas"</string>
+    <string name="sb6">"sb6"</string>
+    <string name="sb7">"sb7"</string>
+    <string name="sb8">"sb8"</string>
+             
+</resources>

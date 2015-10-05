@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map >
+    <entry key="advisory">ADV</entry>
+    <entry key="avalanche">AVL</entry>
+    <entry key="dangerous">DNG</entry>
+    <entry key="cloud">CLD</entry>
+    <entry key="cloudy">CLD</entry>
+    <entry key="blizzard">BLZ</entry>
+    <entry key="Drizzle">DRZL</entry>
+    <entry key="flood">FLD</entry>
+    <entry key="funnel">FNL</entry>
+    <entry key="funnelcloud">FNLC</entry>
+    <entry key="heavy">HVY</entry>
+    <entry key="light">LT</entry>
+    <entry key="mostly">MST</entry>
+    <entry key="overcast">OVRC</entry>
+    <entry key="partly">PRT</entry>
+    <entry key="severe">SVR</entry>
+    <entry key="snow">SNW</entry>
+    <entry key="special">SP</entry>
+    <entry key="statement">ST</entry>
+    <entry key="storm">STM</entry>
+    <entry key="strong">STR</entry>
+    <entry key="thunder">T</entry>
+    <entry key="thunderstorm">T-STM</entry>
+    <entry key="tornado">TOR</entry>
+    <entry key="warning">WRN</entry>
+    <entry key="watch">WTCH</entry>
+    <entry key="weather">WTHR</entry>
+    <entry key="winter">WNTR</entry>    
+</map>
