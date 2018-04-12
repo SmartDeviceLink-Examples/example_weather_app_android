@@ -6,7 +6,7 @@
     android:gravity="top|center_horizontal|center_vertical|clip_horizontal"
     android:orientation="vertical"
     android:weightSum="3"
-    tools:context=".LockScreenActivity" >
+    tools:context=".activity.LockScreenActivity" >
 
     <ImageView
         android:id="@+id/providerImage"
