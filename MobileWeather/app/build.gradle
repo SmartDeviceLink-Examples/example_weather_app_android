@@ -6,8 +6,8 @@ android {
         applicationId "com.ford.mobileweather"
         minSdkVersion 15
         targetSdkVersion 27
-        versionCode 26
-        versionName "1.7.14"
+        versionCode 27
+        versionName "1.7.15"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
