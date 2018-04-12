@@ -5,4 +5,12 @@
 
     </style>
 
+    <style name="TextViewStyle">
+        <item name="android:textColor">@color/colorText</item>
+    </style>
+
+    <style name="ImageViewStyle">
+        <item name="android:tint">@color/colorImageTint</item>
+    </style>
+
 </resources>

@@ -13,6 +13,7 @@
 		android:layout_gravity="center_vertical|left"
 		android:gravity="left"
 		android:textStyle="bold"
+		style="@style/TextViewStyle"
 		android:textAllCaps="true" />
        
 	<ImageView
@@ -23,6 +24,7 @@
 		android:layout_marginTop="2dp"
 		android:layout_marginBottom="2dp"
 		android:layout_gravity="center"
+		style="@style/ImageViewStyle"
 		android:gravity="center" />
 
 	<TextView
@@ -32,6 +34,7 @@
 		android:layout_weight="0.19"
 		android:layout_marginLeft="6dp"
 		android:layout_gravity="center_vertical|left"
+		style="@style/TextViewStyle"
 		android:gravity="left" />
        
 	<TextView
@@ -40,6 +43,7 @@
 		android:layout_height="wrap_content"
 		android:layout_weight="0.17"
 		android:layout_gravity="center_vertical|right"
+		style="@style/TextViewStyle"
 		android:gravity="right" />
 	
 	<TextView
@@ -49,5 +53,6 @@
 		android:layout_weight="0.17"
 		android:layout_marginRight="6dp"
 		android:layout_gravity="center_vertical|right"
+		style="@style/TextViewStyle"
 		android:gravity="right" />
 </LinearLayout>
