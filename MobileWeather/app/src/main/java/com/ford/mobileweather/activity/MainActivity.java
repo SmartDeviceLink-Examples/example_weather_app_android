@@ -1,5 +1,6 @@
 package com.ford.mobileweather.activity;
 
+import android.Manifest;
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
 import android.app.Fragment;
@@ -8,9 +9,12 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
@@ -21,6 +25,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.ford.mobileweather.R;
 import com.ford.mobileweather.fragments.ConditionsFragment;
@@ -33,6 +38,7 @@ public class MainActivity extends SmartDeviceLinkActivity implements ActionBar.T
 
 	private static final String SELECTED_NAVIGATION_ITEM = "selected_navigation_item";
 	private static final String APP_ID = "bf2c3a7bad6b0c79152f50cc42ba1ace";
+	private static final int LOCATION_PERMISSION_REQUEST_CODE = 100;
 
     private Fragment mCurrentFragment;
     private DrawerLayout mDrawerLayout;
@@ -199,10 +205,22 @@ public class MainActivity extends SmartDeviceLinkActivity implements ActionBar.T
         lbManager.registerReceiver(mWeatherConditionsReceiver, new IntentFilter("com.ford.mobileweather.WeatherConditions"));
         lbManager.registerReceiver(mForecastReceiver, new IntentFilter("com.ford.mobileweather.Forecast"));
         lbManager.registerReceiver(mHourlyForecastReceiver, new IntentFilter("com.ford.mobileweather.HourlyForecast"));
+
+		// Ask for permissions
+		if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+			ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
+		} else {
+			startService();
+		}
+
+
+	}
+
+	private void startService() {
 		SmartDeviceLinkApplication app = SmartDeviceLinkApplication.getInstance();
 		if (app != null) {
-			app.startServices();
-		}
+            app.startServices();
+        }
 	}
 
 	@Override
@@ -348,4 +366,15 @@ public class MainActivity extends SmartDeviceLinkActivity implements ActionBar.T
 		outState.putInt(SELECTED_NAVIGATION_ITEM, getActionBar().getSelectedNavigationIndex());
 	}
 
+	@Override
+	public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+		if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+			if (grantResults.length <= 0 || grantResults[0] != PackageManager.PERMISSION_GRANTED){
+				Toast.makeText(this, "The app cannot run without this permission!", Toast.LENGTH_SHORT).show();
+				finish();
+			} else {
+				startService();
+			}
+		}
+	}
 }
