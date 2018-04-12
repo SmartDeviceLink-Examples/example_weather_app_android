@@ -208,7 +208,8 @@ public class SmartDeviceLinkService extends Service implements IProxyListenerALM
 	private static final int CHOICE_ITEM23_ID = 222;
 	private static final int CHOICE_ITEM24_ID = 223;
 	private static final int TIMED_SHOW_DELAY = 8000;
-	private static final String APP_ICON = "ic_launcher.png";
+	private static final String APP_ICON_NAME = "icon";
+	private static final String APP_ICON = APP_ICON_NAME + ".png";
 	private static final String CLEAR_ICON = "";
 	// Service shutdown timing constants
 	private static final int CONNECTION_TIMEOUT = 120000;
@@ -1155,7 +1156,7 @@ public class SmartDeviceLinkService extends Service implements IProxyListenerALM
 	private void uploadFiles() {
 		if (mUploadedFiles == null || 
 				!mUploadedFiles.contains(APP_ICON)) {
-			uploadFile("ic_launcher");
+			uploadFile(APP_ICON_NAME);
 		}
 	}
 

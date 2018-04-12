@@ -15,8 +15,7 @@
         android:layout_gravity="top|center_horizontal|center_vertical|clip_horizontal"
         android:layout_weight="1"
         android:paddingTop="10dp"
-        android:contentDescription="@+strings/title_activity_main"
-        android:src="@drawable/ic_launcher" />
+        android:contentDescription="@+strings/title_activity_main" />
 
     <TextView
         android:id="@+id/locationTextView"
