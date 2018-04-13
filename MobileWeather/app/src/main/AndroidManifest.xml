@@ -56,10 +56,23 @@
         <service android:name="com.ford.mobileweather.forecastio.ForecastIoService" >
         </service>
 
+        <service
+            android:name="com.ford.mobileweather.smartdevicelink.SdlRouterService"
+            android:exported="true"
+            android:process="com.smartdevicelink.router">
+            <intent-filter>
+                <action android:name="com.smartdevicelink.router.service"/>
+            </intent-filter>
+            <meta-data android:name="@string/sdl_router_service_version_name"  android:value="@integer/sdl_router_service_version_value" />
+        </service>
+
         <receiver android:name="com.ford.mobileweather.smartdevicelink.SmartDeviceLinkReceiver" >
             <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.bluetooth.device.action.ACL_CONNECTED" />
                 <action android:name="android.bluetooth.device.action.ACL_DISCONNECTED" />
+                <action android:name="android.bluetooth.adapter.action.STATE_CHANGED" />
+                <action android:name="sdl.router.startservice" />
             </intent-filter>
         </receiver>
 

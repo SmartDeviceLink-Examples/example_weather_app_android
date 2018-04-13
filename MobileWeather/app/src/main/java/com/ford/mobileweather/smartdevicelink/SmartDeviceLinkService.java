@@ -10,6 +10,8 @@ import java.util.LinkedList;
 import java.util.Locale;
 import java.util.Vector;
 
+import android.annotation.SuppressLint;
+import android.app.Notification;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
@@ -17,6 +19,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
@@ -144,9 +147,14 @@ import com.smartdevicelink.proxy.rpc.enums.TextFieldName;
 //import com.smartdevicelink.proxy.rpc.enums.VehicleDataResultCode;
 import com.smartdevicelink.transport.BTTransportConfig;
 import com.smartdevicelink.transport.BaseTransportConfig;
+import com.smartdevicelink.transport.MultiplexTransportConfig;
+import com.smartdevicelink.transport.TransportConstants;
 
 
 public class SmartDeviceLinkService extends Service implements IProxyListenerALM {
+	private boolean forceTransportConnect;
+	private final int FOREGROUND_SERVICE_ID = 200;
+	private static final String APP_ID = "330533107";
 	private static final int STANDARD_FORECAST_DAYS = 3;
 	private static final int DAILY_FORECAST_DAYS = 8; /* max. 8 days might be shown */
 	private static final int HOURLY_FORECAST_HOURS = 12;
@@ -709,8 +717,25 @@ public class SmartDeviceLinkService extends Service implements IProxyListenerALM
 		// See if the location and current conditions are already available
 		mLocationRdy = (mCurrentLocation != null);
 		mConditionsRdy = (mWeatherConditions != null);
+
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			enterForeground();
+		}
 	}
 
+
+	// Helper method to let the service enter background mode
+	@SuppressLint("NewApi")
+	public void enterForeground() {
+		Notification notification = new Notification.Builder(this)
+				.setContentTitle("SmartDeviceLink")
+				.setContentText(getString(R.string.app_name))
+				.setSmallIcon(R.drawable.ic_sdl)
+				.setTicker("SmartDeviceLink")
+				.setPriority(Notification.PRIORITY_DEFAULT)
+				.build();
+		startForeground(FOREGROUND_SERVICE_ID, notification);
+	}
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		// Remove any previous stop service runnables that could be from a recent ACL Disconnect
@@ -720,7 +745,9 @@ public class SmartDeviceLinkService extends Service implements IProxyListenerALM
 			mBtAdapter = BluetoothAdapter.getDefaultAdapter();
 			if (mBtAdapter != null) {
 				if (mBtAdapter.isEnabled()) {
-					startProxy();
+					//Check if this was started with a flag to force a transport connect
+					forceTransportConnect = intent !=null && intent.getBooleanExtra(TransportConstants.FORCE_TRANSPORT_CONNECTED, false);
+					startProxy(forceTransportConnect);
 				}
 			}
 		}
@@ -734,6 +761,11 @@ public class SmartDeviceLinkService extends Service implements IProxyListenerALM
 	@Override
 	public void onDestroy() {
 		shutdown();
+
+		// Stop service background mode
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			stopForeground(true);
+		}
 		super.onDestroy();
 	}
 
@@ -773,13 +805,11 @@ public class SmartDeviceLinkService extends Service implements IProxyListenerALM
 		mHandler.postDelayed(mStopServiceRunnable, STOP_SERVICE_DELAY);
 	}
 
-	public void startProxy() {
+	public void startProxy(boolean forceConnect) {
 		if (proxy == null) {
 			try {
-				//proxy = new SyncProxyALM(this, "MobileWeather", true, "330533107");
-				BaseTransportConfig transport = new BTTransportConfig();
-				//BaseTransportConfig transport = new TCPTransportConfig(12345, "10.0.0.2", false);
-				proxy = new SdlProxyALM(this, "MobileWeather", false, mDesiredAppSdlLanguage, mDesiredAppHmiLanguage, "330533107", transport);
+				BaseTransportConfig transport= new MultiplexTransportConfig(getBaseContext(), APP_ID, MultiplexTransportConfig.FLAG_MULTI_SECURITY_OFF);
+				proxy = new SdlProxyALM(this, "MobileWeather", false, mDesiredAppSdlLanguage, mDesiredAppHmiLanguage, APP_ID, transport);
 				mRegisteredAppSdlLanguage = mDesiredAppSdlLanguage;
 				mRegisteredAppHmiLanguage = mDesiredAppHmiLanguage;				
 			} catch (SdlException e) {
@@ -789,6 +819,8 @@ public class SmartDeviceLinkService extends Service implements IProxyListenerALM
 					stopSelf();
 				}
 			}
+		} else if(forceConnect){
+			proxy.forceOnConnected();
 		}
 	}
 
@@ -831,7 +863,7 @@ public class SmartDeviceLinkService extends Service implements IProxyListenerALM
 				}
 			}
 		} else {
-			startProxy();
+			startProxy(forceTransportConnect);
 		}
 	}
 

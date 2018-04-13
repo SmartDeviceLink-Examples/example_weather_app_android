@@ -16,7 +16,6 @@ import com.ford.mobileweather.R;
 import com.ford.mobileweather.forecastio.ForecastIoService;
 import com.ford.mobileweather.location.PlayServicesConnectionChecker;
 import com.ford.mobileweather.location.WeatherLocationServices;
-import com.ford.mobileweather.smartdevicelink.SmartDeviceLinkService;
 import com.ford.mobileweather.weather.WeatherAlarmManager;
 import com.ford.mobileweather.weather.WeatherDataManager;
 import com.ford.mobileweather.weather.WeatherUpdateWakefulReceiver;
@@ -102,8 +101,7 @@ public class SmartDeviceLinkApplication extends Application {
 		{
 			if ((mBtAdapter.isEnabled() && mBtAdapter.getBondedDevices().isEmpty() == false)) 
 			{
-	        	Intent startIntent = new Intent(this, SmartDeviceLinkService.class);
-	        	startService(startIntent);
+				SmartDeviceLinkReceiver.queryForConnectedService(this);
 			}
 		}
 	}
@@ -118,7 +116,7 @@ public class SmartDeviceLinkApplication extends Application {
 				serviceInstance.reset();
 			// if proxy == null create proxy
 			} else {
-				serviceInstance.startProxy();
+				serviceInstance.startProxy(false);
 			}
 		}
 	}

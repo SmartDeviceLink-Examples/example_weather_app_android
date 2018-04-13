@@ -210,13 +210,13 @@ public class MainActivity extends SmartDeviceLinkActivity implements ActionBar.T
 		if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 			ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
 		} else {
-			startService();
+			startServices();
 		}
 
 
 	}
 
-	private void startService() {
+	private void startServices() {
 		SmartDeviceLinkApplication app = SmartDeviceLinkApplication.getInstance();
 		if (app != null) {
             app.startServices();
@@ -373,7 +373,7 @@ public class MainActivity extends SmartDeviceLinkActivity implements ActionBar.T
 				Toast.makeText(this, "The app cannot run without this permission!", Toast.LENGTH_SHORT).show();
 				finish();
 			} else {
-				startService();
+				startServices();
 			}
 		}
 	}
