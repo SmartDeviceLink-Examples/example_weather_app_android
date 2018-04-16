@@ -51,8 +51,6 @@
         </service>
         <service android:name="com.ford.mobileweather.wunderground.WUndergroundService" >
         </service>
-        <!--<service android:name="com.ford.mobileweather.noaa.NOAAService" >-->
-        <!--</service>-->
         <service android:name="com.ford.mobileweather.forecastio.ForecastIoService" >
         </service>
 
