@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.ford.mobileweather">
+    package="com.sdl.mobileweather">
 
 
     <!-- Required for AppLink connection -->
@@ -21,14 +21,14 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
-        android:name="com.ford.mobileweather.smartdevicelink.SmartDeviceLinkApplication"
+        android:name="com.sdl.mobileweather.smartdevicelink.SmartDeviceLinkApplication"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
         android:allowBackup="true" >
 
         <activity
-            android:name="com.ford.mobileweather.activity.MainActivity"
+            android:name="com.sdl.mobileweather.activity.MainActivity"
             android:label="@string/title_activity_main"
             android:configChanges="orientation"
             android:screenOrientation="portrait" >
@@ -40,22 +40,22 @@
         </activity>
 
         <activity
-            android:name="com.ford.mobileweather.activity.LockScreenActivity"
+            android:name="com.sdl.mobileweather.activity.LockScreenActivity"
             android:label="Locked"
             android:configChanges="orientation"
             android:screenOrientation="portrait" >
         </activity>
         <activity android:name="net.hockeyapp.android.UpdateActivity" />
 
-        <service android:name="com.ford.mobileweather.smartdevicelink.SmartDeviceLinkService" >
+        <service android:name="com.sdl.mobileweather.smartdevicelink.SmartDeviceLinkService" >
         </service>
-        <service android:name="com.ford.mobileweather.wunderground.WUndergroundService" >
+        <service android:name="com.sdl.mobileweather.wunderground.WUndergroundService" >
         </service>
-        <service android:name="com.ford.mobileweather.forecastio.ForecastIoService" >
+        <service android:name="com.sdl.mobileweather.forecastio.ForecastIoService" >
         </service>
 
         <service
-            android:name="com.ford.mobileweather.smartdevicelink.SdlRouterService"
+            android:name="com.sdl.mobileweather.smartdevicelink.SdlRouterService"
             android:exported="true"
             android:process="com.smartdevicelink.router">
             <intent-filter>
@@ -64,7 +64,7 @@
             <meta-data android:name="@string/sdl_router_service_version_name"  android:value="@integer/sdl_router_service_version_value" />
         </service>
 
-        <receiver android:name="com.ford.mobileweather.smartdevicelink.SmartDeviceLinkReceiver" >
+        <receiver android:name="com.sdl.mobileweather.smartdevicelink.SmartDeviceLinkReceiver" >
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.bluetooth.device.action.ACL_CONNECTED" />
@@ -74,7 +74,7 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name="com.ford.mobileweather.weather.WeatherUpdateWakefulReceiver" >
+        <receiver android:name="com.sdl.mobileweather.weather.WeatherUpdateWakefulReceiver" >
         </receiver>
 
         <meta-data
