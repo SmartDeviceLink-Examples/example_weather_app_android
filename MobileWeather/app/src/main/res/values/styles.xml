@@ -1,0 +1,16 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="android:Theme.Holo.Light">
+
+    </style>
+
+    <style name="TextViewStyle">
+        <item name="android:textColor">@color/colorText</item>
+    </style>
+
+    <style name="ImageViewStyle">
+        <item name="android:tint">@color/colorImageTint</item>
+    </style>
+
+</resources>
