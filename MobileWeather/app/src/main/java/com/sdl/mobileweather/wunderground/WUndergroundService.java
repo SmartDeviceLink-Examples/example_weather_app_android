@@ -8,8 +8,7 @@ import com.sdl.mobileweather.weather.WeatherService;
 
 public class WUndergroundService extends WeatherService {
 	
-	//private static final String API_KEY = "c893f14c493389ed";	// API key used for WUnderground API (Hugh)
-	private static final String API_KEY = "34925767b5899ec7";	// API key used for WUnderground API
+	private static final String API_KEY = "";	// API key used for WUnderground API
 	private static final String BASE_URL = "http://api.wunderground.com/api/";	// Base request URL for WUnderground
 
 	public WUndergroundService() {
