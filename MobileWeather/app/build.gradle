@@ -25,5 +25,5 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     implementation 'com.smartdevicelink:sdl_android:4.+'
     implementation 'net.hockeyapp.android:HockeySDK:5.1.0'
-    implementation 'com.google.android.gms:play-services-location:15.0.1'
+    implementation 'com.google.android.gms:play-services-location:16.0.0'
 }
