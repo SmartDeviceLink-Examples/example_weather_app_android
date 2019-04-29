@@ -21,9 +21,6 @@ public class SdlActivity extends Activity {
 		super.onResume();
 		SdlApplication.setCurrentActivity(this);
 		activityOnTop = true;
-		if (LockScreenManager.getLockScreenStatus()) {
-			LockScreenManager.showLockScreen();
-		}
 	}
 	
 	/**

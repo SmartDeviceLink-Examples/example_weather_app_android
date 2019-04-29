@@ -46,12 +46,6 @@
         <activity android:name="net.hockeyapp.android.UpdateActivity" />
 
         <activity
-            android:name="com.sdl.mobileweather.smartdevicelink.LockScreenActivity"
-            android:configChanges="orientation"
-            android:label="Locked"
-            android:screenOrientation="portrait"/>
-
-        <activity
             android:name="com.smartdevicelink.managers.lockscreen.SDLLockScreenActivity"
             android:launchMode="singleTop" />
 

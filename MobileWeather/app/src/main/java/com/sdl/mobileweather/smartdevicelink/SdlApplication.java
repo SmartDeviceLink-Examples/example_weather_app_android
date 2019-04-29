@@ -19,7 +19,9 @@ import com.sdl.mobileweather.location.WeatherLocationServices;
 import com.sdl.mobileweather.weather.WeatherAlarmManager;
 import com.sdl.mobileweather.weather.WeatherDataManager;
 import com.sdl.mobileweather.weather.WeatherUpdateWakefulReceiver;
+import com.smartdevicelink.BuildConfig;
 import com.smartdevicelink.exception.SdlException;
+import com.smartdevicelink.managers.SdlManager;
 import com.smartdevicelink.proxy.SdlProxyALM;
 import com.sdl.mobileweather.localization.LocalizationUtil;
 
@@ -110,13 +112,13 @@ public class SdlApplication extends Application {
 	public void endSdlProxyInstance() {	
 		SdlService serviceInstance = SdlService.getInstance();
 		if (serviceInstance != null){
-			SdlProxyALM proxyInstance = serviceInstance.getProxy();
+			SdlManager sdlManagerInstance = serviceInstance.getSdlManager();
 			// if proxy exists, reset it
-			if(proxyInstance != null){			
+			if(sdlManagerInstance != null){
 				serviceInstance.reset();
 			// if proxy == null create proxy
 			} else {
-				serviceInstance.startProxy(false);
+				serviceInstance.startProxy();
 			}
 		}
 	}
@@ -203,21 +205,8 @@ public class SdlApplication extends Application {
     		Log.d(SdlApplication.TAG, "Can't get package info", e);
     	}
 
-    	try {
-    		if (serviceInstance != null){
-    			SdlProxyALM syncProxy = serviceInstance.getProxy();
-    			if (syncProxy != null){
-    				String proxyVersion = syncProxy.getProxyVersionInfo();
-    				if (proxyVersion != null){
-    					proxyMessage = getResources().getString(R.string.proxy_ver) + proxyVersion;
-    				}    	    			
-    			}
-    		}	
-    	} catch (SdlException e) {
-    		Log.d(SdlApplication.TAG, "Can't get Proxy Version", e);
-    		e.printStackTrace();
-    	}
-    	new AlertDialog.Builder(context).setTitle((getResources().getString(R.string.app_ver)))
+		proxyMessage = getResources().getString(R.string.proxy_ver) + BuildConfig.VERSION_NAME;
+		new AlertDialog.Builder(context).setTitle((getResources().getString(R.string.app_ver)))
     	.setMessage(appMessage + "\r\n" + proxyMessage)
     	.setNeutralButton(android.R.string.ok, null).create().show();
     }
