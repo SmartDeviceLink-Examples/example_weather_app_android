@@ -11,7 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.widget.ImageView;
 
-import com.sdl.mobileweather.smartdevicelink.SmartDeviceLinkApplication;
+import com.sdl.mobileweather.smartdevicelink.SdlApplication;
 
 public class ImageProcessor {
 
@@ -85,7 +85,7 @@ public class ImageProcessor {
 	}
 	
 	public static Bitmap getBitmapFromResources(String imageName) {
-		Resources resources = SmartDeviceLinkApplication.getInstance().getResources();
+		Resources resources = SdlApplication.getInstance().getResources();
 		int resId = resources.getIdentifier(imageName, "drawable", "com.sdl.mobileweather");
 		return BitmapFactory.decodeResource(resources, resId);
 	}

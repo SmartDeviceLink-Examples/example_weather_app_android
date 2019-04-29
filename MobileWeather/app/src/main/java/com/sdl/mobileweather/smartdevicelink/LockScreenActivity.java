@@ -1,4 +1,4 @@
-package com.sdl.mobileweather.activity;
+package com.sdl.mobileweather.smartdevicelink;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -15,7 +15,6 @@ import android.widget.TextView;
 import com.sdl.mobileweather.R;
 import com.sdl.mobileweather.artifact.WeatherLocation;
 import com.sdl.mobileweather.processor.ImageProcessor;
-import com.sdl.mobileweather.smartdevicelink.SmartDeviceLinkApplication;
 import com.sdl.mobileweather.weather.WeatherDataManager;
 
 
@@ -45,12 +44,12 @@ public class LockScreenActivity extends Activity {
 		
     @Override
     public void onCreate(Bundle savedInstanceState) {
-    	Log.v(SmartDeviceLinkApplication.TAG, "onCreate lock");
+    	Log.v(SdlApplication.TAG, "onCreate lock");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.lockscreen);
         mDataManager = WeatherDataManager.getInstance();
 		LockScreenActivity.instance = this;
-		SmartDeviceLinkApplication.setCurrentActivity(this);
+		SdlApplication.setCurrentActivity(this);
 		
 		mLocationTextView = (TextView) findViewById(R.id.locationTextView);
 		ImageView providerImageView = (ImageView) findViewById(R.id.providerImage);
@@ -71,24 +70,24 @@ public class LockScreenActivity extends Activity {
 
 	@Override
 	protected void onPause() {
-		Log.v(SmartDeviceLinkApplication.TAG, "onPause lock");
+		Log.v(SdlApplication.TAG, "onPause lock");
 		// Notify App that activity is leaving the foreground
-		if (SmartDeviceLinkApplication.getCurrentActivity() == this) {
-			Log.v(SmartDeviceLinkApplication.TAG, "onPause clearing");
-			SmartDeviceLinkApplication.setCurrentActivity(null);
+		if (SdlApplication.getCurrentActivity() == this) {
+			Log.v(SdlApplication.TAG, "onPause clearing");
+			SdlApplication.setCurrentActivity(null);
 		}
 		super.onPause();
 	}
 
 	@Override
 	protected void onStop() {
-		Log.v(SmartDeviceLinkApplication.TAG, "onStop lock");		
+		Log.v(SdlApplication.TAG, "onStop lock");
 		// Stop services if no other weather activity has taken foreground
-		SmartDeviceLinkApplication app = SmartDeviceLinkApplication.getInstance();
+		SdlApplication app = SdlApplication.getInstance();
 		if (app != null) {
 			app.stopServices();
 		}else{
-			Log.d(SmartDeviceLinkApplication.TAG, "Lock onStop app==null");
+			Log.d(SdlApplication.TAG, "Lock onStop app==null");
 		}
 		LocalBroadcastManager.getInstance(this).unregisterReceiver(mChangeLocationReceiver);
 		super.onStop();
@@ -101,7 +100,7 @@ public class LockScreenActivity extends Activity {
 
     @Override
     public void onDestroy() {
-    	Log.v(SmartDeviceLinkApplication.TAG, "onDestroy lock");
+    	Log.v(SdlApplication.TAG, "onDestroy lock");
     	LockScreenActivity.instance = null;
     	super.onDestroy();
     }

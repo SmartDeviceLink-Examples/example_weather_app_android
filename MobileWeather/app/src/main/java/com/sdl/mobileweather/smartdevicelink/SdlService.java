@@ -1,14 +1,19 @@
-package com.ford.mobileweather.applink;
+package com.sdl.mobileweather.smartdevicelink;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Locale;
 import java.util.Vector;
 
+import android.annotation.SuppressLint;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
@@ -16,121 +21,156 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.util.SparseArray;
 
-import com.ford.mobileweather.R;
-import com.ford.mobileweather.artifact.WeatherLocation;
-import com.ford.mobileweather.processor.ImageProcessor;
-import com.ford.mobileweather.weather.AbbreviationDictionary;
-import com.ford.mobileweather.weather.Forecast;
-import com.ford.mobileweather.weather.InfoType;
-import com.ford.mobileweather.weather.UnitConverter;
-import com.ford.mobileweather.weather.WeatherAlert;
-import com.ford.mobileweather.weather.WeatherConditions;
-import com.ford.mobileweather.weather.WeatherDataManager;
-import com.ford.mobileweather.localization.LocalizationUtil;
-import com.ford.syncV4.exception.SyncException;
-import com.ford.syncV4.exception.SyncExceptionCause;
-import com.ford.syncV4.proxy.SyncProxyALM;
-import com.ford.syncV4.proxy.TTSChunkFactory;
-import com.ford.syncV4.proxy.interfaces.IProxyListenerALM;
-import com.ford.syncV4.proxy.rpc.AddCommandResponse;
-import com.ford.syncV4.proxy.rpc.AddSubMenuResponse;
-import com.ford.syncV4.proxy.rpc.Alert;
-import com.ford.syncV4.proxy.rpc.AlertResponse;
-import com.ford.syncV4.proxy.rpc.ChangeRegistrationResponse;
-import com.ford.syncV4.proxy.rpc.Choice;
-import com.ford.syncV4.proxy.rpc.CreateInteractionChoiceSet;
-import com.ford.syncV4.proxy.rpc.CreateInteractionChoiceSetResponse;
-import com.ford.syncV4.proxy.rpc.DeleteCommand;
-import com.ford.syncV4.proxy.rpc.DeleteCommandResponse;
-import com.ford.syncV4.proxy.rpc.DeleteFileResponse;
-import com.ford.syncV4.proxy.rpc.DeleteInteractionChoiceSetResponse;
-import com.ford.syncV4.proxy.rpc.DeleteSubMenuResponse;
-import com.ford.syncV4.proxy.rpc.DeviceStatus;
-import com.ford.syncV4.proxy.rpc.DiagnosticMessageResponse;
-import com.ford.syncV4.proxy.rpc.DisplayCapabilities;
-import com.ford.syncV4.proxy.rpc.EndAudioPassThruResponse;
-import com.ford.syncV4.proxy.rpc.GenericResponse;
-import com.ford.syncV4.proxy.rpc.GetDTCsResponse;
-import com.ford.syncV4.proxy.rpc.GetVehicleDataResponse;
-import com.ford.syncV4.proxy.rpc.Image;
-import com.ford.syncV4.proxy.rpc.ListFiles;
-import com.ford.syncV4.proxy.rpc.ListFilesResponse;
-import com.ford.syncV4.proxy.rpc.OnAudioPassThru;
-import com.ford.syncV4.proxy.rpc.OnButtonEvent;
-import com.ford.syncV4.proxy.rpc.OnButtonPress;
-import com.ford.syncV4.proxy.rpc.OnCommand;
-import com.ford.syncV4.proxy.rpc.OnDriverDistraction;
-import com.ford.syncV4.proxy.rpc.OnHMIStatus;
-import com.ford.syncV4.proxy.rpc.OnHashChange;
-import com.ford.syncV4.proxy.rpc.OnKeyboardInput;
-import com.ford.syncV4.proxy.rpc.OnLanguageChange;
-import com.ford.syncV4.proxy.rpc.OnLockScreenStatus;
-import com.ford.syncV4.proxy.rpc.OnPermissionsChange;
-import com.ford.syncV4.proxy.rpc.OnSystemRequest;
-import com.ford.syncV4.proxy.rpc.OnTBTClientState;
-import com.ford.syncV4.proxy.rpc.OnTouchEvent;
-import com.ford.syncV4.proxy.rpc.OnVehicleData;
-import com.ford.syncV4.proxy.rpc.PerformAudioPassThruResponse;
-import com.ford.syncV4.proxy.rpc.PerformInteraction;
-import com.ford.syncV4.proxy.rpc.PerformInteractionResponse;
-import com.ford.syncV4.proxy.rpc.PutFile;
-import com.ford.syncV4.proxy.rpc.PutFileResponse;
-import com.ford.syncV4.proxy.rpc.ReadDIDResponse;
-import com.ford.syncV4.proxy.rpc.ResetGlobalPropertiesResponse;
-import com.ford.syncV4.proxy.rpc.ScrollableMessageResponse;
-import com.ford.syncV4.proxy.rpc.SetAppIcon;
-import com.ford.syncV4.proxy.rpc.SetAppIconResponse;
-import com.ford.syncV4.proxy.rpc.SetDisplayLayout;
-import com.ford.syncV4.proxy.rpc.SetDisplayLayoutResponse;
-import com.ford.syncV4.proxy.rpc.SetGlobalProperties;
-import com.ford.syncV4.proxy.rpc.SetGlobalPropertiesResponse;
-import com.ford.syncV4.proxy.rpc.SetMediaClockTimerResponse;
-import com.ford.syncV4.proxy.rpc.Show;
-import com.ford.syncV4.proxy.rpc.ShowResponse;
-import com.ford.syncV4.proxy.rpc.SliderResponse;
-import com.ford.syncV4.proxy.rpc.SoftButton;
-import com.ford.syncV4.proxy.rpc.Speak;
-import com.ford.syncV4.proxy.rpc.SpeakResponse;
-import com.ford.syncV4.proxy.rpc.SubscribeButtonResponse;
-import com.ford.syncV4.proxy.rpc.SubscribeVehicleDataResponse;
-import com.ford.syncV4.proxy.rpc.SystemRequestResponse;
-import com.ford.syncV4.proxy.rpc.TTSChunk;
-import com.ford.syncV4.proxy.rpc.TextField;
-import com.ford.syncV4.proxy.rpc.UnsubscribeButtonResponse;
-import com.ford.syncV4.proxy.rpc.UnsubscribeVehicleDataResponse;
-import com.ford.syncV4.proxy.rpc.enums.ButtonName;
-import com.ford.syncV4.proxy.rpc.enums.DisplayType;
-import com.ford.syncV4.proxy.rpc.enums.DriverDistractionState;
-import com.ford.syncV4.proxy.rpc.enums.FileType;
-import com.ford.syncV4.proxy.rpc.enums.HMILevel;
-import com.ford.syncV4.proxy.rpc.enums.ImageType;
-import com.ford.syncV4.proxy.rpc.enums.InteractionMode;
-import com.ford.syncV4.proxy.rpc.enums.Language;
-import com.ford.syncV4.proxy.rpc.enums.LockScreenStatus;
-import com.ford.syncV4.proxy.rpc.enums.Result;
-import com.ford.syncV4.proxy.rpc.enums.SoftButtonType;
-import com.ford.syncV4.proxy.rpc.enums.SpeechCapabilities;
-import com.ford.syncV4.proxy.rpc.enums.SyncDisconnectedReason;
-import com.ford.syncV4.proxy.rpc.enums.SystemAction;
-import com.ford.syncV4.proxy.rpc.enums.TextAlignment;
-import com.ford.syncV4.proxy.rpc.enums.TextFieldName;
-import com.ford.syncV4.proxy.rpc.enums.VehicleDataResultCode;
-import com.ford.syncV4.transport.BTTransportConfig;
-import com.ford.syncV4.transport.BaseTransportConfig;
+import com.sdl.mobileweather.R;
+import com.sdl.mobileweather.artifact.WeatherLocation;
+import com.sdl.mobileweather.processor.ImageProcessor;
+import com.sdl.mobileweather.weather.AbbreviationDictionary;
+import com.sdl.mobileweather.weather.Forecast;
+import com.sdl.mobileweather.weather.InfoType;
+import com.sdl.mobileweather.weather.UnitConverter;
+import com.sdl.mobileweather.weather.WeatherAlert;
+import com.sdl.mobileweather.weather.WeatherConditions;
+import com.sdl.mobileweather.weather.WeatherDataManager;
+import com.sdl.mobileweather.localization.LocalizationUtil;
+import com.smartdevicelink.exception.SdlException;
+import com.smartdevicelink.exception.SdlExceptionCause;
+import com.smartdevicelink.proxy.SdlProxyALM;
+import com.smartdevicelink.proxy.TTSChunkFactory;
+import com.smartdevicelink.proxy.callbacks.OnServiceEnded;
+import com.smartdevicelink.proxy.callbacks.OnServiceNACKed;
+import com.smartdevicelink.proxy.interfaces.IProxyListenerALM;
+import com.smartdevicelink.proxy.rpc.AddCommandResponse;
+import com.smartdevicelink.proxy.rpc.AlertManeuverResponse;
+import com.smartdevicelink.proxy.rpc.ButtonPressResponse;
+import com.smartdevicelink.proxy.rpc.DialNumberResponse;
+import com.smartdevicelink.proxy.rpc.GetAppServiceDataResponse;
+import com.smartdevicelink.proxy.rpc.GetCloudAppPropertiesResponse;
+import com.smartdevicelink.proxy.rpc.GetFileResponse;
+import com.smartdevicelink.proxy.rpc.GetInteriorVehicleDataResponse;
+import com.smartdevicelink.proxy.rpc.GetSystemCapabilityResponse;
+import com.smartdevicelink.proxy.rpc.GetWayPointsResponse;
+import com.smartdevicelink.proxy.rpc.OnAppServiceData;
+import com.smartdevicelink.proxy.rpc.OnInteriorVehicleData;
+import com.smartdevicelink.proxy.rpc.OnRCStatus;
+import com.smartdevicelink.proxy.rpc.OnStreamRPC;
+import com.smartdevicelink.proxy.rpc.OnSystemCapabilityUpdated;
+import com.smartdevicelink.proxy.rpc.OnWayPointChange;
+import com.smartdevicelink.proxy.rpc.PerformAppServiceInteractionResponse;
+import com.smartdevicelink.proxy.rpc.PublishAppServiceResponse;
+import com.smartdevicelink.proxy.rpc.SendHapticDataResponse;
+import com.smartdevicelink.proxy.rpc.SendLocationResponse;
+import com.smartdevicelink.proxy.rpc.SetCloudAppPropertiesResponse;
+import com.smartdevicelink.proxy.rpc.SetInteriorVehicleDataResponse;
+import com.smartdevicelink.proxy.rpc.ShowConstantTbtResponse;
+import com.smartdevicelink.proxy.rpc.StreamRPCResponse;
+import com.smartdevicelink.proxy.rpc.SubscribeWayPointsResponse;
+import com.smartdevicelink.proxy.rpc.UnsubscribeWayPointsResponse;
+import com.smartdevicelink.proxy.rpc.UpdateTurnListResponse;
+import com.smartdevicelink.proxy.rpc.AddSubMenuResponse;
+import com.smartdevicelink.proxy.rpc.Alert;
+import com.smartdevicelink.proxy.rpc.AlertResponse;
+import com.smartdevicelink.proxy.rpc.ChangeRegistrationResponse;
+import com.smartdevicelink.proxy.rpc.Choice;
+import com.smartdevicelink.proxy.rpc.CreateInteractionChoiceSet;
+import com.smartdevicelink.proxy.rpc.CreateInteractionChoiceSetResponse;
+import com.smartdevicelink.proxy.rpc.DeleteCommandResponse;
+//import com.smartdevicelink.proxy.rpc.DeleteCommand;
+import com.smartdevicelink.proxy.rpc.DeleteFileResponse;
+import com.smartdevicelink.proxy.rpc.DeleteInteractionChoiceSetResponse;
+import com.smartdevicelink.proxy.rpc.DeleteSubMenuResponse;
+import com.smartdevicelink.proxy.rpc.DeviceStatus;
+import com.smartdevicelink.proxy.rpc.DiagnosticMessageResponse;
+import com.smartdevicelink.proxy.rpc.DisplayCapabilities;
+import com.smartdevicelink.proxy.rpc.EndAudioPassThruResponse;
+import com.smartdevicelink.proxy.rpc.GenericResponse;
+import com.smartdevicelink.proxy.rpc.GetDTCsResponse;
+import com.smartdevicelink.proxy.rpc.GetVehicleDataResponse;
+import com.smartdevicelink.proxy.rpc.Image;
+import com.smartdevicelink.proxy.rpc.ListFiles;
+import com.smartdevicelink.proxy.rpc.ListFilesResponse;
+import com.smartdevicelink.proxy.rpc.OnAudioPassThru;
+import com.smartdevicelink.proxy.rpc.OnButtonEvent;
+import com.smartdevicelink.proxy.rpc.OnButtonPress;
+import com.smartdevicelink.proxy.rpc.OnCommand;
+import com.smartdevicelink.proxy.rpc.OnDriverDistraction;
+import com.smartdevicelink.proxy.rpc.OnHMIStatus;
+import com.smartdevicelink.proxy.rpc.OnHashChange;
+import com.smartdevicelink.proxy.rpc.OnKeyboardInput;
+import com.smartdevicelink.proxy.rpc.OnLanguageChange;
+import com.smartdevicelink.proxy.rpc.OnLockScreenStatus;
+import com.smartdevicelink.proxy.rpc.OnPermissionsChange;
+import com.smartdevicelink.proxy.rpc.OnSystemRequest;
+import com.smartdevicelink.proxy.rpc.OnTBTClientState;
+import com.smartdevicelink.proxy.rpc.OnTouchEvent;
+import com.smartdevicelink.proxy.rpc.OnVehicleData;
+import com.smartdevicelink.proxy.rpc.PerformAudioPassThruResponse;
+import com.smartdevicelink.proxy.rpc.PerformInteraction;
+import com.smartdevicelink.proxy.rpc.PerformInteractionResponse;
+import com.smartdevicelink.proxy.rpc.PutFile;
+import com.smartdevicelink.proxy.rpc.PutFileResponse;
+import com.smartdevicelink.proxy.rpc.ReadDIDResponse;
+import com.smartdevicelink.proxy.rpc.ResetGlobalPropertiesResponse;
+import com.smartdevicelink.proxy.rpc.ScrollableMessageResponse;
+import com.smartdevicelink.proxy.rpc.SetAppIcon;
+import com.smartdevicelink.proxy.rpc.SetAppIconResponse;
+import com.smartdevicelink.proxy.rpc.SetDisplayLayout;
+import com.smartdevicelink.proxy.rpc.SetDisplayLayoutResponse;
+//import com.smartdevicelink.proxy.rpc.SetGlobalProperties;
+import com.smartdevicelink.proxy.rpc.SetGlobalPropertiesResponse;
+import com.smartdevicelink.proxy.rpc.SetMediaClockTimerResponse;
+import com.smartdevicelink.proxy.rpc.Show;
+import com.smartdevicelink.proxy.rpc.ShowResponse;
+import com.smartdevicelink.proxy.rpc.SliderResponse;
+import com.smartdevicelink.proxy.rpc.SoftButton;
+import com.smartdevicelink.proxy.rpc.Speak;
+import com.smartdevicelink.proxy.rpc.SpeakResponse;
+import com.smartdevicelink.proxy.rpc.SubscribeButtonResponse;
+import com.smartdevicelink.proxy.rpc.SubscribeVehicleDataResponse;
+import com.smartdevicelink.proxy.rpc.SystemRequestResponse;
+import com.smartdevicelink.proxy.rpc.TTSChunk;
+import com.smartdevicelink.proxy.rpc.TextField;
+import com.smartdevicelink.proxy.rpc.UnsubscribeButtonResponse;
+import com.smartdevicelink.proxy.rpc.UnsubscribeVehicleDataResponse;
+import com.smartdevicelink.proxy.rpc.enums.ButtonName;
+import com.smartdevicelink.proxy.rpc.enums.SdlDisconnectedReason;
+import com.smartdevicelink.proxy.rpc.enums.DisplayType;
+import com.smartdevicelink.proxy.rpc.enums.DriverDistractionState;
+import com.smartdevicelink.proxy.rpc.enums.FileType;
+import com.smartdevicelink.proxy.rpc.enums.HMILevel;
+import com.smartdevicelink.proxy.rpc.enums.ImageType;
+import com.smartdevicelink.proxy.rpc.enums.InteractionMode;
+import com.smartdevicelink.proxy.rpc.enums.Language;
+import com.smartdevicelink.proxy.rpc.enums.LockScreenStatus;
+import com.smartdevicelink.proxy.rpc.enums.Result;
+import com.smartdevicelink.proxy.rpc.enums.SoftButtonType;
+import com.smartdevicelink.proxy.rpc.enums.SpeechCapabilities;
+//import com.smartdevicelink.proxy.rpc.enums.SyncDisconnectedReason;
+import com.smartdevicelink.proxy.rpc.enums.SystemAction;
+import com.smartdevicelink.proxy.rpc.enums.TextAlignment;
+import com.smartdevicelink.proxy.rpc.enums.TextFieldName;
+//import com.smartdevicelink.proxy.rpc.enums.VehicleDataResultCode;
+import com.smartdevicelink.transport.BaseTransportConfig;
+import com.smartdevicelink.transport.MultiplexTransportConfig;
+import com.smartdevicelink.transport.TransportConstants;
 
-public class AppLinkService extends Service implements IProxyListenerALM {
+
+public class SdlService extends Service implements IProxyListenerALM {
+	private boolean forceTransportConnect;
+	private final int FOREGROUND_SERVICE_ID = 200;
+	private static final String APP_ID = "330533107";
 	private static final int STANDARD_FORECAST_DAYS = 3;
-	private static final int EXTENDED_FORECAST_DAYS = 8; /* max. 8 days might be shown */
+	private static final int DAILY_FORECAST_DAYS = 8; /* max. 8 days might be shown */
 	private static final int HOURLY_FORECAST_HOURS = 12;
 	private static final int VIEW_CURRENT_CONDITIONS = 1;
 	private static final int VIEW_STANDARD_FORECAST = 2;
-	private static final int VIEW_EXTENDED_FORECAST = 3;
+	private static final int VIEW_DAILY_FORECAST = 3;
 	private static final int CHANGE_UNITS = 4;
 	private static final int CHANGE_UNITS_CHOICESET = 1;
 	private static final int METRIC_CHOICE = 1;
@@ -146,7 +186,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 	private static final int NOW = 13;
 	private static final int SHOW_CONDITIONS_ID = 101;
 	private static final int SHOW_STANDARD_FORECAST_ID = 102;
-	private static final int SHOW_EXTENDED_FORECAST_ID = 103;
+	private static final int SHOW_DAILY_FORECAST_ID = 103;
 	private static final int SHOW_HOURLY_FORECAST_ID = 104;
 	private static final int SHOW_ALERTS_ID = 105;
 	private static final int PREV_ITEM_ID = 106;
@@ -186,32 +226,33 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 	private static final int CHOICE_ITEM23_ID = 222;
 	private static final int CHOICE_ITEM24_ID = 223;
 	private static final int TIMED_SHOW_DELAY = 8000;
-	private static final String APP_ICON = "ic_launcher.png";
+	private static final String APP_ICON_NAME = "icon";
+	private static final String APP_ICON = APP_ICON_NAME + ".png";
 	private static final String CLEAR_ICON = "";
 	// Service shutdown timing constants
 	private static final int CONNECTION_TIMEOUT = 120000;
 	private static final int STOP_SERVICE_DELAY = 5000;
 
-	// variable used to increment correlation ID for every request sent to SYNC
+	// variable used to increment correlation ID for every request sent to SDL
 	public int autoIncCorrId = 0;
 	// variable to contain the current state of the service
-	private static AppLinkService instance = null;
+	private static SdlService instance = null;
 	// variable to access the BluetoothAdapter
 	private BluetoothAdapter mBtAdapter;
 	// variable to create and call functions of the SyncProxy
-	private SyncProxyALM proxy = null;
+	private SdlProxyALM proxy = null;
 	private boolean mFirstHmiNone = true;
 	private DisplayType mDisplayType = null; // Keeps track of the HMI display type											
 	private boolean mGraphicsSupported = false; // Keeps track of whether graphics are supported on the display
 	private boolean mDisplayLayoutSupported = false;
 	private int mNumberOfTextFields = 1;
 	private int mLengthOfTextFields = 40;
-	private Vector<TextField> mTextFields = null; // Keeps track of the text fields supported											
-	private Language mCurrentSyncLanguage = null; // Stores the current language													
+	private ArrayList<TextField> mTextFields = null; // Keeps track of the text fields supported											
+	private Language mCurrentSdlLanguage = null; // Stores the current language													
 	private Language mCurrentHmiLanguage = null; // Stores the current language of the display
-	private static Language mRegisteredAppSyncLanguage = Language.EN_US; // Stores the language used at AppInterface registering
+	private static Language mRegisteredAppSdlLanguage = Language.EN_US; // Stores the language used at AppInterface registering
 	private static Language mRegisteredAppHmiLanguage =  Language.EN_US; // Stores the language of the display used at AppInterface registering
-	private static Language mDesiredAppSyncLanguage = Language.EN_US; // Stores the language to be used for next AppInterface registering e.g. after onOnLanguageChange occurred
+	private static Language mDesiredAppSdlLanguage = Language.EN_US; // Stores the language to be used for next AppInterface registering e.g. after onOnLanguageChange occurred
 	private static Language mDesiredAppHmiLanguage =  Language.EN_US; // Stores the language of the display to be used for next AppInterface registering e.g. after onOnLanguageChange occurred
 	// private Double mSpeed = 0.0; // Stores the current vehicle speed
 	// private Double mExternalTemperature = 0.0; // Stores the current external temperature
@@ -226,7 +267,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 	private Forecast[] mHourlyForecast = null; // Stores the current hourly forecast
 	private SoftButton mShowConditions = null;
 	private SoftButton mShowStandardForecast = null;
-	private SoftButton mShowExtendedForecast = null;
+	private SoftButton mShowDailyForecast = null;
 	private SoftButton mShowHourlyForecast = null;
 	private SoftButton mShowAlerts = null;
 	private SoftButton mShowPrevItem = null;
@@ -241,17 +282,12 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 	private Boolean today_cmd_added = false;
 	private Boolean tomorrow_cmd_added = false;
 	private Boolean list_cmd_added = false;
-	/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
 	private Boolean daily_forecast_cmd_added = false;
 	private Boolean hourly_forecast_cmd_added = false;
-	
-	
 	private int daily_forecast_cmd_added_corrId = 0;
 	private int daily_forecast_cmd_deleted_corrId = 0; 
 	private int hourly_forecast_cmd_added_corrId = 0;
 	private int hourly_forecast_cmd_deleted_corrId = 0;
-	/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
-	
 	private int next_cmd_added_corrId = 0;
 	private int next_cmd_deleted_corrId = 0; 
 	private int previous_cmd_added_corrId = 0;
@@ -265,7 +301,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 	private int list_cmd_added_corrId = 0;
 	private int list_cmd_deleted_corrId = 0;
 	private Handler mTimedShowHandler = null;
-	private Vector<String> mUploadedFiles = null;
+	private ArrayList<String> mUploadedFiles = null;
 	private SparseArray<String> mPutFileMap = null;
 	private Show mShowPendingPutFile = null;
 	private String mConditionIconFileName = null;
@@ -292,23 +328,23 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 	private LocalizationUtil mLocalizationUtil = null;
 
 	/**
-	 *  Runnable that stops this service if there hasn't been a connection to SYNC
+	 *  Runnable that stops this service if there hasn't been a connection to SDL
 	 *  within a reasonable amount of time since ACL_CONNECT.
 	 */
 	private Runnable mCheckConnectionRunnable = new Runnable() {
 		@Override
 		public void run() {
-			Log.i(AppLinkApplication.TAG, "CheckConnectionRunnable");
+			Log.i(SdlApplication.TAG, "CheckConnectionRunnable");
 			Boolean stopService = true;
-			// If the proxy has connected to SYNC, do NOT stop the service
+			// If the proxy has connected to SDL, do NOT stop the service
 			if (proxy != null && proxy.getIsConnected()) {
 				stopService = false;
 			}
 			if (stopService) {
-				Log.i(AppLinkApplication.TAG, "No connection - stopping applink service");
+				Log.i(SdlApplication.TAG, "No connection - stopping SmartDeviceLink service");
 				mHandler.removeCallbacks(mCheckConnectionRunnable);
 				mHandler.removeCallbacks(mStopServiceRunnable);
-				AppLinkApplication app = AppLinkApplication.getInstance();
+				SdlApplication app = SdlApplication.getInstance();
 				if (app != null) app.stopServices(true);
 				stopSelf();
 			}
@@ -322,13 +358,13 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 	private Runnable mStopServiceRunnable = new Runnable() {
 		@Override
 		public void run() {
-			Log.i(AppLinkApplication.TAG, "StopServiceRunnable");
-			// As long as the proxy is null or not connected to SYNC, stop the service
+			Log.i(SdlApplication.TAG, "StopServiceRunnable");
+			// As long as the proxy is null or not connected to SDL, stop the service
 			if (proxy == null || !proxy.getIsConnected()) {
-				Log.i(AppLinkApplication.TAG, "StopServiceRunnable stopping service");
+				Log.i(SdlApplication.TAG, "StopServiceRunnable stopping service");
 				mHandler.removeCallbacks(mCheckConnectionRunnable);
 				mHandler.removeCallbacks(mStopServiceRunnable);
-				AppLinkApplication app = AppLinkApplication.getInstance();
+				SdlApplication app = SdlApplication.getInstance();
 				if (app != null) app.stopServices(true);
 				stopSelf();
 			}
@@ -435,7 +471,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 
 				try {
 					proxy.sendRPCRequest(showRequest);
-				} catch (SyncException e) {}
+				} catch (SdlException e) {}
 			}
 		}
 
@@ -531,7 +567,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 			if (mDataManager != null) {
 				mForecast = mDataManager.getForecast();
 				if (currentHMILevel.equals(HMILevel.HMI_FULL) &&
-						mActiveInfoType == InfoType.EXTENDED_FORECAST) {
+						mActiveInfoType == InfoType.DAILY_FORECAST) {
 					writeDisplay(false);
 
 				}
@@ -620,12 +656,12 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 		mShowStandardForecast.setIsHighlighted(false);
 		mShowStandardForecast.setSystemAction(SystemAction.DEFAULT_ACTION);
 		
-		mShowExtendedForecast = new SoftButton();
-		mShowExtendedForecast.setSoftButtonID(SHOW_EXTENDED_FORECAST_ID);
-		mShowExtendedForecast.setText(getResources().getString(R.string.sb3));
-		mShowExtendedForecast.setType(SoftButtonType.SBT_TEXT);
-		mShowExtendedForecast.setIsHighlighted(false);
-		mShowExtendedForecast.setSystemAction(SystemAction.DEFAULT_ACTION);
+		mShowDailyForecast = new SoftButton();
+		mShowDailyForecast.setSoftButtonID(SHOW_DAILY_FORECAST_ID);
+		mShowDailyForecast.setText(getResources().getString(R.string.sb3));
+		mShowDailyForecast.setType(SoftButtonType.SBT_TEXT);
+		mShowDailyForecast.setIsHighlighted(false);
+		mShowDailyForecast.setSystemAction(SystemAction.DEFAULT_ACTION);
 
 		mShowHourlyForecast = new SoftButton();
 		mShowHourlyForecast.setSoftButtonID(SHOW_HOURLY_FORECAST_ID);
@@ -677,7 +713,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 		mDataManager = WeatherDataManager.getInstance();
 		mLocalizationUtil = LocalizationUtil.getInstance();
 		
-		mUploadedFiles = new Vector<String>();
+		mUploadedFiles = new ArrayList<String>();
 		mPutFileMap = new SparseArray<String>();
 
 		// Initialize weather and location data
@@ -691,6 +727,27 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 		// See if the location and current conditions are already available
 		mLocationRdy = (mCurrentLocation != null);
 		mConditionsRdy = (mWeatherConditions != null);
+
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			enterForeground();
+		}
+	}
+
+	@SuppressLint("NewApi")
+	private void enterForeground() {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			NotificationChannel channel = new NotificationChannel("MobileWeather", "SmartDeviceLink", NotificationManager.IMPORTANCE_DEFAULT);
+			NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+			if (notificationManager != null) {
+				notificationManager.createNotificationChannel(channel);
+				Notification serviceNotification = new Notification.Builder(this, channel.getId())
+						.setContentTitle("SmartDeviceLink")
+						.setSmallIcon(R.drawable.ic_sdl)
+						.setTicker("SmartDeviceLink")
+						.build();
+				startForeground(FOREGROUND_SERVICE_ID, serviceNotification);
+			}
+		}
 	}
 
 	@Override
@@ -702,7 +759,9 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 			mBtAdapter = BluetoothAdapter.getDefaultAdapter();
 			if (mBtAdapter != null) {
 				if (mBtAdapter.isEnabled()) {
-					startProxy();
+					//Check if this was started with a flag to force a transport connect
+					forceTransportConnect = intent !=null && intent.getBooleanExtra(TransportConstants.FORCE_TRANSPORT_CONNECTED, false);
+					startProxy(forceTransportConnect);
 				}
 			}
 		}
@@ -716,6 +775,11 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 	@Override
 	public void onDestroy() {
 		shutdown();
+
+		// Stop service background mode
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			stopForeground(true);
+		}
 		super.onDestroy();
 	}
 
@@ -738,39 +802,39 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 		}
 	}
 
-	public static AppLinkService getInstance() {
+	public static SdlService getInstance() {
 		return instance;
 	}
 
-	public SyncProxyALM getProxy() {
+	public SdlProxyALM getProxy() {
 		return proxy;
 	}
 
 	/**
 	 * Queue's a runnable that stops the service after a small delay,
-	 * unless the proxy reconnects to SYNC.
+	 * unless the proxy reconnects to SDL.
 	 */
 	public void stopService() {
 		mHandler.removeCallbacks(mStopServiceRunnable);
 		mHandler.postDelayed(mStopServiceRunnable, STOP_SERVICE_DELAY);
 	}
 
-	public void startProxy() {
+	public void startProxy(boolean forceConnect) {
 		if (proxy == null) {
 			try {
-				//proxy = new SyncProxyALM(this, "MobileWeather", true, "330533107");
-				BaseTransportConfig transport = new BTTransportConfig();
-				//BaseTransportConfig transport = new TCPTransportConfig(12345, "10.0.0.2", false);
-				proxy = new SyncProxyALM(this, "MobileWeather", false, mDesiredAppSyncLanguage, mDesiredAppHmiLanguage, "330533107", transport);
-				mRegisteredAppSyncLanguage = mDesiredAppSyncLanguage;
+				BaseTransportConfig transport= new MultiplexTransportConfig(getBaseContext(), APP_ID, MultiplexTransportConfig.FLAG_MULTI_SECURITY_OFF);
+				proxy = new SdlProxyALM(this, "MobileWeather", false, mDesiredAppSdlLanguage, mDesiredAppHmiLanguage, APP_ID, transport);
+				mRegisteredAppSdlLanguage = mDesiredAppSdlLanguage;
 				mRegisteredAppHmiLanguage = mDesiredAppHmiLanguage;				
-			} catch (SyncException e) {
+			} catch (SdlException e) {
 				e.printStackTrace();
 				// error creating proxy, returned proxy = null
 				if (proxy == null) {
 					stopSelf();
 				}
 			}
+		} else if(forceConnect){
+			proxy.forceOnConnected();
 		}
 	}
 
@@ -781,7 +845,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 	private void proxyCleanup() {
 		/*try {
 			mProxy.unsubscribevehicledata(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20, arg21, arg22, arg23, arg24);	
-		} catch (SyncException e) {
+		} catch (SdlException e) {
 			DebugTool.logError("Failed to unsubscribe from vehicle data", e);
 		}*/
 	}
@@ -790,7 +854,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 		if (proxy != null) {
 			try {
 				proxy.dispose();
-			} catch (SyncException e) {
+			} catch (SdlException e) {
 				e.printStackTrace();
 			}
 			proxy = null;
@@ -804,7 +868,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 		if (proxy != null) {
 			try {
 				proxy.resetProxy();
-			} catch (SyncException e1) {
+			} catch (SdlException e1) {
 				e1.printStackTrace();
 				// something goes wrong, & the proxy returns as null, stop the service.
 				// do not want a running service with a null proxy
@@ -813,7 +877,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 				}
 			}
 		} else {
-			startProxy();
+			startProxy(forceTransportConnect);
 		}
 	}
 
@@ -832,41 +896,41 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 			proxy.sendRPCRequest(showRequest);
 			mWelcomeCorrId = autoIncCorrId++;
 			proxy.speak((getResources().getString(R.string.welcome_speak)), mWelcomeCorrId);
-		} catch (SyncException e) {
-			Log.e(AppLinkApplication.TAG, "Failed to perform welcome message", e);
+		} catch (SdlException e) {
+			Log.e(SdlApplication.TAG, "Failed to perform welcome message", e);
 		}
 	}
 
 	@Override
-	public void onProxyClosed(String info, Exception e,	SyncDisconnectedReason reason) {
-		Log.i(AppLinkApplication.TAG, "onProxyClosed");
+	public void onProxyClosed(String info, Exception e,	SdlDisconnectedReason reason) {
+		Log.i(SdlApplication.TAG, "onProxyClosed");
 		LockScreenManager.clearLockScreen();
 		mFirstHmiNone = true;
 		mActiveInfoType = InfoType.NONE;
 
 		mLocalizationUtil.changeLocale(mLocalizationUtil.getLocaleLanguage(), mLocalizationUtil.getLocaleCountry(), getApplicationContext());
-		if ((((SyncException) e).getSyncExceptionCause() != SyncExceptionCause.SYNC_PROXY_CYCLED)) {
-			if (((SyncException) e).getSyncExceptionCause() != SyncExceptionCause.BLUETOOTH_DISABLED) {
-				Log.v(AppLinkApplication.TAG, "reset proxy in onproxy closed");
+		if ((((SdlException) e).getSdlExceptionCause() != SdlExceptionCause.SDL_PROXY_CYCLED)) {
+			if (((SdlException) e).getSdlExceptionCause() != SdlExceptionCause.BLUETOOTH_DISABLED) {
+				Log.v(SdlApplication.TAG, "reset proxy in onproxy closed");
 				reset();
 			}
 		}
 	}
 
-	private void getSyncSettings() {
+	private void getSdlSettings() {
 		mActiveInfoType = InfoType.NONE;
-		getSyncFiles();
+		getSdlFiles();
 		try {
 			// Change registration to match the language of the head unit if needed
 			mCurrentHmiLanguage = proxy.getHmiDisplayLanguage();
-			mCurrentSyncLanguage = proxy.getSyncLanguage();
+			mCurrentSdlLanguage = proxy.getSdlLanguage();
 
-			if (mCurrentHmiLanguage != null && mCurrentSyncLanguage != null) {
+			if (mCurrentHmiLanguage != null && mCurrentSdlLanguage != null) {
 				if ((mCurrentHmiLanguage.compareTo(mRegisteredAppHmiLanguage) != 0) ||
-						(mCurrentSyncLanguage.compareTo(mRegisteredAppSyncLanguage) != 0)) {
+						(mCurrentSdlLanguage.compareTo(mRegisteredAppSdlLanguage) != 0)) {
 					// determine to which locale the phone should be switched, register on Sync
-					mLocalizationUtil.determineLocale(mCurrentSyncLanguage);
-					proxy.changeregistration(mCurrentSyncLanguage, mCurrentHmiLanguage, autoIncCorrId++);
+					mLocalizationUtil.determineLocale(mCurrentSdlLanguage);
+					proxy.changeregistration(mCurrentSdlLanguage, mCurrentHmiLanguage, autoIncCorrId++);
 				}
 			}
 
@@ -886,8 +950,8 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 				mDataManager.setUnits(units);
 				LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
 			}
-		} catch (SyncException e) {
-			Log.e(AppLinkApplication.TAG, "Failed to change language", e);
+		} catch (SdlException e) {
+			Log.e(SdlApplication.TAG, "Failed to change language", e);
 		}
 
 		try {
@@ -901,10 +965,17 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 				if (gSupport != null) {
 					mGraphicsSupported = gSupport.booleanValue();
 				} else {
-					mGraphicsSupported = false;
+					mGraphicsSupported = false;	
 				}
-				mTextFields = displayCapabilities.getTextFields();
-				Vector<String> templates = displayCapabilities.getTemplatesAvailable();
+				
+				if (displayCapabilities.getTextFields() != null)
+					mTextFields = new ArrayList<TextField>(displayCapabilities.getTextFields());
+				
+				ArrayList<String> templates = null;
+				if (displayCapabilities.getTemplatesAvailable() != null)
+					templates = new ArrayList<String>(displayCapabilities.getTemplatesAvailable());
+				
+				
 				mDisplayLayoutSupported = false;
 				if (templates != null && templates.contains("NON-MEDIA")) {
 					mDisplayLayoutSupported = true;
@@ -933,13 +1004,13 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 							} else {
 								mLengthOfTextFields = field.getWidth();
 							}
-							Log.i(AppLinkApplication.TAG, String.format(Locale.getDefault(), "MainField Length: %d", mLengthOfTextFields));
+							Log.i(SdlApplication.TAG, String.format(Locale.getDefault(), "MainField Length: %d", mLengthOfTextFields));
 						}
 					}
 				}
 			}
-		} catch (SyncException e) {
-			Log.e(AppLinkApplication.TAG, "Failed to get display capabilities", e);
+		} catch (SdlException e) {
+			Log.e(SdlApplication.TAG, "Failed to get display capabilities", e);
 		}
 
 		// Upload files if graphics supported
@@ -951,7 +1022,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 		/*try { 
 			// Subscribe to speed, external temperature, and deviceStatus
 			mProxy.subscribevehicledata(, mAutoIncCorrId++);
-		}catch(SyncException e) {
+		}catch(SdlException e) {
 			DebugTool.logError("Failed to subscribe to vehicle data", e); 
 		}*/
 
@@ -962,7 +1033,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 			layoutRequest.setCorrelationID(autoIncCorrId++);
 			try {
 				proxy.sendRPCRequest(layoutRequest);
-			} catch (SyncException e) {}
+			} catch (SdlException e) {}
 		}
 
 		mFirstHmiNone = false;
@@ -1018,11 +1089,11 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 
 		switch (currentHMILevel) {
 		case HMI_FULL:
-			Log.i(AppLinkApplication.TAG, "HMI_FULL");
+			Log.i(SdlApplication.TAG, "HMI_FULL");
 			mLocalizationUtil.changeLocale(mLocalizationUtil.getAdjustedLocaleLanguage(), mLocalizationUtil.getAdjustedLocaleCountry(), getApplicationContext());
 			// refresh softbuttons
 			mShowConditions.setText(getResources().getString(R.string.sb1));
-			mShowExtendedForecast.setText(getResources().getString(R.string.sb3));
+			mShowDailyForecast.setText(getResources().getString(R.string.sb3));
 			mShowHourlyForecast.setText(getResources().getString(R.string.sb4));
 			mShowBack.setText(getResources().getString(R.string.sb3_back));
 			mShowListItems.setText(getResources().getString(R.string.sb3_list));
@@ -1031,8 +1102,8 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 				try {
 					proxy.setGlobalProperties((getResources().getString(R.string.gp_help_prompt)), 
 							(getResources().getString(R.string.gp_timeout_prompt)), autoIncCorrId++);
-				} catch (SyncException e) {
-					Log.e(AppLinkApplication.TAG, "Failed to setup global properties", e);
+				} catch (SdlException e) {
+					Log.e(SdlApplication.TAG, "Failed to setup global properties", e);
 				}
 
 				// Perform welcome
@@ -1049,18 +1120,18 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 			}
 			break;
 		case HMI_LIMITED:
-			Log.i(AppLinkApplication.TAG, "HMI_LIMITED");
+			Log.i(SdlApplication.TAG, "HMI_LIMITED");
 			break;
 		case HMI_BACKGROUND:
-			Log.i(AppLinkApplication.TAG, "HMI_BACKGROUND");
+			Log.i(SdlApplication.TAG, "HMI_BACKGROUND");
 			if (mFirstHmiNone) {
-				getSyncSettings();
+				getSdlSettings();
 			}
 			break;
 		case HMI_NONE:
-			Log.i(AppLinkApplication.TAG, "HMI_NONE");
+			Log.i(SdlApplication.TAG, "HMI_NONE");
 			if (mFirstHmiNone) {
-				getSyncSettings();
+				getSdlSettings();
 			} else {
 				// write back the original locales of the app
 				mLocalizationUtil.changeLocale(mLocalizationUtil.getLocaleLanguage(), mLocalizationUtil.getLocaleCountry(), getApplicationContext());
@@ -1077,31 +1148,27 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 		try {
 			vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_current), getResources().getString(R.string.vr_current_cond)));
 			proxy.addCommand(VIEW_CURRENT_CONDITIONS, getResources().getString(R.string.cmd_current_cond), vrCommands, autoIncCorrId++);
-			
+
 			vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_daily), 
 					getResources().getString(R.string.vr_daily_forecast)));
-			/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
 			daily_forecast_cmd_added_corrId = autoIncCorrId;
-			/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
-			proxy.addCommand(VIEW_EXTENDED_FORECAST, getResources().getString(R.string.cmd_daily_forecast), vrCommands, autoIncCorrId++);
-			
-			
+			proxy.addCommand(VIEW_DAILY_FORECAST, getResources().getString(R.string.cmd_daily_forecast), vrCommands, autoIncCorrId++);
+
 			vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_change_units), 
 					getResources().getString(R.string.vr_units)));
 			proxy.addCommand(CHANGE_UNITS, getResources().getString(R.string.cmd_change_units), vrCommands, autoIncCorrId++);
-			
+
 			vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_hourly),
 					getResources().getString(R.string.vr_hourly_forecast)));
-			/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
 			hourly_forecast_cmd_added_corrId = autoIncCorrId;
-			/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
 			proxy.addCommand(VIEW_HOURLY_FORECAST, getResources().getString(R.string.cmd_hourly_forecast), vrCommands, autoIncCorrId++);
-			
+
 			vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_alerts)));
 			proxy.addCommand(VIEW_ALERTS, getResources().getString(R.string.cmd_alerts), vrCommands, autoIncCorrId++);
-			} catch (SyncException e) {
+			
+			} catch (SdlException e) {
 				e.printStackTrace();
-				Log.e(AppLinkApplication.TAG, "Failed to add commands", e);
+				Log.e(SdlApplication.TAG, "Failed to add commands", e);
 			}
 		}
 	
@@ -1117,25 +1184,25 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 			imperialChoice.setMenuName(getResources().getString(R.string.choice_imperial_menue));
 			imperialChoice.setVrCommands(new Vector<String>(Arrays.asList(getResources().getString(R.string.choice_imperial_vr))));
 			proxy.createInteractionChoiceSet(new Vector<Choice>(Arrays.asList(metricChoice,	imperialChoice)), CHANGE_UNITS_CHOICESET, autoIncCorrId++);
-		} catch (SyncException e) {
+		} catch (SdlException e) {
 			e.printStackTrace();
-			Log.e(AppLinkApplication.TAG, "Failed to create IntereactionChoiceSet for changing units", e);
+			Log.e(SdlApplication.TAG, "Failed to create IntereactionChoiceSet for changing units", e);
 		}
 	}
 	
 	private void subscribeButtons() {
 		try {
 			proxy.subscribeButton(ButtonName.PRESET_1, autoIncCorrId++);		
-		} catch (SyncException e) {
+		} catch (SdlException e) {
 			e.printStackTrace();
-			Log.e(AppLinkApplication.TAG, "Failed to subscribe to button \"PRESET_1\"", e);
+			Log.e(SdlApplication.TAG, "Failed to subscribe to button \"PRESET_1\"", e);
 		}
 	}
 
 	private void uploadFiles() {
 		if (mUploadedFiles == null || 
 				!mUploadedFiles.contains(APP_ICON)) {
-			uploadFile("ic_launcher");
+			uploadFile(APP_ICON_NAME);
 		}
 	}
 
@@ -1145,32 +1212,32 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 			ByteArrayOutputStream stream = new ByteArrayOutputStream();
 			bm.compress(Bitmap.CompressFormat.PNG, 100, stream);
 			PutFile putfileRequest = new PutFile();
-			putfileRequest.setSyncFileName(fileResource + ".png");
+			putfileRequest.setSdlFileName(fileResource + ".png");
 			putfileRequest.setFileType(FileType.GRAPHIC_PNG);
 			putfileRequest.setSystemFile(false);
 			putfileRequest.setPersistentFile(true);
 			putfileRequest.setCorrelationID(autoIncCorrId++);
 			putfileRequest.setBulkData(stream.toByteArray());
-			mPutFileMap.put(putfileRequest.getCorrelationID(), putfileRequest.getSyncFileName());
+			mPutFileMap.put(putfileRequest.getCorrelationID(), putfileRequest.getSdlFileName());
 			try {
 				stream.close();
 				proxy.sendRPCRequest(putfileRequest);
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
-			} catch (SyncException e) {
+			} catch (SdlException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
 	}
 
-	private void getSyncFiles() {
+	private void getSdlFiles() {
 		ListFiles request = new ListFiles();
 		request.setCorrelationID(autoIncCorrId++);
 		try {
 			proxy.sendRPCRequest(request);
-		} catch (SyncException e) {
+		} catch (SdlException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -1224,7 +1291,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 				mappedName = ImageProcessor.getMappedConditionsImageName(imageName, false);
 				if (mappedName != null) {
 					mConditionIconFileName = mappedName + ".png";
-					Log.i(AppLinkApplication.TAG, "Conditions file: " + mConditionIconFileName);
+					Log.i(SdlApplication.TAG, "Conditions file: " + mConditionIconFileName);
 					if (!mUploadedFiles.contains(mConditionIconFileName)) {
 						putFilePending = true;
 					}
@@ -1269,10 +1336,10 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 			showRequest.setGraphic(conditionsImage);
 
 			if (mDisplayType != DisplayType.CID && mDisplayType != DisplayType.NGN) {
-				Log.d(AppLinkApplication.TAG, "Sending soft buttons");
+				Log.d(SdlApplication.TAG, "Sending soft buttons");
 				Vector<SoftButton> softButtons = new Vector<SoftButton>();
 				softButtons.add(mShowConditions);
-				softButtons.add(mShowExtendedForecast);
+				softButtons.add(mShowDailyForecast);
 				softButtons.add(mShowHourlyForecast);
 				showRequest.setSoftButtons(softButtons);
 			}
@@ -1285,7 +1352,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 				} 
 				else {
 					if (showRequest.getGraphic() != null) {
-						Log.i(AppLinkApplication.TAG, String.format(Locale.getDefault(), "Show image: %s", showRequest.getGraphic().getValue()));
+						Log.i(SdlApplication.TAG, String.format(Locale.getDefault(), "Show image: %s", showRequest.getGraphic().getValue()));
 					}
 					proxy.sendRPCRequest(showRequest);
 				}
@@ -1310,7 +1377,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 					speakRequest.setCorrelationID(autoIncCorrId++);
 					proxy.sendRPCRequest(speakRequest);
 				}
-			} catch (SyncException e) {}
+			} catch (SdlException e) {}
 		} else {
 			showNoConditionsAvail();
 		}
@@ -1338,7 +1405,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 				proxy.speak(getResources().getString(R.string.conditions_speak),autoIncCorrId++);
 				mFirstUnknownError = false;
 			}
-		} catch (SyncException e) {
+		} catch (SdlException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -1384,7 +1451,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 		try {
 			proxy.sendRPCRequest(showRequest);
 			proxy.speak(errorTTSStr, autoIncCorrId++);
-		} catch (SyncException e) {
+		} catch (SdlException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -1404,7 +1471,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 		else{
 			mShowPrevItem.setText(getResources().getString(R.string.sb1_prev));
 		}
-		if( ((mActiveInfoType == InfoType.EXTENDED_FORECAST) && (forecast_item_counter == EXTENDED_FORECAST_DAYS - 1)) || 
+		if( ((mActiveInfoType == InfoType.DAILY_FORECAST) && (forecast_item_counter == DAILY_FORECAST_DAYS - 1)) || 
 				((mActiveInfoType == InfoType.HOURLY_FORECAST) && (forecast_item_counter == HOURLY_FORECAST_HOURS - 1)) ) {
 			mShowNextItem.setText("-");
 		}
@@ -1470,12 +1537,12 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 			} 
 			else {
 				if (showRequest.getGraphic() != null) {
-					Log.i(AppLinkApplication.TAG, String.format(Locale.getDefault(), "Show image: %s", showRequest.getGraphic().getValue()));
+					Log.i(SdlApplication.TAG, String.format(Locale.getDefault(), "Show image: %s", showRequest.getGraphic().getValue()));
 				}
 				proxy.sendRPCRequest(showRequest);
 			}
 		}
-		catch (SyncException e) {}
+		catch (SdlException e) {}
 		
 		if(includeSpeak){
 			Vector<TTSChunk> chunks = new Vector<TTSChunk>();
@@ -1489,7 +1556,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 			speakRequest.setCorrelationID(autoIncCorrId++);
 			try {
 				proxy.sendRPCRequest(speakRequest);
-			} catch (SyncException e) {}
+			} catch (SdlException e) {}
 		}
 		return;
 	}
@@ -1507,9 +1574,9 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 					delete_HourlyForecast_ChoiceSet_corrId = autoIncCorrId;
 					proxy.deleteInteractionChoiceSet(mHourlyForecast_ChoiceSetID, autoIncCorrId++);
 				}
-				catch (SyncException e) {
+				catch (SdlException e) {
 					e.printStackTrace();
-					Log.e(AppLinkApplication.TAG, "Failed to send deleteInteractionChoiceSet for Hourly Forecast", e);
+					Log.e(SdlApplication.TAG, "Failed to send deleteInteractionChoiceSet for Hourly Forecast", e);
 				}
 			}
 		} 
@@ -1521,9 +1588,9 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 					delete_DailyForecast_ChoiceSet_corrId = autoIncCorrId;
 					proxy.deleteInteractionChoiceSet(mDailyForecast_ChoiceSetID, autoIncCorrId++);
 				}
-				catch (SyncException e) {
+				catch (SdlException e) {
 					e.printStackTrace();
-					Log.e(AppLinkApplication.TAG, "Failed to send deleteInteractionChoiceSet for Daily Forecast", e);
+					Log.e(SdlApplication.TAG, "Failed to send deleteInteractionChoiceSet for Daily Forecast", e);
 				}
 			}		
 		}
@@ -1706,7 +1773,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 					forecast_items[forecastCounter].showString =  showStrings;
 				}
 			}
-			if ((mActiveInfoType == InfoType.HOURLY_FORECAST) || (mActiveInfoType == InfoType.EXTENDED_FORECAST)){	
+			if ((mActiveInfoType == InfoType.HOURLY_FORECAST) || (mActiveInfoType == InfoType.DAILY_FORECAST)){	
 				createForecastChoiceSet();
 			}
 			writeDisplay(includeSpeak);		
@@ -1850,7 +1917,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 				commands.add(listChoice12);
 				
 				if (!commands.isEmpty()) {
-					Log.d(AppLinkApplication.TAG, "send HourlyChoiceSet to SYNC");
+					Log.d(SdlApplication.TAG, "send HourlyChoiceSet to SDL");
 					CreateInteractionChoiceSet choiceset_rpc = new CreateInteractionChoiceSet();
 					create_HourlyForecast_ChoiceSet_corrId = autoIncCorrId;	
 					choiceset_rpc.setCorrelationID(autoIncCorrId++);
@@ -1860,15 +1927,15 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 					try {
 						proxy.sendRPCRequest(choiceset_rpc);
 					}
-					catch (SyncException e) {
+					catch (SdlException e) {
 						e.printStackTrace();
-						Log.e(AppLinkApplication.TAG, "Failed to create ChoiceSets Hourly Forecast List", e);
+						Log.e(SdlApplication.TAG, "Failed to create ChoiceSets Hourly Forecast List", e);
 					}
 				}
 			}
 			
 			/* Choices for Daily Forecast to be created */
-			else if(mActiveInfoType == InfoType.EXTENDED_FORECAST) {
+			else if(mActiveInfoType == InfoType.DAILY_FORECAST) {
 				Vector<Choice> commands = new Vector<Choice>();
 
 				Choice listChoice1 = new Choice();
@@ -1944,7 +2011,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 				commands.add(listChoice8);
 
 				if (!commands.isEmpty()) {
-					Log.d(AppLinkApplication.TAG, "send DayChoiceSet to SYNC");
+					Log.d(SdlApplication.TAG, "send DayChoiceSet to SDL");
 					CreateInteractionChoiceSet choiceset_rpc = new CreateInteractionChoiceSet();
 					create_DailyForecast_ChoiceSet_corrId = autoIncCorrId;
 					choiceset_rpc.setCorrelationID(autoIncCorrId++);
@@ -1954,14 +2021,14 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 					try {
 						proxy.sendRPCRequest(choiceset_rpc);
 					}
-					catch (SyncException e) {
+					catch (SdlException e) {
 						e.printStackTrace();
-						Log.e(AppLinkApplication.TAG, "Failed to create ChoiceSets Daily Forecast List", e);
+						Log.e(SdlApplication.TAG, "Failed to create ChoiceSets Daily Forecast List", e);
 					}
 				}
 			}
 			else{
-				Log.d(AppLinkApplication.TAG, "CreateInteractioinChoiceSet requested for something else than hourly or daily forecast");
+				Log.d(SdlApplication.TAG, "CreateInteractioinChoiceSet requested for something else than hourly or daily forecast");
 			}
 		}	
 		
@@ -1969,8 +2036,8 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 		showForecast(includeSpeak, STANDARD_FORECAST_DAYS);
 	}
 
-	private void showExtendedForecast(boolean includeSpeak) {
-		showForecast(includeSpeak, EXTENDED_FORECAST_DAYS);
+	private void showDailyForecast(boolean includeSpeak) {
+		showForecast(includeSpeak, DAILY_FORECAST_DAYS);
 	}
 
 	private void showAlerts(boolean includeSpeak) {
@@ -2012,7 +2079,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 
 			Vector<SoftButton> softButtons = new Vector<SoftButton>();
 			softButtons.add(mShowConditions);
-			softButtons.add(mShowExtendedForecast);
+			softButtons.add(mShowDailyForecast);
 			softButtons.add(mShowHourlyForecast);
 
 			mTimedShowRunnable = new TimedShowRunnable(showStrings,	softButtons, 0, TIMED_SHOW_DELAY);
@@ -2031,7 +2098,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 				speakRequest.setCorrelationID(autoIncCorrId++);
 				try {
 					proxy.sendRPCRequest(speakRequest);
-				} catch (SyncException e) {}
+				} catch (SdlException e) {}
 			}
 		} else {
 			try {
@@ -2048,7 +2115,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 				if (includeSpeak) {
 					proxy.speak(getResources().getString(R.string.weather_alerts_speak), autoIncCorrId++);
 				}
-			} catch (SyncException e) {
+			} catch (SdlException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
@@ -2061,7 +2128,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 
 		String speakString = String.format(Locale.getDefault(), getResources().getString(R.string.weather_alerts_expires_at), 
 				alert.message, timeString.replace(':', ' ').replace("00", ""));
-		Log.d(AppLinkApplication.TAG, "performWeatherAlert: speak string - " + speakString);
+		Log.d(SdlApplication.TAG, "performWeatherAlert: speak string - " + speakString);
 
 		Vector<TTSChunk> chunks = new Vector<TTSChunk>();
 		TTSChunk chunk = new TTSChunk();
@@ -2078,7 +2145,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 		alertRequest.setCorrelationID(coId);
 		try {
 			proxy.sendRPCRequest(alertRequest);
-		} catch (SyncException e) {}
+		} catch (SdlException e) {}
 	}
 
 	private void showHourlyForecast(boolean includeSpeak) {
@@ -2090,8 +2157,8 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 		case WEATHER_CONDITIONS:
 			showWeatherConditions(includeSpeaks);
 			break;
-		case EXTENDED_FORECAST:
-			showExtendedForecast(includeSpeaks);
+		case DAILY_FORECAST:
+			showDailyForecast(includeSpeaks);
 			break;
 		case STANDARD_FORECAST:
 			showStandardForecast(includeSpeaks);
@@ -2141,7 +2208,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 					haveNewAlerts = true;
 					mAlertQueue.add(alert);
 				} else {
-					Log.v(AppLinkApplication.TAG, "Ignored alert as old: " + alert.message);
+					Log.v(SdlApplication.TAG, "Ignored alert as old: " + alert.message);
 				}
 			}
 		}
@@ -2166,278 +2233,28 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 	@Override
 	public void onOnCommand(OnCommand notification) {	
 		int mtemp_counter = forecast_item_counter;
-		Vector<String> vrCommands = null;	
+			
 		if (notification != null) {
 			int command = notification.getCmdID();
 			switch (command) {
 			case VIEW_CURRENT_CONDITIONS:
 				mActiveInfoType = InfoType.WEATHER_CONDITIONS;
-				try {
-					previous_cmd_deleted_corrId = autoIncCorrId;
-					proxy.deleteCommand(PREVIOUS, autoIncCorrId++);
-				} catch (SyncException e) {
-					Log.e(AppLinkApplication.TAG, "Failed to delete command \"Previous\"", e);
-				}
-
-				try {
-					next_cmd_deleted_corrId = autoIncCorrId;
-					proxy.deleteCommand(NEXT, autoIncCorrId++);
-				} catch (SyncException e) {
-					Log.e(AppLinkApplication.TAG, "Failed to delete command \"Next\"", e);
-				}
-
-				try {
-					proxy.deleteCommand(BACK, autoIncCorrId++);
-				} catch (SyncException e) {
-					Log.e(AppLinkApplication.TAG, "Failed to delete command \"Back\"", e);
-				}
-				if(now_cmd_added == true) {
-					try {
-						now_cmd_deleted_corrId = autoIncCorrId;
-						proxy.deleteCommand(NOW, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete voice command \"Now\"", e);
-					}
-				}
-				if(today_cmd_added == true) {
-					try {
-						today_cmd_deleted_corrId = autoIncCorrId;
-						proxy.deleteCommand(TODAY, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete voice command \"Today\"", e);
-					}
-				}
-				if(tomorrow_cmd_added == true) {
-					try {
-						tomorrow_cmd_deleted_corrId = autoIncCorrId;
-						proxy.deleteCommand(TOMORROW, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete voice command \"Tomorrow\"", e);
-					}
-				}
-
-				if(list_cmd_added == true) {
-					try {
-						list_cmd_deleted_corrId = autoIncCorrId;
-						proxy.deleteCommand(LIST, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete voice command \"List\"", e);
-					}	
-				}
+				/* add cmds relevant for Current Weather Conditions, remove cmds not needed */
+				prepareCurrentCondCmds();	
 				break;
 			case VIEW_STANDARD_FORECAST:
 				mActiveInfoType = InfoType.STANDARD_FORECAST;
 				break;
-			case VIEW_EXTENDED_FORECAST:
-				mActiveInfoType = InfoType.EXTENDED_FORECAST;
-				/* add command (voice & menue) "Next" */
-				if(next_cmd_added == false) {
-					try {
-						next_cmd_added_corrId = autoIncCorrId;
-						vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_next)));
-						proxy.addCommand(NEXT, getResources().getString(R.string.cmd_next), vrCommands, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to add command \"Next\"", e);
-					}
-				}				
-				/* add command "Back" */
-				try {
-					vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_back)));
-					proxy.addCommand(BACK, getResources().getString(R.string.cmd_back), vrCommands, autoIncCorrId++);
-				} 
-				catch(SyncException e) {
-					Log.e(AppLinkApplication.TAG, "Failed to add command \"Back\"", e);
-				}		
-				/* add vc "Tomorrow" */
-				if(tomorrow_cmd_added == false) {
-					try {
-						tomorrow_cmd_added_corrId = autoIncCorrId;
-						vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_tomorrow)));
-						proxy.addCommand(TOMORROW, getResources().getString(R.string.cmd_tomorrow), vrCommands, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to add voice command \"Tomorrow\"", e);
-					}
-				}	
-				/* add vc "Today" */
-				if(today_cmd_added == false) {
-					try {
-						today_cmd_added_corrId = autoIncCorrId;
-						vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_today)));
-						proxy.addCommand(TODAY, getResources().getString(R.string.cmd_today), vrCommands, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to add voice command \"Today\"", e);
-					}
-				}				
-				/* add vc "List" */
-				if(list_cmd_added == false) {
-					try {
-						list_cmd_added_corrId = autoIncCorrId;
-						vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_list)));
-						proxy.addCommand(LIST, "List", vrCommands, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to add voice command \"List\"", e);
-					}	
-				}
-				if(now_cmd_added == true) {
-					try {
-						now_cmd_deleted_corrId = autoIncCorrId;
-						proxy.deleteCommand(NOW, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete voice command \"Now\"", e);
-					}
-				}
-				
-				
-				/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
-				if(daily_forecast_cmd_added == true) {
-					try {
-						daily_forecast_cmd_deleted_corrId = autoIncCorrId;
-						proxy.deleteCommand(VIEW_EXTENDED_FORECAST, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete command \"Daily Forecast\"", e);
-					}
-				}
-				
-				if(hourly_forecast_cmd_added == false ) {
-
-					try {
-						vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_hourly),
-								getResources().getString(R.string.vr_hourly_forecast)));
-						hourly_forecast_cmd_added_corrId = autoIncCorrId;	
-						proxy.addCommand(VIEW_HOURLY_FORECAST, getResources().getString(R.string.cmd_hourly_forecast), vrCommands, autoIncCorrId++);
-
-					}
-					catch (SyncException e) {
-						e.printStackTrace();
-						Log.e(AppLinkApplication.TAG, "Failed to send deleteCommand for Hourly Forecast", e);
-					}
-				}
-				
-				
-				/*
-				private Boolean daily_forecast_cmd_added = false;
-				private Boolean hourly_forecast_cmd_added = false;
-				private int daily_forecast_cmd_added_corrId = 0;
-				private int daily_forecast_cmd_deleted_corrId = 0; 
-				private int hourly_forecast_cmd_added_corrId = 0;
-				private int hourly_forecast_cmd_deleted_corrId = 0;
-				*/
-				
-				/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
-				
-				
+			case VIEW_DAILY_FORECAST:
+				mActiveInfoType = InfoType.DAILY_FORECAST;
+				/* add cmds relevant for Daily Forecast, remove cmds not needed */
+				prepareDailyForecastCmds();				
 				mtemp_counter = 0;
 				break;
 			case VIEW_HOURLY_FORECAST:
 				mActiveInfoType = InfoType.HOURLY_FORECAST;
-				if(next_cmd_added == false) {
-					try {
-						next_cmd_added_corrId = autoIncCorrId;
-						vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_next)));
-						proxy.addCommand(NEXT, getResources().getString(R.string.cmd_next), vrCommands, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to add command \"Next\"", e);
-					}
-				}
-				try {
-					vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_back)));
-					proxy.addCommand(BACK, getResources().getString(R.string.cmd_back), vrCommands, autoIncCorrId++);
-				} 
-				catch(SyncException e) {
-					Log.e(AppLinkApplication.TAG, "Failed to add command \"Back\"", e);
-				}
-				/* add vc "Now" */
-				try {
-					now_cmd_added_corrId = autoIncCorrId;
-					vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_now)));
-					proxy.addCommand(NOW, getResources().getString(R.string.cmd_now), vrCommands, autoIncCorrId++);
-				} 
-				catch(SyncException e) {
-					Log.e(AppLinkApplication.TAG, "Failed to add voice command \"Now\"", e);
-				}
-				/* add vc "List" */
-				if(list_cmd_added == false) {
-					try {
-						list_cmd_added_corrId = autoIncCorrId;
-						vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_list)));
-						proxy.addCommand(LIST, "List", vrCommands, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to add voice command \"List\"", e);
-					}	
-				}
-				/* delete cmd "Today" */
-				if(today_cmd_added == true) {
-					try {
-						today_cmd_deleted_corrId = autoIncCorrId;
-						proxy.deleteCommand(TODAY, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete voice command \"Today\"", e);
-					}
-				}
-				/* delete cmd "Tomorrow" */
-				if(tomorrow_cmd_added == true) {
-					try {
-						tomorrow_cmd_deleted_corrId = autoIncCorrId;
-						proxy.deleteCommand(TOMORROW, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete voice command \"Tomorrow\"", e);
-					}
-				}
-				
-				
-				/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
-				if(hourly_forecast_cmd_added == true) {
-					try {
-						hourly_forecast_cmd_deleted_corrId = autoIncCorrId;
-						proxy.deleteCommand(VIEW_HOURLY_FORECAST, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete command \"Hourly Forecast\"", e);
-					}
-				}
-				
-				/* add cmd "Daily Forecast" */
-				if(daily_forecast_cmd_added == false) {
-					try {
-
-						vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_daily), 
-								getResources().getString(R.string.vr_daily_forecast)));
-						daily_forecast_cmd_added_corrId = autoIncCorrId;
-						proxy.addCommand(VIEW_EXTENDED_FORECAST, getResources().getString(R.string.cmd_daily_forecast), vrCommands, autoIncCorrId++);
-					}
-					catch (SyncException e) {
-						e.printStackTrace();
-						Log.e(AppLinkApplication.TAG, "Failed to send deleteCommand for Daily Forecast", e);
-					}
-				}
-				
-				
-				/*
-				private Boolean daily_forecast_cmd_added = false;
-				private Boolean hourly_forecast_cmd_added = false;
-				private int daily_forecast_cmd_added_corrId = 0;
-				private int daily_forecast_cmd_deleted_corrId = 0; 
-				private int hourly_forecast_cmd_added_corrId = 0;
-				private int hourly_forecast_cmd_deleted_corrId = 0;
-				*/
-				
-				/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
-				
-
+				/* add cmds relevant for Hourly Forecast, remove cmds not needed */
+				prepareHourlyForecastCmds();
 				mtemp_counter = 0;
 				break;
 			case VIEW_ALERTS:
@@ -2454,19 +2271,18 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 						next_cmd_deleted_corrId = autoIncCorrId;
 						proxy.deleteCommand(NEXT, autoIncCorrId++);
 					} 
-					catch (SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete command \"Next\"", e);
+					catch (SdlException e) {
+						Log.e(SdlApplication.TAG, "Failed to delete command \"Next\"", e);
 					}
 					
 					try {
 						proxy.speak("You have reached the end of the forecast list", autoIncCorrId++);
 					}
-					catch (SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to perform speak", e);
+					catch (SdlException e) {
+						Log.e(SdlApplication.TAG, "Failed to perform speak", e);
 					}
 				}
 				return;
-		
 			case PREVIOUS:			
 				mtemp_counter--;
 				if(mtemp_counter >= 0) {
@@ -2474,8 +2290,8 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 						try {
 							previous_cmd_deleted_corrId = autoIncCorrId;
 							proxy.deleteCommand(PREVIOUS, autoIncCorrId++);
-						} catch (SyncException e) {
-							Log.e(AppLinkApplication.TAG, "Failed to delete command \"Previous\"", e);
+						} catch (SdlException e) {
+							Log.e(SdlApplication.TAG, "Failed to delete command \"Previous\"", e);
 						}
 					}
 					forecast_item_counter = mtemp_counter;
@@ -2485,8 +2301,8 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 					try {
 						proxy.speak("You have reached the beginning of the forecast list", autoIncCorrId++);
 					}
-					catch (SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to perform speak", e);
+					catch (SdlException e) {
+						Log.e(SdlApplication.TAG, "Failed to perform speak", e);
 					}
 				}
 				return;
@@ -2494,165 +2310,14 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 			case LIST:
 				mTimedShowHandler.removeCallbacks(mTimedShowRunnable);
 				forecast_item_counter = 0;
-				
-				String initialPrompt = "";
-				String helpPrompt = "";
-				String timeoutPrompt = getResources().getString(R.string.interaction_forecastlist_timeoutprompt);
-				String initialText = "";
-
-				if (mActiveInfoType == InfoType.HOURLY_FORECAST) {
-					initialPrompt = getResources().getString(R.string.interaction_hourly_forecastlist_initprompt); 
-					helpPrompt = getResources().getString(R.string.interaction_hourly_forecastlist_helpprompt); 
-					initialText = getResources().getString(R.string.interaction_hourly_forecastlist_inittext); 	
-				}
-				if (mActiveInfoType == InfoType.EXTENDED_FORECAST) {
-					initialPrompt = getResources().getString(R.string.interaction_daily_forecastlist_initprompt);
-					helpPrompt = getResources().getString(R.string.interaction_daily_forecastlist_helpprompt);
-					initialText = getResources().getString(R.string.interaction_daily_forecastlist_inittext); 
-				}	
-				
-				Vector<TTSChunk> intitial_prompt = TTSChunkFactory.createSimpleTTSChunks(initialPrompt);
-				Vector<TTSChunk> help_prompt = TTSChunkFactory.createSimpleTTSChunks(helpPrompt);
-				Vector<TTSChunk> timeout_prompt = TTSChunkFactory.createSimpleTTSChunks(timeoutPrompt);
-				Vector<Integer> interactionChoiceSetIDs = new Vector<Integer>();
-				if(mActiveInfoType == InfoType.EXTENDED_FORECAST) {
-					interactionChoiceSetIDs.add(mDailyForecast_ChoiceSetID);
-				}
-				if(mActiveInfoType == InfoType.HOURLY_FORECAST) {
-					interactionChoiceSetIDs.add(mHourlyForecast_ChoiceSetID);
-				}
-
-				PerformInteraction performInterActionRequest = new PerformInteraction();
-				performInterActionRequest.setInitialPrompt(intitial_prompt);
-				performInterActionRequest.setHelpPrompt(help_prompt);
-				performInterActionRequest.setTimeoutPrompt(timeout_prompt);
-				performInterActionRequest.setInitialText(initialText);
-				performInterActionRequest.setTimeout(100000);
-				performInterActionRequest.setInteractionChoiceSetIDList(interactionChoiceSetIDs);
-				performInterActionRequest.setInteractionMode(InteractionMode.MANUAL_ONLY);
-				performInterActionRequest.setCorrelationID(autoIncCorrId++);				
-				try {
-					proxy.sendRPCRequest(performInterActionRequest);
-				}
-				catch (SyncException e) {
-					e.printStackTrace();
-					Log.e(AppLinkApplication.TAG, "Failed to perform interaction \"Daily/Hourly Forecast List\"", e);
-				}
+				prepareListItemsCmds();			
 				return;
 							
 			case BACK:
 				mActiveInfoType = InfoType.WEATHER_CONDITIONS;
-				try {
-					previous_cmd_deleted_corrId = autoIncCorrId;
-					proxy.deleteCommand(PREVIOUS, autoIncCorrId++);
-				} catch (SyncException e) {
-					Log.e(AppLinkApplication.TAG, "Failed to delete command \"Previous\"", e);
-				}
-				
-				try {
-					next_cmd_deleted_corrId = autoIncCorrId;
-					proxy.deleteCommand(NEXT, autoIncCorrId++);
-				} catch (SyncException e) {
-					Log.e(AppLinkApplication.TAG, "Failed to delete command \"Next\"", e);
-				}
-				
-				try {
-					proxy.deleteCommand(BACK, autoIncCorrId++);
-				} catch (SyncException e) {
-					Log.e(AppLinkApplication.TAG, "Failed to delete command \"Back\"", e);
-				}
-				if(now_cmd_added == true) {
-					try {
-						now_cmd_deleted_corrId = autoIncCorrId;
-						proxy.deleteCommand(NOW, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete voice command \"Now\"", e);
-					}
-				}
-				if(today_cmd_added == true) {
-					try {
-						today_cmd_deleted_corrId = autoIncCorrId;
-						proxy.deleteCommand(TODAY, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete voice command \"Today\"", e);
-					}
-				}
-				if(tomorrow_cmd_added == true) {
-					try {
-						tomorrow_cmd_deleted_corrId = autoIncCorrId;
-						proxy.deleteCommand(TOMORROW, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete voice command \"Tomorrow\"", e);
-					}
-				}
-				
-				if(list_cmd_added == true) {
-					try {
-						list_cmd_deleted_corrId = autoIncCorrId;
-						proxy.deleteCommand(LIST, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete voice command \"List\"", e);
-					}	
-				}
-				if(HourlyForecast_ChoiceSet_created) {
-					try {
-						delete_HourlyForecast_ChoiceSet_corrId = autoIncCorrId;
-						proxy.deleteInteractionChoiceSet(mHourlyForecast_ChoiceSetID, autoIncCorrId++);
-					}
-					catch (SyncException e) {
-						e.printStackTrace();
-						Log.e(AppLinkApplication.TAG, "Failed to send deleteInteractionChoiceSet for Hourly Forecast", e);
-					}
-				}
-				if(DailyForecast_ChoiceSet_created) {
-					try {
-						delete_DailyForecast_ChoiceSet_corrId = autoIncCorrId;
-						proxy.deleteInteractionChoiceSet(mDailyForecast_ChoiceSetID, autoIncCorrId++);
-					}
-					catch (SyncException e) {
-						e.printStackTrace();
-						Log.e(AppLinkApplication.TAG, "Failed to send deleteInteractionChoiceSet for Daily Forecast", e);
-					}
-				}
-								
-				/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
-				if(daily_forecast_cmd_added == false) {
-					try {
-
-						vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_daily), 
-								getResources().getString(R.string.vr_daily_forecast)));
-						daily_forecast_cmd_added_corrId = autoIncCorrId;
-						proxy.addCommand(VIEW_EXTENDED_FORECAST, getResources().getString(R.string.cmd_daily_forecast), vrCommands, autoIncCorrId++);
-					}
-					catch (SyncException e) {
-						e.printStackTrace();
-						Log.e(AppLinkApplication.TAG, "Failed to send deleteCommand for Daily Forecast", e);
-					}
-				}
-				/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
-
-				
-				/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
-				if(hourly_forecast_cmd_added == false ) {
-
-					try {
-						vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_hourly),
-								getResources().getString(R.string.vr_hourly_forecast)));
-						hourly_forecast_cmd_added_corrId = autoIncCorrId;	
-						proxy.addCommand(VIEW_HOURLY_FORECAST, getResources().getString(R.string.cmd_hourly_forecast), vrCommands, autoIncCorrId++);
-
-					}
-					catch (SyncException e) {
-						e.printStackTrace();
-						Log.e(AppLinkApplication.TAG, "Failed to send deleteCommand for Hourly Forecast", e);
-					}
-				}
-				/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
-				
+				mShowConditions.setIsHighlighted(true);
+				mShowBack.setIsHighlighted(false);
+			    prepareBackCmds();	    				
 				forecast_item_counter = 0;
 				updateHmi(false);
 				return;
@@ -2662,15 +2327,15 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 				break;
 			case TOMORROW:
 				if(mtemp_counter < forecast_items.length) {
-					mActiveInfoType = InfoType.EXTENDED_FORECAST;
+					mActiveInfoType = InfoType.DAILY_FORECAST;
 					mtemp_counter = 1;
 				}
 				else {
 					try {
 						proxy.speak("You have reached the end of the forecast list", autoIncCorrId++);
 					}
-					catch (SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to perform speak", e);
+					catch (SdlException e) {
+						Log.e(SdlApplication.TAG, "Failed to perform speak", e);
 					}
 					return;
 				}
@@ -2689,11 +2354,11 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 							getResources().getString(R.string.interaction_units_help_prompt), //helpPrompt
 							getResources().getString(R.string.interaction_units_timeout_prompt),//timeoutPrompt 
 							InteractionMode.BOTH,//interactionMode
-							60000,//timeout
+							100000,//timeout
 							autoIncCorrId++);//correlationID					
-				} catch (SyncException e) {
+				} catch (SdlException e) {
 					e.printStackTrace();
-					Log.e(AppLinkApplication.TAG, "Failed to perform interaction", e);
+					Log.e(SdlApplication.TAG, "Failed to perform interaction", e);
 				}
 				// Fall through to default to avoid showing prematurely
 				// onPerformInteractionResponse() will perform the show once the user selects units
@@ -2709,7 +2374,7 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 
 	@Override
 	public void onOnLockScreenNotification(OnLockScreenStatus notification) {
-		Log.i(AppLinkApplication.TAG, "OnLockScreenStatus: " + notification.getShowLockScreen().toString());
+		Log.i(SdlApplication.TAG, "OnLockScreenStatus: " + notification.getShowLockScreen().toString());
 		LockScreenStatus status = notification.getShowLockScreen();
 		if (status == LockScreenStatus.OPTIONAL	|| status == LockScreenStatus.REQUIRED) {
 			LockScreenManager.showLockScreen();
@@ -2721,15 +2386,15 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 
 	@Override
 	public void onPutFileResponse(PutFileResponse response) {
-		Log.i(AppLinkApplication.TAG, String.format(Locale.getDefault(), "PutFile response success: %b", response.getSuccess()));
-		Log.i(AppLinkApplication.TAG, String.format(Locale.getDefault(), "PutFile response corrId: %d", response.getCorrelationID()));
-		Log.i(AppLinkApplication.TAG, String.format(Locale.getDefault(), "PutFile response info: %s", response.getInfo()));
+		Log.i(SdlApplication.TAG, String.format(Locale.getDefault(), "PutFile response success: %b", response.getSuccess()));
+		Log.i(SdlApplication.TAG, String.format(Locale.getDefault(), "PutFile response corrId: %d", response.getCorrelationID()));
+		Log.i(SdlApplication.TAG, String.format(Locale.getDefault(), "PutFile response info: %s", response.getInfo()));
 
 		// Add uploaded files to the list if they're not already there
 		String currentFile = mPutFileMap.get(response.getCorrelationID());
 		if (response.getSuccess() && currentFile != null) {
 			if (mUploadedFiles == null) {
-				mUploadedFiles = new Vector<String>();
+				mUploadedFiles = new ArrayList<String>();
 			}
 			if (!mUploadedFiles.contains(currentFile)) {
 				mUploadedFiles.add(currentFile);
@@ -2738,290 +2403,46 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 			// Set AppIcon
 			if (mGraphicsSupported && APP_ICON.equals(currentFile)) {
 				SetAppIcon request = new SetAppIcon();
-				request.setSyncFileName(APP_ICON);
+				request.setSdlFileName(APP_ICON);
 				request.setCorrelationID(autoIncCorrId++);
 				try {
 					proxy.sendRPCRequest(request);
-				} catch (SyncException e) {}
+				} catch (SdlException e) {}
 			} 
 			else if (mGraphicsSupported && currentFile.equals(mConditionIconFileName) && (mShowPendingPutFile != null)) {
 				try {
 					proxy.sendRPCRequest(mShowPendingPutFile);
-				} catch (SyncException e) {}
+				} catch (SdlException e) {}
 			}
 		}
 	}
 
+		
 	@Override
 	public void onOnButtonPress(OnButtonPress notification) {
 		int mtemp_counter = forecast_item_counter;
-		Vector<String> vrCommands = null;
 		
 		switch (notification.getButtonName()) {
 		case CUSTOM_BUTTON:
 			switch (notification.getCustomButtonName()) {
 			case SHOW_CONDITIONS_ID:
 				mActiveInfoType = InfoType.WEATHER_CONDITIONS;
-				try {
-					previous_cmd_deleted_corrId = autoIncCorrId;
-					proxy.deleteCommand(PREVIOUS, autoIncCorrId++);
-				} catch (SyncException e) {
-					Log.e(AppLinkApplication.TAG, "Failed to delete command \"Previous\"", e);
-				}
-				
-				try {
-					next_cmd_deleted_corrId = autoIncCorrId;
-					proxy.deleteCommand(NEXT, autoIncCorrId++);
-				} catch (SyncException e) {
-					Log.e(AppLinkApplication.TAG, "Failed to delete command \"Next\"", e);
-				}
-				
-				try {
-					proxy.deleteCommand(BACK, autoIncCorrId++);
-				} catch (SyncException e) {
-					Log.e(AppLinkApplication.TAG, "Failed to delete command \"Back\"", e);
-				}
-				if(now_cmd_added == true) {
-					try {
-						now_cmd_deleted_corrId = autoIncCorrId;
-						proxy.deleteCommand(NOW, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete voice command \"Now\"", e);
-					}
-				}
-				if(today_cmd_added == true) {
-					try {
-						today_cmd_deleted_corrId = autoIncCorrId;
-						proxy.deleteCommand(TODAY, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete voice command \"Today\"", e);
-					}
-				}
-				if(tomorrow_cmd_added == true) {
-					try {
-						tomorrow_cmd_deleted_corrId = autoIncCorrId;
-						proxy.deleteCommand(TOMORROW, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete voice command \"Tomorrow\"", e);
-					}
-				}
-				
-				if(list_cmd_added == true) {
-					try {
-						list_cmd_deleted_corrId = autoIncCorrId;
-						proxy.deleteCommand(LIST, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete voice command \"List\"", e);
-					}	
-				}
+				/* add cmds relevant for Current Weather Conditions, remove cmds not needed */
+				prepareCurrentCondCmds();
 				break;
 			case SHOW_STANDARD_FORECAST_ID:
 				mActiveInfoType = InfoType.STANDARD_FORECAST;
 				break;
-			case SHOW_EXTENDED_FORECAST_ID:
-				mActiveInfoType = InfoType.EXTENDED_FORECAST;				
-				if(next_cmd_added == false) {
-					try {
-						next_cmd_added_corrId = autoIncCorrId;
-						vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_next)));
-						proxy.addCommand(NEXT, getResources().getString(R.string.cmd_next), vrCommands, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to add command \"Next\"", e);
-					}
-				}
-				try {
-					vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_back)));
-					proxy.addCommand(BACK, getResources().getString(R.string.cmd_back), vrCommands, autoIncCorrId++);
-				} 
-				catch(SyncException e) {
-					Log.e(AppLinkApplication.TAG, "Failed to add command \"Back\"", e);
-				}
-				
-				/* add vc "Tomorrow" */
-				if(tomorrow_cmd_added == false) {
-					try {
-						tomorrow_cmd_added_corrId = autoIncCorrId;
-						vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_tomorrow)));
-						proxy.addCommand(TOMORROW, getResources().getString(R.string.cmd_tomorrow), vrCommands, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to add voice command \"Tomorrow\"", e);
-					}
-				}
-				
-				/* add vc "Today" */
-				if(today_cmd_added == false) {
-					try {
-						today_cmd_added_corrId = autoIncCorrId;
-						vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_today)));
-						proxy.addCommand(TODAY, getResources().getString(R.string.cmd_today), vrCommands, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to add voice command \"Today\"", e);
-					}
-				}
-				
-				/* add vc "List" */
-				if(list_cmd_added == false) {
-					try {
-						list_cmd_added_corrId = autoIncCorrId;
-						vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_list)));
-						proxy.addCommand(LIST, "List", vrCommands, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to add voice command \"List\"", e);
-					}	
-				}
-				
-				if(now_cmd_added == true) {
-					try {
-						now_cmd_deleted_corrId = autoIncCorrId;
-						proxy.deleteCommand(NOW, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete voice command \"Now\"", e);
-					}
-				}
-				
-				
-				/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
-				/* delete cmd "Daily Forecast" */
-				if(daily_forecast_cmd_added == true) {
-					try {
-						daily_forecast_cmd_deleted_corrId = autoIncCorrId;
-						proxy.deleteCommand(VIEW_EXTENDED_FORECAST, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete command \"Daily Forecast\"", e);
-					}
-				}
-				/* add cmd "Hourly Forecast" */
-				if(hourly_forecast_cmd_added == false ) {
-
-					try {
-						vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_hourly),
-								getResources().getString(R.string.vr_hourly_forecast)));
-						hourly_forecast_cmd_added_corrId = autoIncCorrId;	
-						proxy.addCommand(VIEW_HOURLY_FORECAST, getResources().getString(R.string.cmd_hourly_forecast), vrCommands, autoIncCorrId++);
-
-					}
-					catch (SyncException e) {
-						e.printStackTrace();
-						Log.e(AppLinkApplication.TAG, "Failed to send deleteCommand for Hourly Forecast", e);
-					}
-				}
-				
-				
-				/*
-				private Boolean daily_forecast_cmd_added = false;
-				private Boolean hourly_forecast_cmd_added = false;
-				private int daily_forecast_cmd_added_corrId = 0;
-				private int daily_forecast_cmd_deleted_corrId = 0; 
-				private int hourly_forecast_cmd_added_corrId = 0;
-				private int hourly_forecast_cmd_deleted_corrId = 0;
-				*/
-				
-				/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
-				
-				
-				
+			case SHOW_DAILY_FORECAST_ID:
+				mActiveInfoType = InfoType.DAILY_FORECAST;	
+				/* add cmds relevant for Daily Forecast, remove cmds not needed */
+				prepareDailyForecastCmds();
 				mtemp_counter = 0;
 				break;
 			case SHOW_HOURLY_FORECAST_ID:
 				mActiveInfoType = InfoType.HOURLY_FORECAST;
-				if(next_cmd_added == false) {
-					try {
-						next_cmd_added_corrId = autoIncCorrId;
-						vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_next)));
-						proxy.addCommand(NEXT, getResources().getString(R.string.cmd_next), vrCommands, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to add command \"Next\"", e);
-					}
-				}
-				try {
-					vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_back)));
-					proxy.addCommand(BACK, getResources().getString(R.string.cmd_back), vrCommands, autoIncCorrId++);
-				} 
-				catch(SyncException e) {
-					Log.e(AppLinkApplication.TAG, "Failed to add command \"Back\"", e);
-				}
-				/* add vc "Now" */
-				try {
-					now_cmd_added_corrId = autoIncCorrId;
-					vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_now)));
-					proxy.addCommand(NOW, getResources().getString(R.string.cmd_now), vrCommands, autoIncCorrId++);
-				} 
-				catch(SyncException e) {
-					Log.e(AppLinkApplication.TAG, "Failed to add voice command \"Now\"", e);
-				}	
-				
-				/* add vc "List" */
-				if(list_cmd_added == false) {
-					try {
-						list_cmd_added_corrId = autoIncCorrId;
-						vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_list)));
-						proxy.addCommand(LIST, "List", vrCommands, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to add voice command \"List\"", e);
-					}	
-				}
-				
-				/* delete cmd "Today" */
-				if(today_cmd_added == true) {
-					try {
-						today_cmd_deleted_corrId = autoIncCorrId;
-						proxy.deleteCommand(TODAY, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete voice command \"Today\"", e);
-					}
-				}
-				/* delete cmd "Tomorrow" */
-				if(tomorrow_cmd_added == true) {
-					try {
-						tomorrow_cmd_deleted_corrId = autoIncCorrId;
-						proxy.deleteCommand(TOMORROW, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete voice command \"Tomorrow\"", e);
-					}
-				}
-				
-				/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
-				/* delete cmd "Hourly Forecast" */
-				if(hourly_forecast_cmd_added == true) {
-					try {
-						hourly_forecast_cmd_deleted_corrId = autoIncCorrId;
-						proxy.deleteCommand(VIEW_HOURLY_FORECAST, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete command \"Hourly Forecast\"", e);
-					}
-				}
-				
-				/* add cmd "Daily Forecast" */
-				if(daily_forecast_cmd_added == false) {
-					try {
-
-						vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_daily), 
-								getResources().getString(R.string.vr_daily_forecast)));
-						daily_forecast_cmd_added_corrId = autoIncCorrId;
-						proxy.addCommand(VIEW_EXTENDED_FORECAST, getResources().getString(R.string.cmd_daily_forecast), vrCommands, autoIncCorrId++);
-					}
-					catch (SyncException e) {
-						e.printStackTrace();
-						Log.e(AppLinkApplication.TAG, "Failed to send deleteCommand for Daily Forecast", e);
-					}
-				}
-				/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
-				
+				/* add cmds relevant for Hourly Forecast, remove cmds not needed */
+				prepareHourlyForecastCmds();
 				mtemp_counter = 0;
 				break;
 			
@@ -3036,8 +2457,8 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 						try {
 							previous_cmd_deleted_corrId = autoIncCorrId;
 							proxy.deleteCommand(PREVIOUS, autoIncCorrId++);
-						} catch (SyncException e) {
-							Log.e(AppLinkApplication.TAG, "Failed to delete command \"Previous\"", e);
+						} catch (SdlException e) {
+							Log.e(SdlApplication.TAG, "Failed to delete command \"Previous\"", e);
 						}
 					}
 					forecast_item_counter = mtemp_counter;
@@ -3047,8 +2468,8 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 					try {
 						proxy.speak("You have reached the beginning of the forecast list", autoIncCorrId++);
 					}
-					catch (SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to perform speak", e);
+					catch (SdlException e) {
+						Log.e(SdlApplication.TAG, "Failed to perform speak", e);
 					}
 				}
 				return;
@@ -3064,184 +2485,30 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 						next_cmd_deleted_corrId = autoIncCorrId;
 						proxy.deleteCommand(NEXT, autoIncCorrId++);
 					} 
-					catch (SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete command \"Next\"", e);
+					catch (SdlException e) {
+						Log.e(SdlApplication.TAG, "Failed to delete command \"Next\"", e);
 					}
 					
 					try {
 						proxy.speak("You have reached the end of the forecast list", autoIncCorrId++);
 					}
-					catch (SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to perform speak", e);
+					catch (SdlException e) {
+						Log.e(SdlApplication.TAG, "Failed to perform speak", e);
 					}
 				}
 				return;
 				
 			case LIST_ITEMS_ID:	
 				forecast_item_counter = 0;
-				mTimedShowHandler.removeCallbacks(mTimedShowRunnable);
-
-				String initialPrompt = "";
-				String helpPrompt = "";
-				String timeoutPrompt = getResources().getString(R.string.interaction_forecastlist_timeoutprompt); 
-				String initialText = "";
-
-				if (mActiveInfoType == InfoType.HOURLY_FORECAST) {
-					initialPrompt = getResources().getString(R.string.interaction_hourly_forecastlist_initprompt); 
-					helpPrompt = getResources().getString(R.string.interaction_hourly_forecastlist_helpprompt); 
-					initialText = getResources().getString(R.string.interaction_hourly_forecastlist_inittext); 	
-				}
-				if (mActiveInfoType == InfoType.EXTENDED_FORECAST) {
-					initialPrompt = getResources().getString(R.string.interaction_daily_forecastlist_initprompt);
-					helpPrompt = getResources().getString(R.string.interaction_daily_forecastlist_helpprompt);
-					initialText = getResources().getString(R.string.interaction_daily_forecastlist_inittext); 
-				}	
-				Vector<TTSChunk> intitial_prompt = TTSChunkFactory.createSimpleTTSChunks(initialPrompt);
-				Vector<TTSChunk> help_prompt = TTSChunkFactory.createSimpleTTSChunks(helpPrompt);
-				Vector<TTSChunk> timeout_prompt = TTSChunkFactory.createSimpleTTSChunks(timeoutPrompt);
-				Vector<Integer> interactionChoiceSetIDs = new Vector<Integer>();
-				if(mActiveInfoType == InfoType.EXTENDED_FORECAST) {
-					interactionChoiceSetIDs.add(mDailyForecast_ChoiceSetID);
-				}
-				if(mActiveInfoType == InfoType.HOURLY_FORECAST) {
-					interactionChoiceSetIDs.add(mHourlyForecast_ChoiceSetID);
-				}
-
-				PerformInteraction performInterActionRequest = new PerformInteraction();
-				performInterActionRequest.setInitialPrompt(intitial_prompt);
-				performInterActionRequest.setHelpPrompt(help_prompt);
-				performInterActionRequest.setTimeoutPrompt(timeout_prompt);
-				performInterActionRequest.setInitialText(initialText);
-				performInterActionRequest.setTimeout(100000);
-				performInterActionRequest.setInteractionChoiceSetIDList(interactionChoiceSetIDs);
-				performInterActionRequest.setInteractionMode(InteractionMode.MANUAL_ONLY);
-				performInterActionRequest.setCorrelationID(autoIncCorrId++);				
-				try {
-					proxy.sendRPCRequest(performInterActionRequest);
-				}
-				catch (SyncException e) {
-					e.printStackTrace();
-					Log.e(AppLinkApplication.TAG, "Failed to perform interaction \"Daily/Houtly Forecast List\"", e);
-				}
+				mTimedShowHandler.removeCallbacks(mTimedShowRunnable);				
+				prepareListItemsCmds();
 				return;
 				
 			case BACK_ID:
 				mActiveInfoType = InfoType.WEATHER_CONDITIONS;
 				mShowConditions.setIsHighlighted(true);
 				mShowBack.setIsHighlighted(false);
-							
-				try {
-					previous_cmd_deleted_corrId = autoIncCorrId;
-					proxy.deleteCommand(PREVIOUS, autoIncCorrId++);
-				} catch (SyncException e) {
-					Log.e(AppLinkApplication.TAG, "Failed to delete command \"Previous\"", e);
-				}
-				
-				try {
-					next_cmd_deleted_corrId = autoIncCorrId;
-					proxy.deleteCommand(NEXT, autoIncCorrId++);
-				} catch (SyncException e) {
-					Log.e(AppLinkApplication.TAG, "Failed to delete command \"Next\"", e);
-				}
-				try {
-					next_cmd_deleted_corrId = autoIncCorrId;
-					proxy.deleteCommand(BACK, autoIncCorrId++);
-				} catch (SyncException e) {
-					Log.e(AppLinkApplication.TAG, "Failed to delete command \"Back\"", e);
-				}
-				
-				if(now_cmd_added == true) {
-					try {
-						now_cmd_deleted_corrId = autoIncCorrId;
-						proxy.deleteCommand(NOW, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete voice command \"Now\"", e);
-					}
-				}
-				if(today_cmd_added == true) {
-					try {
-						today_cmd_deleted_corrId = autoIncCorrId;
-						proxy.deleteCommand(TODAY, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete voice command \"Today\"", e);
-					}
-				}
-				if(tomorrow_cmd_added == true) {
-					try {
-						tomorrow_cmd_deleted_corrId = autoIncCorrId;
-						proxy.deleteCommand(TOMORROW, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete voice command \"Tomorrow\"", e);
-					}
-				}
-				if(list_cmd_added == true) {
-					try {
-						list_cmd_deleted_corrId = autoIncCorrId;
-						proxy.deleteCommand(LIST, autoIncCorrId++);
-					} 
-					catch(SyncException e) {
-						Log.e(AppLinkApplication.TAG, "Failed to delete voice command \"List\"", e);
-					}	
-				}
-				if(HourlyForecast_ChoiceSet_created) {
-					try {
-						delete_HourlyForecast_ChoiceSet_corrId = autoIncCorrId;
-						proxy.deleteInteractionChoiceSet(mHourlyForecast_ChoiceSetID, autoIncCorrId++);
-					}
-					catch (SyncException e) {
-						e.printStackTrace();
-						Log.e(AppLinkApplication.TAG, "Failed to send deleteInteractionChoiceSet for Hourly Forecast", e);
-					}
-				}
-				if(DailyForecast_ChoiceSet_created) {
-					try {
-						delete_DailyForecast_ChoiceSet_corrId = autoIncCorrId;
-						proxy.deleteInteractionChoiceSet(mDailyForecast_ChoiceSetID, autoIncCorrId++);
-					}
-					catch (SyncException e) {
-						e.printStackTrace();
-						Log.e(AppLinkApplication.TAG, "Failed to send deleteInteractionChoiceSet for Daily Forecast", e);
-					}
-				}	
-				
-				
-				/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
-				if(daily_forecast_cmd_added == false) {
-					try {
-
-						vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_daily), 
-								getResources().getString(R.string.vr_daily_forecast)));
-						daily_forecast_cmd_added_corrId = autoIncCorrId;
-						proxy.addCommand(VIEW_EXTENDED_FORECAST, getResources().getString(R.string.cmd_daily_forecast), vrCommands, autoIncCorrId++);
-					}
-					catch (SyncException e) {
-						e.printStackTrace();
-						Log.e(AppLinkApplication.TAG, "Failed to send deleteCommand for Daily Forecast", e);
-					}
-				}
-				/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
-
-				
-				/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
-				if(hourly_forecast_cmd_added == false ) {
-
-					try {
-						vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_hourly),
-								getResources().getString(R.string.vr_hourly_forecast)));
-						hourly_forecast_cmd_added_corrId = autoIncCorrId;	
-						proxy.addCommand(VIEW_HOURLY_FORECAST, getResources().getString(R.string.cmd_hourly_forecast), vrCommands, autoIncCorrId++);
-
-					}
-					catch (SyncException e) {
-						e.printStackTrace();
-						Log.e(AppLinkApplication.TAG, "Failed to send deleteCommand for Hourly Forecast", e);
-					}
-				}
-				/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
-				
+				prepareBackCmds();
 				forecast_item_counter = 0;
 				updateHmi(false);
 				return;
@@ -3263,8 +2530,10 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 
 	@Override
 	public void onListFilesResponse(ListFilesResponse response) {
-		if (response != null)
-			mUploadedFiles = response.getFilenames();
+		if (response != null && response.getFilenames() != null)
+		{
+				mUploadedFiles = new ArrayList<String>(response.getFilenames());
+		}
 	}
 
 	@Override
@@ -3372,9 +2641,6 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 
 	@Override
 	public void onAddCommandResponse(AddCommandResponse response) {
-		String mhelp_prompt = "";
-		
-		
 		if(response.getSuccess() == true){
 			String help_prompt = (getResources().getString(R.string.gp_help_prompt_start));
 			if (response.getCorrelationID() == next_cmd_added_corrId) {
@@ -3401,148 +2667,22 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 				list_cmd_added = true;
 				help_prompt += (getResources().getString(R.string.vr_list));
 			}
-			help_prompt += (getResources().getString(R.string.gp_help_prompt_end));
-			
-			
-			
-			
-			if(false) {
-				//(getResources().getString(R.string.gp_help_prompt_start));
-
-				//(getResources().getString(R.string.gp_help_prompt_end));
-
-				Vector<TTSChunk> help_prompt_new = new Vector<TTSChunk>();
-
-				/* next */
-				TTSChunk next_cmd = new TTSChunk();
-				next_cmd.setText(getResources().getString(R.string.vr_next));
-				next_cmd.setType(SpeechCapabilities.TEXT);
-				help_prompt_new.add(next_cmd);
-
-				/* previous */
-				TTSChunk previous_cmd = new TTSChunk();
-				previous_cmd.setText(getResources().getString(R.string.vr_prev));
-				previous_cmd.setType(SpeechCapabilities.TEXT);
-				help_prompt_new.add(previous_cmd);
-
-				/* now */
-				TTSChunk now_cmd = new TTSChunk();
-				now_cmd.setText(getResources().getString(R.string.vr_prev));
-				now_cmd.setType(SpeechCapabilities.TEXT);
-				help_prompt_new.add(now_cmd);
-
-				/* today */
-				TTSChunk today_cmd = new TTSChunk();
-				today_cmd.setText(getResources().getString(R.string.vr_prev));
-				today_cmd.setType(SpeechCapabilities.TEXT);
-				help_prompt_new.add(today_cmd);
-
-				/* tomorrow */
-				TTSChunk tomorrow_cmd = new TTSChunk();
-				tomorrow_cmd.setText(getResources().getString(R.string.vr_prev));
-				tomorrow_cmd.setType(SpeechCapabilities.TEXT);
-				help_prompt_new.add(tomorrow_cmd);	
-
-				/* list */
-				TTSChunk list_cmd = new TTSChunk();
-				list_cmd.setText(getResources().getString(R.string.vr_prev));
-				list_cmd.setType(SpeechCapabilities.TEXT);
-				help_prompt_new.add(list_cmd);
-
-				/* current */
-				TTSChunk current_cmd = new TTSChunk();
-				current_cmd.setText(getResources().getString(R.string.vr_prev));
-				current_cmd.setType(SpeechCapabilities.TEXT);
-				help_prompt_new.add(current_cmd);
-
-				/* change_units */
-				TTSChunk change_units_cmd = new TTSChunk();
-				change_units_cmd.setText(getResources().getString(R.string.vr_change_units));
-				change_units_cmd.setType(SpeechCapabilities.TEXT);
-				help_prompt_new.add(change_units_cmd);
-
-
-				/* daily */
-				TTSChunk daily_cmd = new TTSChunk();
-				daily_cmd.setText(getResources().getString(R.string.vr_daily_forecast));
-				daily_cmd.setType(SpeechCapabilities.TEXT);
-				help_prompt_new.add(daily_cmd);
-
-				/* hourly */
-				TTSChunk hourly_cmd = new TTSChunk();
-				hourly_cmd.setText(getResources().getString(R.string.vr_hourly_forecast));
-				hourly_cmd.setType(SpeechCapabilities.TEXT);
-				help_prompt_new.add(hourly_cmd);
-
-
-				/* back */
-				TTSChunk back_cmd = new TTSChunk();
-				back_cmd.setText(getResources().getString(R.string.vr_prev));
-				back_cmd.setType(SpeechCapabilities.TEXT);
-				help_prompt_new.add(back_cmd);
-
-				/* alerts */
-				TTSChunk alerts_cmd = new TTSChunk();
-				alerts_cmd.setText(getResources().getString(R.string.vr_prev));
-				alerts_cmd.setType(SpeechCapabilities.TEXT);
-				help_prompt_new.add(alerts_cmd);
-
-
-			
-			
-		}
-			/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
 			if (response.getCorrelationID() == daily_forecast_cmd_added_corrId) {
 				daily_forecast_cmd_added = true;
 				help_prompt += (getResources().getString(R.string.vr_daily_forecast));
 			}
-
-
 			if (response.getCorrelationID() == hourly_forecast_cmd_added_corrId) {
 				hourly_forecast_cmd_added = true;
 				help_prompt += (getResources().getString(R.string.vr_hourly_forecast));
 			}
-			/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
 			
-			
-			try {		
-				if(false){
-				SetGlobalProperties gp = new SetGlobalProperties() ;//PerformInteraction performInterActionRequest = new PerformInteraction();
-				//gp.(vrHelp);
-				
-				String help = "Hilfe";
-				String help1 = "Hilfe";
-				
-				
-				/*!!!!!!!!!!OK!!!!!!!!!!!!!!!*/
-				
-				//Vector<TTSChunk> help_prompt1 = TTSChunkFactory.createSimpleTTSChunks(help);
-				Vector<TTSChunk> help_prompt1 = new Vector<TTSChunk>();
-				
-				TTSChunk test = new TTSChunk();
-				test.setText("chunk");
-				test.setType(SpeechCapabilities.TEXT);
-				help_prompt1.add(test);
-				
-				TTSChunk test1 = new TTSChunk();
-				test1.setText("chunk1");
-				test1.setType(SpeechCapabilities.TEXT);
-				help_prompt1.add(test1);
-				
-				
-				gp.setHelpPrompt(help_prompt1);
-				
-				
-				help_prompt1.removeElement(test);
-				/*!!!!!!!!!!OK!!!!!!!!!!!!!!!*/		
-				}
-				
+			help_prompt += (getResources().getString(R.string.gp_help_prompt_end));
+		
+			try {			
 				proxy.setGlobalProperties(help_prompt,(getResources().getString(R.string.gp_timeout_prompt)), autoIncCorrId++);
-			} catch (SyncException e) {
-				Log.e(AppLinkApplication.TAG, "Failed to setup global properties", e);
+			} catch (SdlException e) {
+				Log.e(SdlApplication.TAG, "Failed to setup global properties", e);
 			}
-			mhelp_prompt = help_prompt;
-			Log.d(AppLinkApplication.TAG, "Help Prompt = " + mhelp_prompt);
 		}
 	}
 
@@ -3601,15 +2741,12 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 			if (response.getCorrelationID() == list_cmd_deleted_corrId) {
 				list_cmd_added = false;
 			}
-
-			/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
 			if (response.getCorrelationID() ==  daily_forecast_cmd_deleted_corrId) {
 				daily_forecast_cmd_added = false;
 			}
 			if (response.getCorrelationID() ==  hourly_forecast_cmd_deleted_corrId) {
 				hourly_forecast_cmd_added = false;
 			}		
-			/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
 		}
 	}
 
@@ -3771,8 +2908,8 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 	public void onChangeRegistrationResponse(ChangeRegistrationResponse response) {		
 		if((response.getResultCode().equals(Result.SUCCESS)) && (response.getSuccess())){
 			/*store the registered language if ChangeRegistration has been successful */
-			Log.i(AppLinkApplication.TAG, "ChangeRegistrationResponse: SUCCESS");
-			mRegisteredAppSyncLanguage = mCurrentSyncLanguage;
+			Log.i(SdlApplication.TAG, "ChangeRegistrationResponse: SUCCESS");
+			mRegisteredAppSdlLanguage = mCurrentSdlLanguage;
 			mRegisteredAppHmiLanguage =  mCurrentHmiLanguage; 
 		}
 	}
@@ -3785,10 +2922,10 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 
 	@Override
 	public void onOnLanguageChange(OnLanguageChange notification) {
-		mDesiredAppSyncLanguage = notification.getLanguage();
+		mDesiredAppSdlLanguage = notification.getLanguage();
 		mDesiredAppHmiLanguage =  notification.getHmiDisplayLanguage();	
-		Log.i(AppLinkApplication.TAG, "onOnLanguageChange: Language = " + mDesiredAppSyncLanguage);
-		Log.i(AppLinkApplication.TAG, "onOnLanguageChange: HmiDisplayLanguage = " +  mDesiredAppHmiLanguage);
+		Log.i(SdlApplication.TAG, "onOnLanguageChange: Language = " + mDesiredAppSdlLanguage);
+		Log.i(SdlApplication.TAG, "onOnLanguageChange: HmiDisplayLanguage = " +  mDesiredAppHmiLanguage);
 	}
 
 	@Override
@@ -3832,4 +2969,554 @@ public class AppLinkService extends Service implements IProxyListenerALM {
 		// TODO Auto-generated method stub
 
 	}
+	
+	
+	private void prepareDailyForecastCmds(){
+		Vector<String> vrCommands = null;
+		if(next_cmd_added == false) {
+			try {
+				next_cmd_added_corrId = autoIncCorrId;
+				vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_next)));
+				proxy.addCommand(NEXT, getResources().getString(R.string.cmd_next), vrCommands, autoIncCorrId++);
+			} 
+			catch(SdlException e) {
+				Log.e(SdlApplication.TAG, "Failed to add command \"Next\"", e);
+			}
+		}
+		try {
+			vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_back)));
+			proxy.addCommand(BACK, getResources().getString(R.string.cmd_back), vrCommands, autoIncCorrId++);
+		} 
+		catch(SdlException e) {
+			Log.e(SdlApplication.TAG, "Failed to add command \"Back\"", e);
+		}
+
+		/* add vc "Tomorrow" */
+		if(tomorrow_cmd_added == false) {
+			try {
+				tomorrow_cmd_added_corrId = autoIncCorrId;
+				vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_tomorrow)));
+				proxy.addCommand(TOMORROW, getResources().getString(R.string.cmd_tomorrow), vrCommands, autoIncCorrId++);
+			} 
+			catch(SdlException e) {
+				Log.e(SdlApplication.TAG, "Failed to add voice command \"Tomorrow\"", e);
+			}
+		}
+
+		/* add vc "Today" */
+		if(today_cmd_added == false) {
+			try {
+				today_cmd_added_corrId = autoIncCorrId;
+				vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_today)));
+				proxy.addCommand(TODAY, getResources().getString(R.string.cmd_today), vrCommands, autoIncCorrId++);
+			} 
+			catch(SdlException e) {
+				Log.e(SdlApplication.TAG, "Failed to add voice command \"Today\"", e);
+			}
+		}
+
+		/* add vc "List" */
+		if(list_cmd_added == false) {
+			try {
+				list_cmd_added_corrId = autoIncCorrId;
+				vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_list)));
+				proxy.addCommand(LIST, "List", vrCommands, autoIncCorrId++);
+			} 
+			catch(SdlException e) {
+				Log.e(SdlApplication.TAG, "Failed to add voice command \"List\"", e);
+			}	
+		}
+
+		if(now_cmd_added == true) {
+			try {
+				now_cmd_deleted_corrId = autoIncCorrId;
+				proxy.deleteCommand(NOW, autoIncCorrId++);
+			} 
+			catch(SdlException e) {
+				Log.e(SdlApplication.TAG, "Failed to delete voice command \"Now\"", e);
+			}
+		}
+		/* delete cmd "Daily Forecast" */
+		if(daily_forecast_cmd_added == true) {
+			try {
+				daily_forecast_cmd_deleted_corrId = autoIncCorrId;
+				proxy.deleteCommand(VIEW_DAILY_FORECAST, autoIncCorrId++);
+			} 
+			catch(SdlException e) {
+				Log.e(SdlApplication.TAG, "Failed to delete command \"Daily Forecast\"", e);
+			}
+		}
+		/* add cmd "Hourly Forecast" */
+		if(hourly_forecast_cmd_added == false ) {
+
+			try {
+				vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_hourly),
+						getResources().getString(R.string.vr_hourly_forecast)));
+				hourly_forecast_cmd_added_corrId = autoIncCorrId;	
+				proxy.addCommand(VIEW_HOURLY_FORECAST, getResources().getString(R.string.cmd_hourly_forecast), vrCommands, autoIncCorrId++);
+
+			}
+			catch (SdlException e) {
+				e.printStackTrace();
+				Log.e(SdlApplication.TAG, "Failed to send deleteCommand for Hourly Forecast", e);
+			}
+		}
+	}
+
+
+	private void prepareHourlyForecastCmds(){
+		Vector<String> vrCommands = null;
+		if(next_cmd_added == false) {
+			try {
+				next_cmd_added_corrId = autoIncCorrId;
+				vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_next)));
+				proxy.addCommand(NEXT, getResources().getString(R.string.cmd_next), vrCommands, autoIncCorrId++);
+			} 
+			catch(SdlException e) {
+				Log.e(SdlApplication.TAG, "Failed to add command \"Next\"", e);
+			}
+		}
+		try {
+			vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_back)));
+			proxy.addCommand(BACK, getResources().getString(R.string.cmd_back), vrCommands, autoIncCorrId++);
+		} 
+		catch(SdlException e) {
+			Log.e(SdlApplication.TAG, "Failed to add command \"Back\"", e);
+		}
+		/* add cmd "Now" */
+		try {
+			now_cmd_added_corrId = autoIncCorrId;
+			vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_now)));
+			proxy.addCommand(NOW, getResources().getString(R.string.cmd_now), vrCommands, autoIncCorrId++);
+		} 
+		catch(SdlException e) {
+			Log.e(SdlApplication.TAG, "Failed to add voice command \"Now\"", e);
+		}
+		/* add cmd "List" */
+		if(list_cmd_added == false) {
+			try {
+				list_cmd_added_corrId = autoIncCorrId;
+				vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_list)));
+				proxy.addCommand(LIST, "List", vrCommands, autoIncCorrId++);
+			} 
+			catch(SdlException e) {
+				Log.e(SdlApplication.TAG, "Failed to add voice command \"List\"", e);
+			}	
+		}
+		/* delete cmd "Today" */
+		if(today_cmd_added == true) {
+			try {
+				today_cmd_deleted_corrId = autoIncCorrId;
+				proxy.deleteCommand(TODAY, autoIncCorrId++);
+			} 
+			catch(SdlException e) {
+				Log.e(SdlApplication.TAG, "Failed to delete voice command \"Today\"", e);
+			}
+		}
+		/* delete cmd "Tomorrow" */
+		if(tomorrow_cmd_added == true) {
+			try {
+				tomorrow_cmd_deleted_corrId = autoIncCorrId;
+				proxy.deleteCommand(TOMORROW, autoIncCorrId++);
+			} 
+			catch(SdlException e) {
+				Log.e(SdlApplication.TAG, "Failed to delete voice command \"Tomorrow\"", e);
+			}
+		}
+		/* delete cmd Hourly Forecast */
+		if(hourly_forecast_cmd_added == true) {
+			try {
+				hourly_forecast_cmd_deleted_corrId = autoIncCorrId;
+				proxy.deleteCommand(VIEW_HOURLY_FORECAST, autoIncCorrId++);
+			} 
+			catch(SdlException e) {
+				Log.e(SdlApplication.TAG, "Failed to delete command \"Hourly Forecast\"", e);
+			}
+		}
+		/* add cmd "Daily Forecast" */
+		if(daily_forecast_cmd_added == false) {
+			try {
+
+				vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_daily), 
+						getResources().getString(R.string.vr_daily_forecast)));
+				daily_forecast_cmd_added_corrId = autoIncCorrId;
+				proxy.addCommand(VIEW_DAILY_FORECAST, getResources().getString(R.string.cmd_daily_forecast), vrCommands, autoIncCorrId++);
+			}
+			catch (SdlException e) {
+				e.printStackTrace();
+				Log.e(SdlApplication.TAG, "Failed to send deleteCommand for Daily Forecast", e);
+			}
+		}
+	}
+
+	private void prepareCurrentCondCmds() {
+		try {
+			previous_cmd_deleted_corrId = autoIncCorrId;
+			proxy.deleteCommand(PREVIOUS, autoIncCorrId++);
+		} catch (SdlException e) {
+			Log.e(SdlApplication.TAG, "Failed to delete command \"Previous\"", e);
+		}
+
+		try {
+			next_cmd_deleted_corrId = autoIncCorrId;
+			proxy.deleteCommand(NEXT, autoIncCorrId++);
+		} catch (SdlException e) {
+			Log.e(SdlApplication.TAG, "Failed to delete command \"Next\"", e);
+		}
+
+		try {
+			proxy.deleteCommand(BACK, autoIncCorrId++);
+		} catch (SdlException e) {
+			Log.e(SdlApplication.TAG, "Failed to delete command \"Back\"", e);
+		}
+		if(now_cmd_added == true) {
+			try {
+				now_cmd_deleted_corrId = autoIncCorrId;
+				proxy.deleteCommand(NOW, autoIncCorrId++);
+			} 
+			catch(SdlException e) {
+				Log.e(SdlApplication.TAG, "Failed to delete voice command \"Now\"", e);
+			}
+		}
+		if(today_cmd_added == true) {
+			try {
+				today_cmd_deleted_corrId = autoIncCorrId;
+				proxy.deleteCommand(TODAY, autoIncCorrId++);
+			} 
+			catch(SdlException e) {
+				Log.e(SdlApplication.TAG, "Failed to delete voice command \"Today\"", e);
+			}
+		}
+		if(tomorrow_cmd_added == true) {
+			try {
+				tomorrow_cmd_deleted_corrId = autoIncCorrId;
+				proxy.deleteCommand(TOMORROW, autoIncCorrId++);
+			} 
+			catch(SdlException e) {
+				Log.e(SdlApplication.TAG, "Failed to delete voice command \"Tomorrow\"", e);
+			}
+		}
+
+		if(list_cmd_added == true) {
+			try {
+				list_cmd_deleted_corrId = autoIncCorrId;
+				proxy.deleteCommand(LIST, autoIncCorrId++);
+			} 
+			catch(SdlException e) {
+				Log.e(SdlApplication.TAG, "Failed to delete voice command \"List\"", e);
+			}	
+		}
+	}
+
+
+	private void prepareListItemsCmds(){
+		String initialPrompt = "";
+		String helpPrompt = "";
+		String timeoutPrompt = getResources().getString(R.string.interaction_forecastlist_timeoutprompt); 
+		String initialText = "";
+
+		if (mActiveInfoType == InfoType.HOURLY_FORECAST) {
+			initialPrompt = getResources().getString(R.string.interaction_hourly_forecastlist_initprompt); 
+			helpPrompt = getResources().getString(R.string.interaction_hourly_forecastlist_helpprompt); 
+			initialText = getResources().getString(R.string.interaction_hourly_forecastlist_inittext); 	
+		}
+		if (mActiveInfoType == InfoType.DAILY_FORECAST) {
+			initialPrompt = getResources().getString(R.string.interaction_daily_forecastlist_initprompt);
+			helpPrompt = getResources().getString(R.string.interaction_daily_forecastlist_helpprompt);
+			initialText = getResources().getString(R.string.interaction_daily_forecastlist_inittext); 
+		}	
+		Vector<TTSChunk> intitial_prompt = TTSChunkFactory.createSimpleTTSChunks(initialPrompt);
+		Vector<TTSChunk> help_prompt = TTSChunkFactory.createSimpleTTSChunks(helpPrompt);
+		Vector<TTSChunk> timeout_prompt = TTSChunkFactory.createSimpleTTSChunks(timeoutPrompt);
+		Vector<Integer> interactionChoiceSetIDs = new Vector<Integer>();
+		if(mActiveInfoType == InfoType.DAILY_FORECAST) {
+			interactionChoiceSetIDs.add(mDailyForecast_ChoiceSetID);
+		}
+		if(mActiveInfoType == InfoType.HOURLY_FORECAST) {
+			interactionChoiceSetIDs.add(mHourlyForecast_ChoiceSetID);
+		}
+
+		PerformInteraction performInterActionRequest = new PerformInteraction();
+		performInterActionRequest.setInitialPrompt(intitial_prompt);
+		performInterActionRequest.setHelpPrompt(help_prompt);
+		performInterActionRequest.setTimeoutPrompt(timeout_prompt);
+		performInterActionRequest.setInitialText(initialText);
+		performInterActionRequest.setTimeout(100000);
+		performInterActionRequest.setInteractionChoiceSetIDList(interactionChoiceSetIDs);
+		performInterActionRequest.setInteractionMode(InteractionMode.MANUAL_ONLY);
+		performInterActionRequest.setCorrelationID(autoIncCorrId++);				
+		try {
+			proxy.sendRPCRequest(performInterActionRequest);
+		}
+		catch (SdlException e) {
+			e.printStackTrace();
+			Log.e(SdlApplication.TAG, "Failed to perform interaction \"Daily/Houtly Forecast List\"", e);
+		}
+
+	}
+
+	private void prepareBackCmds() {
+		Vector<String> vrCommands = null;
+		try {
+			previous_cmd_deleted_corrId = autoIncCorrId;
+			proxy.deleteCommand(PREVIOUS, autoIncCorrId++);
+		} catch (SdlException e) {
+			Log.e(SdlApplication.TAG, "Failed to delete command \"Previous\"", e);
+		}
+
+		try {
+			next_cmd_deleted_corrId = autoIncCorrId;
+			proxy.deleteCommand(NEXT, autoIncCorrId++);
+		} catch (SdlException e) {
+			Log.e(SdlApplication.TAG, "Failed to delete command \"Next\"", e);
+		}
+
+		try {
+			proxy.deleteCommand(BACK, autoIncCorrId++);
+		} catch (SdlException e) {
+			Log.e(SdlApplication.TAG, "Failed to delete command \"Back\"", e);
+		}
+		if(now_cmd_added == true) {
+			try {
+				now_cmd_deleted_corrId = autoIncCorrId;
+				proxy.deleteCommand(NOW, autoIncCorrId++);
+			} 
+			catch(SdlException e) {
+				Log.e(SdlApplication.TAG, "Failed to delete voice command \"Now\"", e);
+			}
+		}
+		if(today_cmd_added == true) {
+			try {
+				today_cmd_deleted_corrId = autoIncCorrId;
+				proxy.deleteCommand(TODAY, autoIncCorrId++);
+			} 
+			catch(SdlException e) {
+				Log.e(SdlApplication.TAG, "Failed to delete voice command \"Today\"", e);
+			}
+		}
+		if(tomorrow_cmd_added == true) {
+			try {
+				tomorrow_cmd_deleted_corrId = autoIncCorrId;
+				proxy.deleteCommand(TOMORROW, autoIncCorrId++);
+			} 
+			catch(SdlException e) {
+				Log.e(SdlApplication.TAG, "Failed to delete voice command \"Tomorrow\"", e);
+			}
+		}
+
+		if(list_cmd_added == true) {
+			try {
+				list_cmd_deleted_corrId = autoIncCorrId;
+				proxy.deleteCommand(LIST, autoIncCorrId++);
+			} 
+			catch(SdlException e) {
+				Log.e(SdlApplication.TAG, "Failed to delete voice command \"List\"", e);
+			}	
+		}
+		if(HourlyForecast_ChoiceSet_created) {
+			try {
+				delete_HourlyForecast_ChoiceSet_corrId = autoIncCorrId;
+				proxy.deleteInteractionChoiceSet(mHourlyForecast_ChoiceSetID, autoIncCorrId++);
+			}
+			catch (SdlException e) {
+				e.printStackTrace();
+				Log.e(SdlApplication.TAG, "Failed to send deleteInteractionChoiceSet for Hourly Forecast", e);
+			}
+		}
+		if(DailyForecast_ChoiceSet_created) {
+			try {
+				delete_DailyForecast_ChoiceSet_corrId = autoIncCorrId;
+				proxy.deleteInteractionChoiceSet(mDailyForecast_ChoiceSetID, autoIncCorrId++);
+			}
+			catch (SdlException e) {
+				e.printStackTrace();
+				Log.e(SdlApplication.TAG, "Failed to send deleteInteractionChoiceSet for Daily Forecast", e);
+			}
+		}
+
+		/* add cmd "Daily Forecast" */
+		if(daily_forecast_cmd_added == false) {
+			try {
+				vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_daily), 
+						getResources().getString(R.string.vr_daily_forecast)));
+				daily_forecast_cmd_added_corrId = autoIncCorrId;
+				proxy.addCommand(VIEW_DAILY_FORECAST, getResources().getString(R.string.cmd_daily_forecast), vrCommands, autoIncCorrId++);
+			}
+			catch (SdlException e) {
+				e.printStackTrace();
+				Log.e(SdlApplication.TAG, "Failed to send deleteCommand for Daily Forecast", e);
+			}
+		}
+
+		/* add cmd "Hourly Forecast */
+		if(hourly_forecast_cmd_added == false ) {
+			try {
+				vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_hourly),
+						getResources().getString(R.string.vr_hourly_forecast)));
+				hourly_forecast_cmd_added_corrId = autoIncCorrId;	
+				proxy.addCommand(VIEW_HOURLY_FORECAST, getResources().getString(R.string.cmd_hourly_forecast), vrCommands, autoIncCorrId++);
+
+			}
+			catch (SdlException e) {
+				e.printStackTrace();
+				Log.e(SdlApplication.TAG, "Failed to send deleteCommand for Hourly Forecast", e);
+			}
+		}
+
+	}
+
+	@Override
+	public void onAlertManeuverResponse(AlertManeuverResponse arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onDialNumberResponse(DialNumberResponse arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onOnStreamRPC(OnStreamRPC arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onSendLocationResponse(SendLocationResponse arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onServiceEnded(OnServiceEnded arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onServiceNACKed(OnServiceNACKed arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onShowConstantTbtResponse(ShowConstantTbtResponse arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onStreamRPCResponse(StreamRPCResponse arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onUpdateTurnListResponse(UpdateTurnListResponse arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onServiceDataACK(int dataSize) {
+
+	}
+
+	@Override
+	public void onGetWayPointsResponse(GetWayPointsResponse response) {
+
+	}
+
+	@Override
+	public void onSubscribeWayPointsResponse(SubscribeWayPointsResponse response) {
+
+	}
+
+	@Override
+	public void onUnsubscribeWayPointsResponse(UnsubscribeWayPointsResponse response) {
+
+	}
+
+	@Override
+	public void onOnWayPointChange(OnWayPointChange notification) {
+
+	}
+
+	@Override
+	public void onGetSystemCapabilityResponse(GetSystemCapabilityResponse response) {
+
+	}
+
+	@Override
+	public void onGetInteriorVehicleDataResponse(GetInteriorVehicleDataResponse response) {
+
+	}
+
+	@Override
+	public void onButtonPressResponse(ButtonPressResponse response) {
+
+	}
+
+	@Override
+	public void onSetInteriorVehicleDataResponse(SetInteriorVehicleDataResponse response) {
+
+	}
+
+	@Override
+	public void onOnInteriorVehicleData(OnInteriorVehicleData notification) {
+
+	}
+
+	@Override
+	public void onSendHapticDataResponse(SendHapticDataResponse response) {
+
+	}
+
+	@Override
+	public void onOnRCStatus(OnRCStatus notification) {
+
+	}
+
+	@Override
+	public void onSetCloudAppProperties(SetCloudAppPropertiesResponse response) {
+
+	}
+
+	@Override
+	public void onGetCloudAppProperties(GetCloudAppPropertiesResponse response) {
+
+	}
+
+	@Override
+	public void onPublishAppServiceResponse(PublishAppServiceResponse response) {
+
+	}
+
+	@Override
+	public void onGetAppServiceDataResponse(GetAppServiceDataResponse response) {
+
+	}
+
+	@Override
+	public void onGetFileResponse(GetFileResponse response) {
+
+	}
+
+	@Override
+	public void onPerformAppServiceInteractionResponse(PerformAppServiceInteractionResponse response) {
+
+	}
+
+	@Override
+	public void onOnAppServiceData(OnAppServiceData notification) {
+
+	}
+
+	@Override
+	public void onOnSystemCapabilityUpdated(OnSystemCapabilityUpdated notification) {
+
+	}
+
 }

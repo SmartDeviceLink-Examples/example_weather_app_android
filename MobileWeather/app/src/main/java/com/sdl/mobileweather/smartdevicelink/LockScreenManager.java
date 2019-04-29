@@ -3,8 +3,6 @@ package com.sdl.mobileweather.smartdevicelink;
 import android.app.Activity;
 import android.content.Intent;
 
-import com.sdl.mobileweather.activity.LockScreenActivity;
-
 /**
  * This class manages the lockscreen for the app.
  */
@@ -16,13 +14,13 @@ public class LockScreenManager {
 		// only throw up lockscreen if main activity is currently on top
 		// else, wait until onResume() to throw lockscreen so it doesn't 
 		// pop-up while a user is using another app on the phone
-		Activity currentAct = SmartDeviceLinkApplication.getCurrentActivity();
+		Activity currentAct = SdlApplication.getCurrentActivity();
 		if (currentAct != null && !currentAct.getClass().equals(LockScreenActivity.class)) {
-			if (((SmartDeviceLinkActivity) SmartDeviceLinkApplication.getCurrentActivity()).isActivityonTop() == true) {
-				Intent i = new Intent(SmartDeviceLinkApplication.getInstance(), LockScreenActivity.class);
+			if (((SdlActivity) SdlApplication.getCurrentActivity()).isActivityonTop() == true) {
+				Intent i = new Intent(SdlApplication.getInstance(), LockScreenActivity.class);
 				i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 				i.addFlags(Intent.FLAG_ACTIVITY_NO_USER_ACTION);
-				SmartDeviceLinkApplication.getInstance().startActivity(i);
+				SdlApplication.getInstance().startActivity(i);
 			}
 		}
 		lockScreenUp = true;		

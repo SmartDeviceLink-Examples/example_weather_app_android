@@ -24,10 +24,10 @@ import com.smartdevicelink.proxy.SdlProxyALM;
 import com.sdl.mobileweather.localization.LocalizationUtil;
 
 
-public class SmartDeviceLinkApplication extends Application {
+public class SdlApplication extends Application {
 	
 	public static final String TAG = "MobileWeather";
-	private static SmartDeviceLinkApplication instance;
+	private static SdlApplication instance;
 	private static Activity currentUIActivity;
 	private WeatherLocationServices mLocationServices;
 	private WeatherDataManager mDataManager;
@@ -39,11 +39,11 @@ public class SmartDeviceLinkApplication extends Application {
 		instance = null;
 	}
 	
-	private static synchronized void setInstance(SmartDeviceLinkApplication app) {
+	private static synchronized void setInstance(SdlApplication app) {
 		instance = app;
 	}
 	
-	public static synchronized SmartDeviceLinkApplication getInstance() {
+	public static synchronized SdlApplication getInstance() {
 		return instance;
 	}
 	
@@ -58,7 +58,7 @@ public class SmartDeviceLinkApplication extends Application {
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		SmartDeviceLinkApplication.setInstance(this);
+		SdlApplication.setInstance(this);
 		mDataManager = new WeatherDataManager();
 		// TODO: Fix magic number assignment of update interval
 		mDataManager.setUpdateInterval(5);
@@ -74,7 +74,7 @@ public class SmartDeviceLinkApplication extends Application {
 	public void onConfigurationChanged(Configuration newConfig) {
 		super.onConfigurationChanged(newConfig);
 		Log.d(TAG, "onConfigurationChanged received");
-		Context mAppContext =  SmartDeviceLinkApplication.getInstance().getApplicationContext();
+		Context mAppContext =  SdlApplication.getInstance().getApplicationContext();
 		Intent mUpdateIntent = new Intent(mAppContext, WeatherUpdateWakefulReceiver.class);
     	mUpdateIntent.putExtra("weather_update_service", ForecastIoService.class.getName());
     	mAppContext.sendBroadcast(mUpdateIntent);
@@ -92,7 +92,7 @@ public class SmartDeviceLinkApplication extends Application {
 	}
 	
     public void startSdlProxyService() {
-    	Log.i(SmartDeviceLinkApplication.TAG, "Starting SmartDeviceLink service");
+    	Log.i(SdlApplication.TAG, "Starting SmartDeviceLink service");
         // Get the local Bluetooth adapter
         BluetoothAdapter mBtAdapter = BluetoothAdapter.getDefaultAdapter();
 
@@ -101,14 +101,14 @@ public class SmartDeviceLinkApplication extends Application {
 		{
 			if ((mBtAdapter.isEnabled() && mBtAdapter.getBondedDevices().isEmpty() == false)) 
 			{
-				SmartDeviceLinkReceiver.queryForConnectedService(this);
+				SdlReceiver.queryForConnectedService(this);
 			}
 		}
 	}
     
     // Recycle the proxy
 	public void endSdlProxyInstance() {	
-		SmartDeviceLinkService serviceInstance = SmartDeviceLinkService.getInstance();
+		SdlService serviceInstance = SdlService.getInstance();
 		if (serviceInstance != null){
 			SdlProxyALM proxyInstance = serviceInstance.getProxy();
 			// if proxy exists, reset it
@@ -121,34 +121,34 @@ public class SmartDeviceLinkApplication extends Application {
 		}
 	}
 	
-	// Stop the SmartDeviceLinkService
+	// Stop the SdlService
 	public void endSdlProxyService() {
-		Log.i(SmartDeviceLinkApplication.TAG, "Ending SmartDeviceLink service");
-		SmartDeviceLinkService serviceInstance = SmartDeviceLinkService.getInstance();
+		Log.i(SdlApplication.TAG, "Ending SmartDeviceLink service");
+		SdlService serviceInstance = SdlService.getInstance();
 		if (serviceInstance != null){
 			serviceInstance.stopService();
 		}
 	}
 
     public void startWeatherUpdates() {
-    	Log.i(SmartDeviceLinkApplication.TAG, "Starting weather updates");
+    	Log.i(SdlApplication.TAG, "Starting weather updates");
     	mWeatherAlarm.startPendingLocation();
     }
     
     public void endWeatherUpdates() {
-    	Log.i(SmartDeviceLinkApplication.TAG, "Stopping weather updates");
+    	Log.i(SdlApplication.TAG, "Stopping weather updates");
     	mWeatherAlarm.stop();
     }
     
     public void startLocationServices() {
-    	Log.i(SmartDeviceLinkApplication.TAG, "Starting location service");
+    	Log.i(SdlApplication.TAG, "Starting location service");
     	if (mLocationServices != null) {
     		mLocationServices.start();
     	}
     }
 
     public void endLocationServices() {
-    	Log.i(SmartDeviceLinkApplication.TAG, "Stopping location service");
+    	Log.i(SdlApplication.TAG, "Stopping location service");
     	if (mLocationServices != null) {
     		mLocationServices.stop();
     	}
@@ -165,7 +165,7 @@ public class SmartDeviceLinkApplication extends Application {
     	boolean noApplinkService;
     	
     	noUIActivity = (currentUIActivity == null);
-    	noApplinkService = (SmartDeviceLinkService.getInstance() == null);
+    	noApplinkService = (SdlService.getInstance() == null);
     	
     	Log.d(TAG, "Attempting to stop services");
 		if(noUIActivity && noApplinkService){
@@ -195,12 +195,12 @@ public class SmartDeviceLinkApplication extends Application {
 
     	String appMessage = getResources().getString(R.string.mobileweather_ver_not_available);
     	String proxyMessage = getResources().getString(R.string.proxy_ver_not_available);    		    		    		
-    	SmartDeviceLinkService serviceInstance = SmartDeviceLinkService.getInstance();
+    	SdlService serviceInstance = SdlService.getInstance();
     	try {
     		appMessage = getResources().getString(R.string.mobileweather_ver) + 
     				getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
     	} catch (NameNotFoundException e) {
-    		Log.d(SmartDeviceLinkApplication.TAG, "Can't get package info", e);
+    		Log.d(SdlApplication.TAG, "Can't get package info", e);
     	}
 
     	try {
@@ -214,7 +214,7 @@ public class SmartDeviceLinkApplication extends Application {
     			}
     		}	
     	} catch (SdlException e) {
-    		Log.d(SmartDeviceLinkApplication.TAG, "Can't get Proxy Version", e);
+    		Log.d(SdlApplication.TAG, "Can't get Proxy Version", e);
     		e.printStackTrace();
     	}
     	new AlertDialog.Builder(context).setTitle((getResources().getString(R.string.app_ver)))

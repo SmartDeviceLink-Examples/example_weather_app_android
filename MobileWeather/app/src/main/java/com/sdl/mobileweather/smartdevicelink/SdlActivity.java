@@ -8,7 +8,7 @@ import android.view.MenuItem;
 
 import com.sdl.mobileweather.weather.AbbreviationDictionary;
 
-public class SmartDeviceLinkActivity extends Activity {
+public class SdlActivity extends Activity {
 	private boolean activityOnTop;
 	
 	/**
@@ -19,7 +19,7 @@ public class SmartDeviceLinkActivity extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		SmartDeviceLinkApplication.setCurrentActivity(this);
+		SdlApplication.setCurrentActivity(this);
 		activityOnTop = true;
 		if (LockScreenManager.getLockScreenStatus()) {
 			LockScreenManager.showLockScreen();
@@ -34,13 +34,13 @@ public class SmartDeviceLinkActivity extends Activity {
 	protected void onPause() {
 		activityOnTop = false;
 		// Notify App that activity is leaving forground
-		if (SmartDeviceLinkApplication.getCurrentActivity() == this) {
-			SmartDeviceLinkApplication.setCurrentActivity(null);
+		if (SdlApplication.getCurrentActivity() == this) {
+			SdlApplication.setCurrentActivity(null);
 		}else{
-			if(SmartDeviceLinkApplication.getCurrentActivity() == null){
-				Log.v(SmartDeviceLinkApplication.TAG, "Current activity already null.");
+			if(SdlApplication.getCurrentActivity() == null){
+				Log.v(SdlApplication.TAG, "Current activity already null.");
 			}else{
-				Log.v(SmartDeviceLinkApplication.TAG, "This activity is not on top.");
+				Log.v(SdlApplication.TAG, "This activity is not on top.");
 			}
 		}
 		super.onPause();
@@ -59,11 +59,11 @@ public class SmartDeviceLinkActivity extends Activity {
 	@Override
 	protected void onStop() {
 		// Stop services if no other weather activity has taken foreground
-		SmartDeviceLinkApplication app = SmartDeviceLinkApplication.getInstance();
+		SdlApplication app = SdlApplication.getInstance();
 		if (app != null) {
 			app.stopServices();
 		}else{
-			Log.d(SmartDeviceLinkApplication.TAG, "onStop app==null");
+			Log.d(SdlApplication.TAG, "onStop app==null");
 		}
     	super.onStop();		
 	}
