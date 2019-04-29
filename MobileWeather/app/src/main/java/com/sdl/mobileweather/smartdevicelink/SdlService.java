@@ -36,6 +36,8 @@ import com.smartdevicelink.managers.BaseSubManager;
 import com.smartdevicelink.managers.SdlManager;
 import com.smartdevicelink.managers.SdlManagerListener;
 import com.smartdevicelink.managers.file.filetypes.SdlArtwork;
+import com.smartdevicelink.managers.screen.SoftButtonObject;
+import com.smartdevicelink.managers.screen.SoftButtonState;
 import com.smartdevicelink.protocol.enums.FunctionID;
 import com.smartdevicelink.proxy.RPCNotification;
 import com.smartdevicelink.proxy.RPCResponse;
@@ -53,6 +55,7 @@ import com.smartdevicelink.proxy.rpc.Image;
 import com.smartdevicelink.proxy.rpc.ListFiles;
 import com.smartdevicelink.proxy.rpc.ListFilesResponse;
 import com.smartdevicelink.proxy.rpc.MenuParams;
+import com.smartdevicelink.proxy.rpc.OnButtonEvent;
 import com.smartdevicelink.proxy.rpc.OnButtonPress;
 import com.smartdevicelink.proxy.rpc.OnCommand;
 import com.smartdevicelink.proxy.rpc.OnHMIStatus;
@@ -95,8 +98,10 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Vector;
@@ -128,15 +133,6 @@ public class SdlService extends Service {
     private static final int TODAY = 11;
     private static final int TOMORROW = 12;
     private static final int NOW = 13;
-    private static final int SHOW_CONDITIONS_ID = 101;
-    private static final int SHOW_STANDARD_FORECAST_ID = 102;
-    private static final int SHOW_DAILY_FORECAST_ID = 103;
-    private static final int SHOW_HOURLY_FORECAST_ID = 104;
-    private static final int SHOW_ALERTS_ID = 105;
-    private static final int PREV_ITEM_ID = 106;
-    private static final int NEXT_ITEM_ID = 107;
-    private static final int LIST_ITEMS_ID = 108;
-    private static final int BACK_ID = 109;
     private static Boolean DailyForecast_ChoiceSet_created = false;
     private static Boolean HourlyForecast_ChoiceSet_created = false;
     private static int mDailyForecast_ChoiceSetID = 400;
@@ -208,15 +204,19 @@ public class SdlService extends Service {
     private WeatherAlert[] mPreviousAlerts = {}; // Stores the last known weather alerts
     private Forecast[] mForecast = null; // Stores the current forecast
     private Forecast[] mHourlyForecast = null; // Stores the current hourly forecast
-    private SoftButton mShowConditions = null;
-    private SoftButton mShowStandardForecast = null;
-    private SoftButton mShowDailyForecast = null;
-    private SoftButton mShowHourlyForecast = null;
-    private SoftButton mShowAlerts = null;
-    private SoftButton mShowPrevItem = null;
-    private SoftButton mShowNextItem = null;
-    private SoftButton mShowListItems = null;
-    private SoftButton mShowBack = null;
+    private SoftButtonObject mShowConditions = null;
+    private SoftButtonObject mShowStandardForecast = null;
+    private SoftButtonObject mShowDailyForecast = null;
+    private SoftButtonObject mShowHourlyForecast = null;
+    private SoftButtonObject mShowAlerts = null;
+    private String mShowPrevItemState1Name = "mShowPrevItemState1";
+    private String mShowPrevItemState2Name = "mShowPrevItemState2";
+    private SoftButtonObject mShowPrevItem = null;
+    private String mShowNextItemState1Name = "mShowNextItemState1";
+    private String mShowNextItemState2Name = "mShowNextItemState2";
+    private SoftButtonObject mShowNextItem = null;
+    private SoftButtonObject mShowListItems = null;
+    private SoftButtonObject mShowBack = null;
     private ForecastItem[] forecast_items = null;
     private static int forecast_item_counter = 0;
     private Boolean next_cmd_added = false;
@@ -493,14 +493,14 @@ public class SdlService extends Service {
     private class TimedShowRunnable implements Runnable {
 
         protected Vector<String> mShowStrings;
-        protected Vector<SoftButton> mSoftButtons;
+        protected List<SoftButtonObject> mSoftButtonObjects;
         protected int mFieldIndex;
         protected int mDelayTime;
         protected int mFieldsLeft;
 
-        public TimedShowRunnable(Vector<String> showStrings, Vector<SoftButton> softButtons, int index, int delay) {
+        public TimedShowRunnable(Vector<String> showStrings, List<SoftButtonObject> softButtonObjects, int index, int delay) {
             this.mShowStrings = showStrings;
-            this.mSoftButtons = softButtons;
+            this.mSoftButtonObjects = softButtonObjects;
             this.mFieldIndex = index;
             this.mDelayTime = delay;
         }
@@ -557,6 +557,9 @@ public class SdlService extends Service {
                     appImage.setValue(CLEAR_ICON);
                 }
 
+                sdlManager.getScreenManager().setSoftButtonObjects(mSoftButtonObjects);
+
+
                 Show showRequest = new Show();
                 showRequest.setMainField1(field1);
                 showRequest.setMainField2(field2);
@@ -564,10 +567,7 @@ public class SdlService extends Service {
                 showRequest.setMainField4(field4);
                 showRequest.setAlignment(TextAlignment.LEFT_ALIGNED);
                 showRequest.setGraphic(appImage);
-                if (mDisplayType != DisplayType.CID && mDisplayType != DisplayType.NGN)
-                    showRequest.setSoftButtons(this.mSoftButtons);
                 showRequest.setCorrelationID(autoIncCorrId++);
-
                 sdlManager.sendRPC(showRequest);
             }
         }
@@ -736,68 +736,174 @@ public class SdlService extends Service {
         lbManager.registerReceiver(mErrorReceiver, new IntentFilter("com.ford.mobileweather.ErrorUpdate"));
         // lbManager.registerReceiver(mRoadConditionsReceiver, new IntentFilter("com.ford.mobileweather.RoadConditions"));
 
-        mShowConditions = new SoftButton();
-        mShowConditions.setSoftButtonID(SHOW_CONDITIONS_ID);
-        mShowConditions.setText(getResources().getString(R.string.sb1));
-        mShowConditions.setType(SoftButtonType.SBT_TEXT);
-        mShowConditions.setIsHighlighted(false);
-        mShowConditions.setSystemAction(SystemAction.DEFAULT_ACTION);
 
-        mShowStandardForecast = new SoftButton();
-        mShowStandardForecast.setSoftButtonID(SHOW_STANDARD_FORECAST_ID);
-        mShowStandardForecast.setText(getResources().getString(R.string.sb2));
-        mShowStandardForecast.setType(SoftButtonType.SBT_TEXT);
-        mShowStandardForecast.setIsHighlighted(false);
-        mShowStandardForecast.setSystemAction(SystemAction.DEFAULT_ACTION);
+        SoftButtonState mShowConditionsState = new SoftButtonState("mShowConditionsState", getResources().getString(R.string.sb1), null);
+        mShowConditions = new SoftButtonObject("mShowConditions", Collections.singletonList(mShowConditionsState), mShowConditionsState.getName(), new SoftButtonObject.OnEventListener() {
+            @Override
+            public void onPress(SoftButtonObject softButtonObject, OnButtonPress onButtonPress) {
+                int mtemp_counter = forecast_item_counter;
+                mActiveInfoType = InfoType.WEATHER_CONDITIONS;
+                /* add cmds relevant for Current Weather Conditions, remove cmds not needed */
+                prepareCurrentCondCmds();
+                forecast_item_counter = mtemp_counter;
+                updateHmi(true);
+            }
 
-        mShowDailyForecast = new SoftButton();
-        mShowDailyForecast.setSoftButtonID(SHOW_DAILY_FORECAST_ID);
-        mShowDailyForecast.setText(getResources().getString(R.string.sb3));
-        mShowDailyForecast.setType(SoftButtonType.SBT_TEXT);
-        mShowDailyForecast.setIsHighlighted(false);
-        mShowDailyForecast.setSystemAction(SystemAction.DEFAULT_ACTION);
+            @Override
+            public void onEvent(SoftButtonObject softButtonObject, OnButtonEvent onButtonEvent) {
 
-        mShowHourlyForecast = new SoftButton();
-        mShowHourlyForecast.setSoftButtonID(SHOW_HOURLY_FORECAST_ID);
-        mShowHourlyForecast.setText(getResources().getString(R.string.sb4));
-        mShowHourlyForecast.setType(SoftButtonType.SBT_TEXT);
-        mShowHourlyForecast.setIsHighlighted(false);
-        mShowHourlyForecast.setSystemAction(SystemAction.DEFAULT_ACTION);
+            }
+        });
 
-        mShowAlerts = new SoftButton();
-        mShowAlerts.setSoftButtonID(SHOW_ALERTS_ID);
-        mShowAlerts.setText(getResources().getString(R.string.sb5));
-        mShowAlerts.setType(SoftButtonType.SBT_TEXT);
-        mShowAlerts.setIsHighlighted(false);
-        mShowAlerts.setSystemAction(SystemAction.DEFAULT_ACTION);
+        SoftButtonState mShowStandardForecastState = new SoftButtonState("mShowStandardForecastState", getResources().getString(R.string.sb2), null);
+        mShowStandardForecast = new SoftButtonObject("mShowStandardForecast", Collections.singletonList(mShowStandardForecastState), mShowStandardForecastState.getName(), new SoftButtonObject.OnEventListener() {
+            @Override
+            public void onPress(SoftButtonObject softButtonObject, OnButtonPress onButtonPress) {
+                int mtemp_counter = forecast_item_counter;
+                mActiveInfoType = InfoType.STANDARD_FORECAST;
+                forecast_item_counter = mtemp_counter;
+                updateHmi(true);
+            }
 
-        mShowPrevItem = new SoftButton();
-        mShowPrevItem.setSoftButtonID(PREV_ITEM_ID);
-        mShowPrevItem.setText(getResources().getString(R.string.sb1_prev));
-        mShowPrevItem.setType(SoftButtonType.SBT_TEXT);
-        mShowPrevItem.setIsHighlighted(false);
-        mShowPrevItem.setSystemAction(SystemAction.DEFAULT_ACTION);
+            @Override
+            public void onEvent(SoftButtonObject softButtonObject, OnButtonEvent onButtonEvent) {
 
-        mShowNextItem = new SoftButton();
-        mShowNextItem.setSoftButtonID(NEXT_ITEM_ID);
-        mShowNextItem.setText(getResources().getString(R.string.sb2_next));
-        mShowNextItem.setType(SoftButtonType.SBT_TEXT);
-        mShowNextItem.setIsHighlighted(false);
-        mShowNextItem.setSystemAction(SystemAction.DEFAULT_ACTION);
+            }
+        });
 
-        mShowListItems = new SoftButton();
-        mShowListItems.setSoftButtonID(LIST_ITEMS_ID);
-        mShowListItems.setText(getResources().getString(R.string.sb3_list));
-        mShowListItems.setType(SoftButtonType.SBT_TEXT);
-        mShowListItems.setIsHighlighted(false);
-        mShowListItems.setSystemAction(SystemAction.DEFAULT_ACTION);
+        SoftButtonState mShowDailyForecastState = new SoftButtonState("mShowDailyForecastState", getResources().getString(R.string.sb3), null);
+        mShowDailyForecast = new SoftButtonObject("mShowDailyForecast", Collections.singletonList(mShowDailyForecastState), mShowDailyForecastState.getName(), new SoftButtonObject.OnEventListener() {
+            @Override
+            public void onPress(SoftButtonObject softButtonObject, OnButtonPress onButtonPress) {
+                int mtemp_counter = forecast_item_counter;
+                mActiveInfoType = InfoType.DAILY_FORECAST;
+                /* add cmds relevant for Daily Forecast, remove cmds not needed */
+                prepareDailyForecastCmds();
+                mtemp_counter = 0;
+                forecast_item_counter = mtemp_counter;
+                updateHmi(true);
+            }
 
-        mShowBack = new SoftButton();
-        mShowBack.setSoftButtonID(BACK_ID);
-        mShowBack.setText(getResources().getString(R.string.sb3_back));
-        mShowBack.setType(SoftButtonType.SBT_TEXT);
-        mShowBack.setIsHighlighted(false);
-        mShowBack.setSystemAction(SystemAction.DEFAULT_ACTION);
+            @Override
+            public void onEvent(SoftButtonObject softButtonObject, OnButtonEvent onButtonEvent) {
+
+            }
+        });
+
+        SoftButtonState mShowHourlyForecastState = new SoftButtonState("mShowHourlyForecastState", getResources().getString(R.string.sb4), null);
+        mShowHourlyForecast = new SoftButtonObject("mShowHourlyForecast", Collections.singletonList(mShowHourlyForecastState), mShowHourlyForecastState.getName(), new SoftButtonObject.OnEventListener() {
+            @Override
+            public void onPress(SoftButtonObject softButtonObject, OnButtonPress onButtonPress) {
+                int mtemp_counter = forecast_item_counter;
+                mActiveInfoType = InfoType.HOURLY_FORECAST;
+                /* add cmds relevant for Hourly Forecast, remove cmds not needed */
+                prepareHourlyForecastCmds();
+                mtemp_counter = 0;
+                forecast_item_counter = mtemp_counter;
+                updateHmi(true);            }
+
+            @Override
+            public void onEvent(SoftButtonObject softButtonObject, OnButtonEvent onButtonEvent) {
+
+            }
+        });
+
+        SoftButtonState mShowAlertsState = new SoftButtonState("mShowStandardForecastState", getResources().getString(R.string.sb5), null);
+        mShowAlerts = new SoftButtonObject("mShowStandardForecast", Collections.singletonList(mShowAlertsState), mShowAlertsState.getName(), new SoftButtonObject.OnEventListener() {
+            @Override
+            public void onPress(SoftButtonObject softButtonObject, OnButtonPress onButtonPress) {
+                int mtemp_counter = forecast_item_counter;
+                mActiveInfoType = InfoType.ALERTS;
+                forecast_item_counter = mtemp_counter;
+                updateHmi(true);            }
+
+            @Override
+            public void onEvent(SoftButtonObject softButtonObject, OnButtonEvent onButtonEvent) {
+
+            }
+        });
+
+        SoftButtonState mShowPrevItemState1 = new SoftButtonState(mShowPrevItemState1Name, getResources().getString(R.string.sb1_prev), null);
+        SoftButtonState mShowPrevItemState2 = new SoftButtonState(mShowPrevItemState2Name, "-", null);
+        mShowPrevItem = new SoftButtonObject("mShowPrevItem", Arrays.asList(mShowPrevItemState1, mShowPrevItemState2), mShowPrevItemState2.getName(), new SoftButtonObject.OnEventListener() {
+            @Override
+            public void onPress(SoftButtonObject softButtonObject, OnButtonPress onButtonPress) {
+                int mtemp_counter = forecast_item_counter;
+                mtemp_counter--;
+                if (mtemp_counter >= 0) {
+                    if (mtemp_counter == 0) {
+                        previous_cmd_deleted_corrId = autoIncCorrId;
+                        deleteCommand(PREVIOUS, autoIncCorrId++);
+                    }
+                    forecast_item_counter = mtemp_counter;
+                    writeDisplay(true);
+                } else {
+                    speak("You have reached the beginning of the forecast list", autoIncCorrId++);
+                }
+            }
+
+            @Override
+            public void onEvent(SoftButtonObject softButtonObject, OnButtonEvent onButtonEvent) {
+
+            }
+        });
+
+        SoftButtonState mShowNextItemState1 = new SoftButtonState(mShowNextItemState1Name, getResources().getString(R.string.sb2_next), null);
+        SoftButtonState mShowNextItemState2 = new SoftButtonState(mShowNextItemState2Name, "-", null);
+        mShowNextItem = new SoftButtonObject("mShowNextItem", Arrays.asList(mShowNextItemState1, mShowNextItemState2), mShowNextItemState1.getName(), new SoftButtonObject.OnEventListener() {
+            @Override
+            public void onPress(SoftButtonObject softButtonObject, OnButtonPress onButtonPress) {
+                int mtemp_counter = forecast_item_counter;
+                mtemp_counter++;
+                if (mtemp_counter < forecast_items.length) {
+                    forecast_item_counter = mtemp_counter;
+                    writeDisplay(true);
+                }
+                if (mtemp_counter >= forecast_items.length) {
+                    next_cmd_deleted_corrId = autoIncCorrId;
+                    deleteCommand(NEXT, autoIncCorrId++);
+
+                    speak("You have reached the end of the forecast list", autoIncCorrId++);
+                }
+            }
+
+            @Override
+            public void onEvent(SoftButtonObject softButtonObject, OnButtonEvent onButtonEvent) {
+
+            }
+        });
+
+        SoftButtonState mShowListItemsState = new SoftButtonState("mShowListItemsState", getResources().getString(R.string.sb3_list), null);
+        mShowListItems = new SoftButtonObject("mShowListItems", Collections.singletonList(mShowListItemsState), mShowListItemsState.getName(), new SoftButtonObject.OnEventListener() {
+            @Override
+            public void onPress(SoftButtonObject softButtonObject, OnButtonPress onButtonPress) {
+                forecast_item_counter = 0;
+                mTimedShowHandler.removeCallbacks(mTimedShowRunnable);
+                prepareListItemsCmds();
+            }
+
+            @Override
+            public void onEvent(SoftButtonObject softButtonObject, OnButtonEvent onButtonEvent) {
+
+            }
+        });
+
+        SoftButtonState mShowBackState = new SoftButtonState("mShowBackState", getResources().getString(R.string.sb3_back), null);
+        mShowBack = new SoftButtonObject("mShowBack", Collections.singletonList(mShowBackState), mShowBackState.getName(), new SoftButtonObject.OnEventListener() {
+            @Override
+            public void onPress(SoftButtonObject softButtonObject, OnButtonPress onButtonPress) {
+                mActiveInfoType = InfoType.WEATHER_CONDITIONS;
+                prepareBackCmds();
+                forecast_item_counter = 0;
+                updateHmi(false);
+            }
+
+            @Override
+            public void onEvent(SoftButtonObject softButtonObject, OnButtonEvent onButtonEvent) {
+
+            }
+        });
+
 
         if (!AbbreviationDictionary.isPrepared())
             AbbreviationDictionary.loadDictionary(this);
@@ -948,87 +1054,7 @@ public class SdlService extends Service {
                         @Override
                         public void onNotified(RPCNotification notification) {
                             OnButtonPress onButtonPress = (OnButtonPress) notification;
-
-                            int mtemp_counter = forecast_item_counter;
-
                             switch (onButtonPress.getButtonName()) {
-                                case CUSTOM_BUTTON:
-                                    switch (onButtonPress.getCustomButtonName()) {
-                                        case SHOW_CONDITIONS_ID:
-                                            mActiveInfoType = InfoType.WEATHER_CONDITIONS;
-                                            /* add cmds relevant for Current Weather Conditions, remove cmds not needed */
-                                            prepareCurrentCondCmds();
-                                            break;
-                                        case SHOW_STANDARD_FORECAST_ID:
-                                            mActiveInfoType = InfoType.STANDARD_FORECAST;
-                                            break;
-                                        case SHOW_DAILY_FORECAST_ID:
-                                            mActiveInfoType = InfoType.DAILY_FORECAST;
-                                            /* add cmds relevant for Daily Forecast, remove cmds not needed */
-                                            prepareDailyForecastCmds();
-                                            mtemp_counter = 0;
-                                            break;
-                                        case SHOW_HOURLY_FORECAST_ID:
-                                            mActiveInfoType = InfoType.HOURLY_FORECAST;
-                                            /* add cmds relevant for Hourly Forecast, remove cmds not needed */
-                                            prepareHourlyForecastCmds();
-                                            mtemp_counter = 0;
-                                            break;
-
-                                        case SHOW_ALERTS_ID:
-                                            mActiveInfoType = InfoType.ALERTS;
-                                            break;
-
-                                        case PREV_ITEM_ID:
-                                            mtemp_counter--;
-                                            if (mtemp_counter >= 0) {
-                                                if (mtemp_counter == 0) {
-                                                    previous_cmd_deleted_corrId = autoIncCorrId;
-                                                    deleteCommand(PREVIOUS, autoIncCorrId++);
-                                                }
-                                                forecast_item_counter = mtemp_counter;
-                                                writeDisplay(true);
-                                            } else {
-                                                speak("You have reached the beginning of the forecast list", autoIncCorrId++);
-                                            }
-                                            return;
-
-                                        case NEXT_ITEM_ID:
-                                            mtemp_counter++;
-                                            if (mtemp_counter < forecast_items.length) {
-                                                forecast_item_counter = mtemp_counter;
-                                                writeDisplay(true);
-                                            }
-                                            if (mtemp_counter >= forecast_items.length) {
-                                                next_cmd_deleted_corrId = autoIncCorrId;
-                                                deleteCommand(NEXT, autoIncCorrId++);
-
-                                                speak("You have reached the end of the forecast list", autoIncCorrId++);
-                                            }
-                                            return;
-
-                                        case LIST_ITEMS_ID:
-                                            forecast_item_counter = 0;
-                                            mTimedShowHandler.removeCallbacks(mTimedShowRunnable);
-                                            prepareListItemsCmds();
-                                            return;
-
-                                        case BACK_ID:
-                                            mActiveInfoType = InfoType.WEATHER_CONDITIONS;
-                                            mShowConditions.setIsHighlighted(true);
-                                            mShowBack.setIsHighlighted(false);
-                                            prepareBackCmds();
-                                            forecast_item_counter = 0;
-                                            updateHmi(false);
-                                            return;
-
-                                        default:
-                                            break;
-                                    }
-                                    forecast_item_counter = mtemp_counter;
-                                    updateHmi(true);
-                                    break;
-
                                 case PRESET_1:
                                     updateHmi(true);
                                     break;
@@ -1118,8 +1144,6 @@ public class SdlService extends Service {
 
                                     case BACK:
                                         mActiveInfoType = InfoType.WEATHER_CONDITIONS;
-                                        mShowConditions.setIsHighlighted(true);
-                                        mShowBack.setIsHighlighted(false);
                                         prepareBackCmds();
                                         forecast_item_counter = 0;
                                         updateHmi(false);
@@ -1233,12 +1257,6 @@ public class SdlService extends Service {
                         case HMI_FULL:
                             Log.i(SdlApplication.TAG, "HMI_FULL");
                             mLocalizationUtil.changeLocale(mLocalizationUtil.getAdjustedLocaleLanguage(), mLocalizationUtil.getAdjustedLocaleCountry(), getApplicationContext());
-                            // refresh softbuttons
-                            mShowConditions.setText(getResources().getString(R.string.sb1));
-                            mShowDailyForecast.setText(getResources().getString(R.string.sb3));
-                            mShowHourlyForecast.setText(getResources().getString(R.string.sb4));
-                            mShowBack.setText(getResources().getString(R.string.sb3_back));
-                            mShowListItems.setText(getResources().getString(R.string.sb3_list));
                             if (onHMIStatus.getFirstRun()) {
                                 // Custom help and timeout messages
                                 setGlobalProperties((getResources().getString(R.string.gp_help_prompt)), (getResources().getString(R.string.gp_timeout_prompt)), autoIncCorrId++);
@@ -1717,11 +1735,11 @@ public class SdlService extends Service {
 
             if (mDisplayType != DisplayType.CID && mDisplayType != DisplayType.NGN) {
                 Log.d(SdlApplication.TAG, "Sending soft buttons");
-                Vector<SoftButton> softButtons = new Vector<SoftButton>();
-                softButtons.add(mShowConditions);
-                softButtons.add(mShowDailyForecast);
-                softButtons.add(mShowHourlyForecast);
-                showRequest.setSoftButtons(softButtons);
+                List<SoftButtonObject> softButtonObjects = new ArrayList<>();
+                softButtonObjects.add(mShowConditions);
+                softButtonObjects.add(mShowDailyForecast);
+                softButtonObjects.add(mShowHourlyForecast);
+                sdlManager.getScreenManager().setSoftButtonObjects(softButtonObjects);
             }
             showRequest.setCorrelationID(autoIncCorrId++);
 
@@ -1833,22 +1851,22 @@ public class SdlService extends Service {
         String mediatrack = "";
 
         if (forecast_item_counter == 0) {
-            mShowPrevItem.setText("-");
+            mShowPrevItem.transitionToStateByName(mShowPrevItemState2Name);
         } else {
-            mShowPrevItem.setText(getResources().getString(R.string.sb1_prev));
+            mShowPrevItem.transitionToStateByName(mShowPrevItemState1Name);
         }
         if (((mActiveInfoType == InfoType.DAILY_FORECAST) && (forecast_item_counter == DAILY_FORECAST_DAYS - 1)) ||
                 ((mActiveInfoType == InfoType.HOURLY_FORECAST) && (forecast_item_counter == HOURLY_FORECAST_HOURS - 1))) {
-            mShowNextItem.setText("-");
+            mShowNextItem.transitionToStateByName(mShowNextItemState2Name);
         } else {
-            mShowNextItem.setText(getResources().getString(R.string.sb2_next));
+            mShowNextItem.transitionToStateByName(mShowNextItemState1Name);
         }
 
-        Vector<SoftButton> softButtons = new Vector<SoftButton>();
-        softButtons.add(mShowPrevItem);
-        softButtons.add(mShowNextItem);
-        softButtons.add(mShowBack);
-        softButtons.add(mShowListItems);
+        List<SoftButtonObject> softButtonObjects = new ArrayList<>();
+        softButtonObjects.add(mShowPrevItem);
+        softButtonObjects.add(mShowNextItem);
+        softButtonObjects.add(mShowBack);
+        softButtonObjects.add(mShowListItems);
 
         if (forecast_items != null) {
             field1 = forecast_items[forecast_item_counter].showString_field1;
@@ -1892,7 +1910,7 @@ public class SdlService extends Service {
         showRequest.setGraphic(conditionsImage);
         showRequest.setCorrelationID(autoIncCorrId++);
         if (mDisplayType != DisplayType.CID && mDisplayType != DisplayType.NGN) {
-            showRequest.setSoftButtons(softButtons);
+            sdlManager.getScreenManager().setSoftButtonObjects(softButtonObjects);
         }
 
         if (putFilePending) {
@@ -2412,12 +2430,12 @@ public class SdlService extends Service {
                 }
             }
 
-            Vector<SoftButton> softButtons = new Vector<SoftButton>();
-            softButtons.add(mShowConditions);
-            softButtons.add(mShowDailyForecast);
-            softButtons.add(mShowHourlyForecast);
+            List<SoftButtonObject> softButtonObjects = new ArrayList<>();
+            softButtonObjects.add(mShowConditions);
+            softButtonObjects.add(mShowDailyForecast);
+            softButtonObjects.add(mShowHourlyForecast);
 
-            mTimedShowRunnable = new TimedShowRunnable(showStrings, softButtons, 0, TIMED_SHOW_DELAY);
+            mTimedShowRunnable = new TimedShowRunnable(showStrings, softButtonObjects, 0, TIMED_SHOW_DELAY);
             mTimedShowHandler.post(mTimedShowRunnable);
 
             if (includeSpeak) {
