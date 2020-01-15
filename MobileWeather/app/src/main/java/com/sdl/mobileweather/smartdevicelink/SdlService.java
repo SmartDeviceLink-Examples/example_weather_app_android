@@ -1802,31 +1802,31 @@ public class SdlService extends Service {
     }
 
     private void showWeatherError() {
-        Show showRequest = new Show();
-        showRequest.setMainField3(getResources().getString(R.string.network_txt_field3));
-        showRequest.setMainField4(getResources().getString(R.string.network_txt_field4));
-        showRequest.setAlignment(TextAlignment.CENTERED);
+       sdlManager.getScreenManager().beginTransaction();
+       sdlManager.getScreenManager().setTextField3(getResources().getString(R.string.network_txt_field3));
+       sdlManager.getScreenManager().setTextField4(getResources().getString(R.string.network_txt_field4));
+       sdlManager.getScreenManager().setTextAlignment(TextAlignment.CENTERED);
         String errorTTSStr = null;
         String field3 = "";
         String field4 = "";
 
         if (!mDataManager.isNetworkAvailable()) {
-            showRequest.setMainField1(getResources().getString(R.string.network_txt_field1));
-            showRequest.setMainField2(getResources().getString(R.string.network_txt_field2));
+            sdlManager.getScreenManager().setTextField1(getResources().getString(R.string.network_txt_field1));
+            sdlManager.getScreenManager().setTextField2(getResources().getString(R.string.network_txt_field2));
             if (mFirstConnectionError) {
                 errorTTSStr = getResources().getString(R.string.network_speak);
                 mFirstConnectionError = false;
             }
         } else if (!mDataManager.isLocationAvailable()) {
-            showRequest.setMainField1(getResources().getString(R.string.location_txt_field1));
-            showRequest.setMainField2(getResources().getString(R.string.location_txt_field2));
+            sdlManager.getScreenManager().setTextField1(getResources().getString(R.string.location_txt_field1));
+            sdlManager.getScreenManager().setTextField2(getResources().getString(R.string.location_txt_field2));
             if (mFirstLocationError) {
                 errorTTSStr = getResources().getString(R.string.location_speak);
                 mFirstLocationError = false;
             }
         } else if (!mDataManager.isAPIAvailable()) {
-            showRequest.setMainField1(getResources().getString(R.string.weather_api_txt_field1));
-            showRequest.setMainField2(getResources().getString(R.string.weather_api_txt_field2));
+            sdlManager.getScreenManager().setTextField1(getResources().getString(R.string.weather_api_txt_field1));
+            sdlManager.getScreenManager().setTextField2(getResources().getString(R.string.weather_api_txt_field2));
             if (mFirstAPIError) {
                 errorTTSStr = getResources().getString(R.string.weather_api_speak);
             }
@@ -1835,11 +1835,18 @@ public class SdlService extends Service {
             // show and speak.
             return;
         }
-        showRequest.setMainField3(field3);
-        showRequest.setMainField4(field4);
-        showRequest.setCorrelationID(autoIncCorrId++);
-        sdlManager.sendRPC(showRequest);
+        sdlManager.getScreenManager().setTextField3(field3);
+        sdlManager.getScreenManager().setTextField4(field4);
+        sdlManager.getScreenManager().commit(new CompletionListener() {
+            @Override
+            public void onComplete(boolean success) {
+                Log.i(TAG, "ScreenManager update complete: " + success);
+
+            }
+        });
         speak(errorTTSStr, autoIncCorrId++);
+
+
     }
 
 
