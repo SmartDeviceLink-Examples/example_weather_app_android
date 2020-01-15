@@ -1856,7 +1856,7 @@ public class SdlService extends Service {
         String field3 = "";
         String field4 = "";
         String mediatrack = "";
-
+        
         if (forecast_item_counter == 0) {
             mShowPrevItem.transitionToStateByName(mShowPrevItemState2Name);
         } else {
@@ -1869,6 +1869,7 @@ public class SdlService extends Service {
             mShowNextItem.transitionToStateByName(mShowNextItemState1Name);
         }
 
+        sdlManager.getScreenManager().beginTransaction();
         List<SoftButtonObject> softButtonObjects = new ArrayList<>();
         softButtonObjects.add(mShowPrevItem);
         softButtonObjects.add(mShowNextItem);
@@ -1881,54 +1882,37 @@ public class SdlService extends Service {
             mediatrack = forecast_items[forecast_item_counter].precipitationChance.toString() + "%";
         }
 
-        Image appImage = null;
-        if (mGraphicsSupported) {
-            appImage = new Image();
-            appImage.setImageType(ImageType.DYNAMIC);
-            appImage.setValue(CLEAR_ICON);
-        }
+        sdlManager.getScreenManager().setTextField1(field1);
+        sdlManager.getScreenManager().setTextField2(field2);
+        sdlManager.getScreenManager().setTextField3(field3);
+        sdlManager.getScreenManager().setTextField4(field4);
+        sdlManager.getScreenManager().setMediaTrackTextField(mediatrack);
 
-        Show showRequest = new Show();
-        showRequest.setMainField1(field1);
-        showRequest.setMainField2(field2);
-        showRequest.setMainField3(field3);
-        showRequest.setMainField4(field4);
-        showRequest.setMediaTrack(mediatrack);
-
-        Image conditionsImage = null;
-        boolean putFilePending = false;
         String mappedName = null;
-
+        conditionsID = 0;
         if (mGraphicsSupported && mWeatherConditions.conditionIcon != null && forecast_items != null) {
             String imageName = ImageProcessor.getFileFromURL(forecast_items[forecast_item_counter].conditionIcon);
             mappedName = ImageProcessor.getMappedConditionsImageName(imageName, false);
             if (mappedName != null) {
                 mConditionIconFileName = mappedName + ".png";
-                if (!mUploadedFiles.contains(mConditionIconFileName)) {
-                    putFilePending = true;
-                }
-                conditionsImage = new Image();
-                conditionsImage.setValue(mConditionIconFileName);
-                conditionsImage.setImageType(ImageType.DYNAMIC);
+                conditionsID = getResources().getIdentifier(mappedName, "drawable", getPackageName());
             }
         }
 
-        showRequest.setAlignment(TextAlignment.LEFT_ALIGNED);
-        showRequest.setGraphic(conditionsImage);
-        showRequest.setCorrelationID(autoIncCorrId++);
+        sdlManager.getScreenManager().setTextAlignment(TextAlignment.LEFT_ALIGNED);
+        sdlManager.getScreenManager().setPrimaryGraphic(new SdlArtwork(mConditionIconFileName, FileType.GRAPHIC_PNG, conditionsID, true ));
+
         if (mDisplayType != DisplayType.CID && mDisplayType != DisplayType.NGN) {
             sdlManager.getScreenManager().setSoftButtonObjects(softButtonObjects);
         }
 
-        if (putFilePending) {
-            mShowPendingPutFile = showRequest;
-            uploadFile(mappedName);
-        } else {
-            if (showRequest.getGraphic() != null) {
-                Log.i(SdlApplication.TAG, String.format(Locale.getDefault(), "Show image: %s", showRequest.getGraphic().getValue()));
+        sdlManager.getScreenManager().commit(new CompletionListener() {
+            @Override
+            public void onComplete(boolean success) {
+                Log.i(TAG, "ScreenManager update complete: " + success);
+
             }
-            sdlManager.sendRPC(showRequest);
-        }
+        });
 
         if (includeSpeak) {
             Vector<TTSChunk> chunks = new Vector<TTSChunk>();
