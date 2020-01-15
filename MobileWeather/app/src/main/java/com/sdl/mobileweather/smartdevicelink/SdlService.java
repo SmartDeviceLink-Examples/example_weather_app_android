@@ -1856,7 +1856,7 @@ public class SdlService extends Service {
         String field3 = "";
         String field4 = "";
         String mediatrack = "";
-        
+
         if (forecast_item_counter == 0) {
             mShowPrevItem.transitionToStateByName(mShowPrevItemState2Name);
         } else {
@@ -2443,15 +2443,20 @@ public class SdlService extends Service {
                 sdlManager.sendRPC(speakRequest);
             }
         } else {
-            Show showRequest = new Show();
-            showRequest.setMainField1(getResources().getString(R.string.weather_alerts_txt_field1));
-            showRequest.setMainField2(getResources().getString(R.string.weather_alerts_txt_field2));
-            showRequest.setMainField3(getResources().getString(R.string.weather_alerts_txt_field3));
-            showRequest.setMainField4(getResources().getString(R.string.weather_alerts_txt_field4));
-            showRequest.setMediaTrack(getResources().getString(R.string.weather_alerts_txt_mediatrack));
-            showRequest.setAlignment(TextAlignment.CENTERED);
-            showRequest.setCorrelationID(autoIncCorrId++);
-            sdlManager.sendRPC(showRequest);
+            sdlManager.getScreenManager().beginTransaction();
+            sdlManager.getScreenManager().setTextField1(getResources().getString(R.string.weather_alerts_txt_field1));
+            sdlManager.getScreenManager().setTextField2(getResources().getString(R.string.weather_alerts_txt_field2));
+            sdlManager.getScreenManager().setTextField3(getResources().getString(R.string.weather_alerts_txt_field3));
+            sdlManager.getScreenManager().setTextField4(getResources().getString(R.string.weather_alerts_txt_field4));
+            sdlManager.getScreenManager().setMediaTrackTextField(getResources().getString(R.string.weather_alerts_txt_mediatrack));
+            sdlManager.getScreenManager().setTextAlignment(TextAlignment.CENTERED);
+            sdlManager.getScreenManager().commit(new CompletionListener() {
+                @Override
+                public void onComplete(boolean success) {
+                    Log.i(TAG, "ScreenManager update complete: " + success);
+
+                }
+            });
 
             if (includeSpeak) {
                 speak(getResources().getString(R.string.weather_alerts_speak), autoIncCorrId++);
