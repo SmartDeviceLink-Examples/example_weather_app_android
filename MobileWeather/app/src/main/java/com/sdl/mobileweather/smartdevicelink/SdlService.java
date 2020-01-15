@@ -33,9 +33,11 @@ import com.sdl.mobileweather.weather.WeatherConditions;
 import com.sdl.mobileweather.weather.WeatherDataManager;
 import com.smartdevicelink.exception.SdlException;
 import com.smartdevicelink.managers.BaseSubManager;
+import com.smartdevicelink.managers.CompletionListener;
 import com.smartdevicelink.managers.SdlManager;
 import com.smartdevicelink.managers.SdlManagerListener;
 import com.smartdevicelink.managers.file.filetypes.SdlArtwork;
+import com.smartdevicelink.managers.lifecycle.LifecycleConfigurationUpdate;
 import com.smartdevicelink.managers.screen.SoftButtonObject;
 import com.smartdevicelink.managers.screen.SoftButtonState;
 import com.smartdevicelink.protocol.enums.FunctionID;
@@ -172,7 +174,7 @@ public class SdlService extends Service {
     // Service shutdown timing constants
     private static final int CONNECTION_TIMEOUT = 120000;
     private static final int STOP_SERVICE_DELAY = 5000;
-
+    private int conditionsID = 0;
     // variable used to increment correlation ID for every request sent to SDL
     public int autoIncCorrId = 0;
     // variable to contain the current state of the service
@@ -1210,6 +1212,12 @@ public class SdlService extends Service {
                 @Override
                 public void onError(String info, Exception e) {
                 }
+
+                @Override
+                public LifecycleConfigurationUpdate managerShouldUpdateLifecycle(Language language) {
+                    return null;
+                }
+
             };
 
             // Create App Icon, this is set in the SdlManager builder
@@ -1662,12 +1670,8 @@ public class SdlService extends Service {
             float humidity = mWeatherConditions.humidity;
             String title = mWeatherConditions.conditionTitle;
             String locationString = "";
-
-            Image conditionsImage = null;
-            Show showRequest = null;
-            boolean putFilePending = false;
             String mappedName = null;
-
+            conditionsID = 0;
             if (mCurrentLocation != null) {
                 if (mCurrentLocation.city != null) {
                     locationString = mCurrentLocation.city;
@@ -1689,15 +1693,11 @@ public class SdlService extends Service {
             if (mGraphicsSupported && mWeatherConditions.conditionIcon != null) {
                 String imageName = ImageProcessor.getFileFromURL(mWeatherConditions.conditionIcon);
                 mappedName = ImageProcessor.getMappedConditionsImageName(imageName, false);
+
                 if (mappedName != null) {
                     mConditionIconFileName = mappedName + ".png";
+                    conditionsID = getResources().getIdentifier(mappedName, "drawable", getPackageName());
                     Log.i(SdlApplication.TAG, "Conditions file: " + mConditionIconFileName);
-                    if (!mUploadedFiles.contains(mConditionIconFileName)) {
-                        putFilePending = true;
-                    }
-                    conditionsImage = new Image();
-                    conditionsImage.setValue(mConditionIconFileName);
-                    conditionsImage.setImageType(ImageType.DYNAMIC);
                 }
             }
 
@@ -1723,15 +1723,14 @@ public class SdlService extends Service {
                 field3 = String.format(Locale.getDefault(), "%.0f\u00B0%s, %.0f%%, %.0f %s", temperature, tempUnitsShort, humidity, windSpeed, speedUnitsShort);
             }
 
-            showRequest = new Show();
-            showRequest.setMainField1(field1);
-            showRequest.setMainField2(field2);
-            showRequest.setMainField3(field3);
-            showRequest.setMainField4(field4);
-            showRequest.setMediaTrack(mediatrack);
-
-            showRequest.setAlignment(TextAlignment.LEFT_ALIGNED);
-            showRequest.setGraphic(conditionsImage);
+            sdlManager.getScreenManager().beginTransaction();
+            sdlManager.getScreenManager().setTextField1(field1);
+            sdlManager.getScreenManager().setTextField2(field2);
+            sdlManager.getScreenManager().setTextField3(field3);
+            sdlManager.getScreenManager().setTextField4(field4);
+            sdlManager.getScreenManager().setMediaTrackTextField(mediatrack);
+            sdlManager.getScreenManager().setTextAlignment(TextAlignment.LEFT_ALIGNED);
+            sdlManager.getScreenManager().setPrimaryGraphic(new SdlArtwork(mConditionIconFileName, FileType.GRAPHIC_PNG, conditionsID, true ));
 
             if (mDisplayType != DisplayType.CID && mDisplayType != DisplayType.NGN) {
                 Log.d(SdlApplication.TAG, "Sending soft buttons");
@@ -1741,17 +1740,14 @@ public class SdlService extends Service {
                 softButtonObjects.add(mShowHourlyForecast);
                 sdlManager.getScreenManager().setSoftButtonObjects(softButtonObjects);
             }
-            showRequest.setCorrelationID(autoIncCorrId++);
+            sdlManager.getScreenManager().commit(new CompletionListener() {
+                @Override
+                public void onComplete(boolean success) {
+                    Log.i(TAG, "ScreenManager update complete: " + success);
 
-            if (putFilePending) {
-                mShowPendingPutFile = showRequest;
-                uploadFile(mappedName);
-            } else {
-                if (showRequest.getGraphic() != null) {
-                    Log.i(SdlApplication.TAG, String.format(Locale.getDefault(), "Show image: %s", showRequest.getGraphic().getValue()));
                 }
-                sdlManager.sendRPC(showRequest);
-            }
+            });
+            
             if (includeSpeak) {
                 String speakString;
                 Vector<TTSChunk> chunks = new Vector<TTSChunk>();
