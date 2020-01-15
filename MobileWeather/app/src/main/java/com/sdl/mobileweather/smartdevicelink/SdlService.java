@@ -1747,7 +1747,6 @@ public class SdlService extends Service {
 
                 }
             });
-            
             if (includeSpeak) {
                 String speakString;
                 Vector<TTSChunk> chunks = new Vector<TTSChunk>();
@@ -1783,14 +1782,19 @@ public class SdlService extends Service {
     }
 
     private void showNoConditionsAvail() {
-        Show showRequest = new Show();
-        showRequest.setMainField1(getResources().getString(R.string.conditions_txt_field1));
-        showRequest.setMainField2(getResources().getString(R.string.conditions_txt_field2));
-        showRequest.setMainField3(getResources().getString(R.string.conditions_txt_field3));
-        showRequest.setMainField4(getResources().getString(R.string.conditions_txt_field4));
-        showRequest.setAlignment(TextAlignment.CENTERED);
-        showRequest.setCorrelationID(autoIncCorrId++);
-        sdlManager.sendRPC(showRequest);
+        sdlManager.getScreenManager().beginTransaction();
+        sdlManager.getScreenManager().setTextField1(getResources().getString(R.string.conditions_txt_field1));
+        sdlManager.getScreenManager().setTextField2(getResources().getString(R.string.conditions_txt_field2));
+        sdlManager.getScreenManager().setTextField3(getResources().getString(R.string.conditions_txt_field3));
+        sdlManager.getScreenManager().setTextField4(getResources().getString(R.string.conditions_txt_field4));
+        sdlManager.getScreenManager().setTextAlignment(TextAlignment.CENTERED);
+        sdlManager.getScreenManager().commit(new CompletionListener() {
+            @Override
+            public void onComplete(boolean success) {
+                Log.i(TAG, "ScreenManager update complete: " + success);
+
+            }
+        });
         if (mFirstUnknownError) {
             speak(getResources().getString(R.string.conditions_speak), autoIncCorrId++);
             mFirstUnknownError = false;
