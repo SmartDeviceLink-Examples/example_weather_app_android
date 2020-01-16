@@ -1276,9 +1276,6 @@ public class SdlService extends Service {
                                 // Perform welcome
                                 showWelcomeMessage();
 
-                                // Add commands
-                                addCommands();
-
                                 // Create InteractionChoicedSet for changing units
                                 createChangeUnitsInteractionChoiceSet();
 
@@ -1350,15 +1347,23 @@ public class SdlService extends Service {
      * Shows and speaks a welcome message
      */
     private void showWelcomeMessage() {
-        Show showRequest = new Show();
-        showRequest.setMainField1(getResources().getString(R.string.welcome_textfield1));
-        showRequest.setMainField2(getResources().getString(R.string.welcome_textfield2));
-        showRequest.setMainField3(getResources().getString(R.string.welcome_textfield3));
-        showRequest.setMainField4(getResources().getString(R.string.welcome_textfield4));
-        showRequest.setAlignment(TextAlignment.CENTERED);
-        showRequest.setCorrelationID(autoIncCorrId++);
-        sdlManager.sendRPC(showRequest);
-        mWelcomeCorrId = autoIncCorrId++;
+
+      sdlManager.getScreenManager().beginTransaction();
+      sdlManager.getScreenManager().setTextField1("Welcome to");
+      sdlManager.getScreenManager().setTextField2("MobileWeather");
+      sdlManager.getScreenManager().setTextField3("");
+      sdlManager.getScreenManager().setTextField4("");
+      sdlManager.getScreenManager().setTextAlignment(TextAlignment.CENTERED);
+        sdlManager.getScreenManager().commit(new CompletionListener() {
+            @Override
+            public void onComplete(boolean success) {
+                Log.i(TAG, "ScreenManager update complete: " + success);
+                addCommands();
+
+            }
+        });
+
+       // mWelcomeCorrId = autoIncCorrId++;
         Speak msg = new Speak(TTSChunkFactory.createSimpleTTSChunks((getResources().getString(R.string.welcome_speak))));
         msg.setCorrelationID(mWelcomeCorrId);
         msg.setOnRPCResponseListener(new OnRPCResponseListener() {
