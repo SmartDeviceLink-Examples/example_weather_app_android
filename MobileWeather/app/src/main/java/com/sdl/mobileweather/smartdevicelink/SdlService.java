@@ -40,6 +40,7 @@ import com.smartdevicelink.managers.file.filetypes.SdlArtwork;
 import com.smartdevicelink.managers.lifecycle.LifecycleConfigurationUpdate;
 import com.smartdevicelink.managers.screen.SoftButtonObject;
 import com.smartdevicelink.managers.screen.SoftButtonState;
+import com.smartdevicelink.managers.screen.choiceset.ChoiceCell;
 import com.smartdevicelink.protocol.enums.FunctionID;
 import com.smartdevicelink.proxy.RPCNotification;
 import com.smartdevicelink.proxy.RPCResponse;
@@ -2137,240 +2138,66 @@ public class SdlService extends Service {
         }
     }
 
-    private Image getImageIcon(URL icon_url) {
-        Image conditionsImage = null;
+    private SdlArtwork getArtWork(URL icon_url){
         String mappedName = null;
+        int conditionID = 0;
         if (mGraphicsSupported && mWeatherConditions.conditionIcon != null) {
             String imageName = ImageProcessor.getFileFromURL(icon_url);
             mappedName = ImageProcessor.getMappedConditionsImageName(imageName, false);
+
             if (mappedName != null) {
                 mConditionIconFileName = mappedName + ".png";
-                if (!mUploadedFiles.contains(mConditionIconFileName)) {
-                    uploadFile(mappedName);
-                }
-                conditionsImage = new Image();
-                conditionsImage.setValue(mConditionIconFileName);
-                conditionsImage.setImageType(ImageType.DYNAMIC);
-
+                conditionID = getResources().getIdentifier(mappedName, "drawable", getPackageName());
             }
         }
-        return conditionsImage;
+        SdlArtwork tempArtworkName = new SdlArtwork(mConditionIconFileName,FileType.GRAPHIC_PNG,conditionID,true);
+        return tempArtworkName;
+
+
     }
 
 
     private void createForecastChoiceSet() {
         /* Choices for Hourly Forecast to be created */
         if (mActiveInfoType == InfoType.HOURLY_FORECAST) {
-            Vector<Choice> commands = new Vector<Choice>();
+            sdlManager.getScreenManager().setPrimaryGraphic(new SdlArtwork(mConditionIconFileName, FileType.GRAPHIC_PNG, conditionsID, true ));
 
-            Choice listChoice1 = new Choice();
-            listChoice1.setChoiceID(CHOICE_ITEM1_ID);
-            listChoice1.setMenuName(forecast_items[0].timeString);
-            listChoice1.setVrCommands(new Vector<String>(Arrays.asList(new String[]{forecast_items[0].timeString})));
-            if (mGraphicsSupported) {
-                listChoice1.setImage(getImageIcon(forecast_items[0].conditionIcon));
-            }
-            commands.add(listChoice1);
+            ChoiceCell cell1 = new ChoiceCell(forecast_items[0].timeString,new Vector<String>(Arrays.asList(new String[]{forecast_items[0].timeString})),getArtWork(forecast_items[0].conditionIcon));
+            ChoiceCell cell2 = new ChoiceCell(forecast_items[1].timeString,new Vector<String>(Arrays.asList(new String[]{forecast_items[1].timeString})),getArtWork(forecast_items[1].conditionIcon));
+            ChoiceCell cell3 = new ChoiceCell(forecast_items[2].timeString,new Vector<String>(Arrays.asList(new String[]{forecast_items[2].timeString})),getArtWork(forecast_items[2].conditionIcon));
+            ChoiceCell cell4 = new ChoiceCell(forecast_items[3].timeString,new Vector<String>(Arrays.asList(new String[]{forecast_items[3].timeString})),getArtWork(forecast_items[3].conditionIcon));
+            ChoiceCell cell5 = new ChoiceCell(forecast_items[4].timeString,new Vector<String>(Arrays.asList(new String[]{forecast_items[4].timeString})),getArtWork(forecast_items[4].conditionIcon));
+            ChoiceCell cell6 = new ChoiceCell(forecast_items[5].timeString,new Vector<String>(Arrays.asList(new String[]{forecast_items[5].timeString})),getArtWork(forecast_items[5].conditionIcon));
+            ChoiceCell cell7 = new ChoiceCell(forecast_items[6].timeString,new Vector<String>(Arrays.asList(new String[]{forecast_items[6].timeString})),getArtWork(forecast_items[6].conditionIcon));
+            ChoiceCell cell8 = new ChoiceCell(forecast_items[7].timeString,new Vector<String>(Arrays.asList(new String[]{forecast_items[7].timeString})),getArtWork(forecast_items[7].conditionIcon));
+            ChoiceCell cell9 = new ChoiceCell(forecast_items[8].timeString,new Vector<String>(Arrays.asList(new String[]{forecast_items[8].timeString})),getArtWork(forecast_items[8].conditionIcon));
+            ChoiceCell cell10 = new ChoiceCell(forecast_items[9].timeString,new Vector<String>(Arrays.asList(new String[]{forecast_items[9].timeString})),getArtWork(forecast_items[9].conditionIcon));
+            ChoiceCell cell11 = new ChoiceCell(forecast_items[10].timeString,new Vector<String>(Arrays.asList(new String[]{forecast_items[10].timeString})),getArtWork(forecast_items[10].conditionIcon));
+            ChoiceCell cell12 = new ChoiceCell(forecast_items[11].timeString,new Vector<String>(Arrays.asList(new String[]{forecast_items[11].timeString})),getArtWork(forecast_items[11].conditionIcon));
 
-            Choice listChoice2 = new Choice();
-            listChoice2.setChoiceID(CHOICE_ITEM2_ID);
-            listChoice2.setMenuName(forecast_items[1].timeString);
-            listChoice2.setVrCommands(new Vector<String>(Arrays.asList(new String[]{forecast_items[1].timeString})));
-            if (mGraphicsSupported) {
-                listChoice2.setImage(getImageIcon(forecast_items[1].conditionIcon));
-            }
-            commands.add(listChoice2);
 
-            Choice listChoice3 = new Choice();
-            listChoice3.setChoiceID(CHOICE_ITEM3_ID);
-            listChoice3.setMenuName(forecast_items[2].timeString);
-            listChoice3.setVrCommands(new Vector<String>(Arrays.asList(new String[]{forecast_items[2].timeString})));
-            if (mGraphicsSupported) {
-                listChoice3.setImage(getImageIcon(forecast_items[2].conditionIcon));
-            }
-            commands.add(listChoice3);
+            List<ChoiceCell> choiceCellList = Arrays.asList(cell1,cell2,cell3,cell4,cell5,cell6,cell7,cell8,cell9,cell10,cell11,cell12);
 
-            Choice listChoice4 = new Choice();
-            listChoice4.setChoiceID(CHOICE_ITEM4_ID);
-            listChoice4.setMenuName(forecast_items[3].timeString);
-            listChoice4.setVrCommands(new Vector<String>(Arrays.asList(new String[]{forecast_items[3].timeString})));
-            if (mGraphicsSupported) {
-                listChoice4.setImage(getImageIcon(forecast_items[3].conditionIcon));
-            }
-            commands.add(listChoice4);
-
-            Choice listChoice5 = new Choice();
-            listChoice5.setChoiceID(CHOICE_ITEM5_ID);
-            listChoice5.setMenuName(forecast_items[4].timeString);
-            listChoice5.setVrCommands(new Vector<String>(Arrays.asList(new String[]{forecast_items[4].timeString})));
-            if (mGraphicsSupported) {
-                listChoice5.setImage(getImageIcon(forecast_items[4].conditionIcon));
-            }
-            commands.add(listChoice5);
-
-            Choice listChoice6 = new Choice();
-            listChoice6.setChoiceID(CHOICE_ITEM6_ID);
-            listChoice6.setMenuName(forecast_items[5].timeString);
-            listChoice6.setVrCommands(new Vector<String>(Arrays.asList(new String[]{forecast_items[5].timeString})));
-            if (mGraphicsSupported) {
-                listChoice6.setImage(getImageIcon(forecast_items[5].conditionIcon));
-            }
-            commands.add(listChoice6);
-
-            Choice listChoice7 = new Choice();
-            listChoice7.setChoiceID(CHOICE_ITEM7_ID);
-            listChoice7.setMenuName(forecast_items[6].timeString);
-            listChoice7.setVrCommands(new Vector<String>(Arrays.asList(new String[]{forecast_items[6].timeString})));
-            if (mGraphicsSupported) {
-                listChoice7.setImage(getImageIcon(forecast_items[6].conditionIcon));
-            }
-            commands.add(listChoice7);
-
-            Choice listChoice8 = new Choice();
-            listChoice8.setChoiceID(CHOICE_ITEM8_ID);
-            listChoice8.setMenuName(forecast_items[7].timeString);
-            listChoice8.setVrCommands(new Vector<String>(Arrays.asList(new String[]{forecast_items[7].timeString})));
-            if (mGraphicsSupported) {
-                listChoice8.setImage(getImageIcon(forecast_items[7].conditionIcon));
-            }
-            commands.add(listChoice8);
-
-            Choice listChoice9 = new Choice();
-            listChoice9.setChoiceID(CHOICE_ITEM9_ID);
-            listChoice9.setMenuName(forecast_items[8].timeString);
-            listChoice9.setVrCommands(new Vector<String>(Arrays.asList(new String[]{forecast_items[8].timeString})));
-            if (mGraphicsSupported) {
-                listChoice9.setImage(getImageIcon(forecast_items[8].conditionIcon));
-            }
-            commands.add(listChoice9);
-
-            Choice listChoice10 = new Choice();
-            listChoice10.setChoiceID(CHOICE_ITEM10_ID);
-            listChoice10.setMenuName(forecast_items[9].timeString);
-            listChoice10.setVrCommands(new Vector<String>(Arrays.asList(new String[]{forecast_items[9].timeString})));
-            if (mGraphicsSupported) {
-                listChoice10.setImage(getImageIcon(forecast_items[9].conditionIcon));
-            }
-            commands.add(listChoice10);
-
-            Choice listChoice11 = new Choice();
-            listChoice11.setChoiceID(CHOICE_ITEM11_ID);
-            listChoice11.setMenuName(forecast_items[10].timeString);
-            listChoice11.setVrCommands(new Vector<String>(Arrays.asList(new String[]{forecast_items[10].timeString})));
-            if (mGraphicsSupported) {
-                listChoice11.setImage(getImageIcon(forecast_items[10].conditionIcon));
-            }
-            commands.add(listChoice11);
-
-            Choice listChoice12 = new Choice();
-            listChoice12.setChoiceID(CHOICE_ITEM12_ID);
-            listChoice12.setMenuName(forecast_items[11].timeString);
-            listChoice12.setVrCommands(new Vector<String>(Arrays.asList(new String[]{forecast_items[11].timeString})));
-            if (mGraphicsSupported) {
-                listChoice12.setImage(getImageIcon(forecast_items[11].conditionIcon));
-            }
-            commands.add(listChoice12);
-
-            if (!commands.isEmpty()) {
-                Log.d(SdlApplication.TAG, "send HourlyChoiceSet to SDL");
-                CreateInteractionChoiceSet choiceset_rpc = new CreateInteractionChoiceSet();
-                create_HourlyForecast_ChoiceSet_corrId = autoIncCorrId;
-                choiceset_rpc.setCorrelationID(autoIncCorrId++);
-                mHourlyForecast_ChoiceSetID++;
-                choiceset_rpc.setInteractionChoiceSetID(mHourlyForecast_ChoiceSetID);
-                choiceset_rpc.setChoiceSet(commands);
-                choiceset_rpc.setOnRPCResponseListener(createInteractionChoiceSetListener);
-                sdlManager.sendRPC(choiceset_rpc);
-            }
+            sdlManager.getScreenManager().preloadChoices(choiceCellList,null);
         }
 
         /* Choices for Daily Forecast to be created */
         else if (mActiveInfoType == InfoType.DAILY_FORECAST) {
-            Vector<Choice> commands = new Vector<Choice>();
 
-            Choice listChoice1 = new Choice();
-            listChoice1.setChoiceID(CHOICE_ITEM1_ID);
-            listChoice1.setMenuName(getResources().getString(R.string.cmd_today)/*forecast_items[0].fullDateString*/);
-            listChoice1.setVrCommands(new Vector<String>(Arrays.asList(new String[]{getResources().getString(R.string.cmd_today)})));
-            if (mGraphicsSupported) {
-                listChoice1.setImage(getImageIcon(forecast_items[0].conditionIcon));
-            }
-            commands.add(listChoice1);
+            sdlManager.getScreenManager().setPrimaryGraphic(new SdlArtwork(mConditionIconFileName, FileType.GRAPHIC_PNG, conditionsID, true ));
 
-            Choice listChoice2 = new Choice();
-            listChoice2.setChoiceID(CHOICE_ITEM2_ID);
-            listChoice2.setMenuName(getResources().getString(R.string.cmd_tomorrow)/*forecast_items[1].fullDateString*/);
-            listChoice2.setVrCommands(new Vector<String>(Arrays.asList(new String[]{getResources().getString(R.string.cmd_tomorrow)})));
-            if (mGraphicsSupported) {
-                listChoice2.setImage(getImageIcon(forecast_items[1].conditionIcon));
-            }
-            commands.add(listChoice2);
+            ChoiceCell cell1 = new ChoiceCell(getResources().getString(R.string.cmd_today),new Vector<String>(Arrays.asList(new String[]{forecast_items[0].timeString})),getArtWork(forecast_items[0].conditionIcon));
+            ChoiceCell cell2 = new ChoiceCell(getResources().getString(R.string.cmd_tomorrow),new Vector<String>(Arrays.asList(new String[]{forecast_items[1].timeString})),getArtWork(forecast_items[1].conditionIcon));
+            ChoiceCell cell3 = new ChoiceCell(forecast_items[2].fullDateString,new Vector<String>(Arrays.asList(new String[]{forecast_items[2].timeString})),getArtWork(forecast_items[2].conditionIcon));
+            ChoiceCell cell4 = new ChoiceCell(forecast_items[3].fullDateString,new Vector<String>(Arrays.asList(new String[]{forecast_items[3].timeString})),getArtWork(forecast_items[3].conditionIcon));
+            ChoiceCell cell5 = new ChoiceCell(forecast_items[4].fullDateString,new Vector<String>(Arrays.asList(new String[]{forecast_items[4].timeString})),getArtWork(forecast_items[4].conditionIcon));
+            ChoiceCell cell6 = new ChoiceCell(forecast_items[5].fullDateString,new Vector<String>(Arrays.asList(new String[]{forecast_items[5].timeString})),getArtWork(forecast_items[5].conditionIcon));
+            ChoiceCell cell7 = new ChoiceCell(forecast_items[6].fullDateString,new Vector<String>(Arrays.asList(new String[]{forecast_items[6].timeString})),getArtWork(forecast_items[6].conditionIcon));
+            ChoiceCell cell8 = new ChoiceCell(forecast_items[7].fullDateString,new Vector<String>(Arrays.asList(new String[]{forecast_items[7].timeString})),getArtWork(forecast_items[7].conditionIcon));
 
-            Choice listChoice3 = new Choice();
-            listChoice3.setChoiceID(CHOICE_ITEM3_ID);
-            listChoice3.setMenuName(forecast_items[2].fullDateString);
-            listChoice3.setVrCommands(new Vector<String>(Arrays.asList(new String[]{forecast_items[2].fullDateString})));
-            if (mGraphicsSupported) {
-                listChoice3.setImage(getImageIcon(forecast_items[2].conditionIcon));
-            }
-            commands.add(listChoice3);
+            List<ChoiceCell> choiceCellList = Arrays.asList(cell1,cell2,cell3,cell4,cell5,cell6,cell7,cell8);
 
-            Choice listChoice4 = new Choice();
-            listChoice4.setChoiceID(CHOICE_ITEM4_ID);
-            listChoice4.setMenuName(forecast_items[3].fullDateString);
-            listChoice4.setVrCommands(new Vector<String>(Arrays.asList(new String[]{forecast_items[3].fullDateString})));
-            if (mGraphicsSupported) {
-                listChoice4.setImage(getImageIcon(forecast_items[3].conditionIcon));
-            }
-            commands.add(listChoice4);
-
-            Choice listChoice5 = new Choice();
-            listChoice5.setChoiceID(CHOICE_ITEM5_ID);
-            listChoice5.setMenuName(forecast_items[4].fullDateString);
-            listChoice5.setVrCommands(new Vector<String>(Arrays.asList(new String[]{forecast_items[4].fullDateString})));
-            if (mGraphicsSupported) {
-                listChoice5.setImage(getImageIcon(forecast_items[4].conditionIcon));
-            }
-            commands.add(listChoice5);
-
-            Choice listChoice6 = new Choice();
-            listChoice6.setChoiceID(CHOICE_ITEM6_ID);
-            listChoice6.setMenuName(forecast_items[5].fullDateString);
-            listChoice6.setVrCommands(new Vector<String>(Arrays.asList(new String[]{forecast_items[5].fullDateString})));
-            if (mGraphicsSupported) {
-                listChoice6.setImage(getImageIcon(forecast_items[5].conditionIcon));
-            }
-            commands.add(listChoice6);
-
-            Choice listChoice7 = new Choice();
-            listChoice7.setChoiceID(CHOICE_ITEM7_ID);
-            listChoice7.setMenuName(forecast_items[6].fullDateString);
-            listChoice7.setVrCommands(new Vector<String>(Arrays.asList(new String[]{forecast_items[6].fullDateString})));
-            if (mGraphicsSupported) {
-                listChoice7.setImage(getImageIcon(forecast_items[6].conditionIcon));
-            }
-            commands.add(listChoice7);
-
-            Choice listChoice8 = new Choice();
-            listChoice8.setChoiceID(CHOICE_ITEM8_ID);
-            listChoice8.setMenuName(forecast_items[7].fullDateString);
-            listChoice8.setVrCommands(new Vector<String>(Arrays.asList(new String[]{forecast_items[7].fullDateString})));
-            if (mGraphicsSupported) {
-                listChoice8.setImage(getImageIcon(forecast_items[7].conditionIcon));
-            }
-            commands.add(listChoice8);
-
-            if (!commands.isEmpty()) {
-                Log.d(SdlApplication.TAG, "send DayChoiceSet to SDL");
-                CreateInteractionChoiceSet choiceset_rpc = new CreateInteractionChoiceSet();
-                create_DailyForecast_ChoiceSet_corrId = autoIncCorrId;
-                choiceset_rpc.setCorrelationID(autoIncCorrId++);
-                mDailyForecast_ChoiceSetID++;
-                choiceset_rpc.setInteractionChoiceSetID(mDailyForecast_ChoiceSetID);
-                choiceset_rpc.setChoiceSet(commands);
-                choiceset_rpc.setOnRPCResponseListener(createInteractionChoiceSetListener);
-                sdlManager.sendRPC(choiceset_rpc);
-            }
+            sdlManager.getScreenManager().preloadChoices(choiceCellList,null);
         } else {
             Log.d(SdlApplication.TAG, "CreateInteractioinChoiceSet requested for something else than hourly or daily forecast");
         }
