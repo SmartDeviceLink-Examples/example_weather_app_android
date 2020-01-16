@@ -41,6 +41,8 @@ import com.smartdevicelink.managers.lifecycle.LifecycleConfigurationUpdate;
 import com.smartdevicelink.managers.screen.SoftButtonObject;
 import com.smartdevicelink.managers.screen.SoftButtonState;
 import com.smartdevicelink.managers.screen.choiceset.ChoiceCell;
+import com.smartdevicelink.managers.screen.menu.MenuCell;
+import com.smartdevicelink.managers.screen.menu.MenuSelectionListener;
 import com.smartdevicelink.protocol.enums.FunctionID;
 import com.smartdevicelink.proxy.RPCNotification;
 import com.smartdevicelink.proxy.RPCResponse;
@@ -1222,13 +1224,14 @@ public class SdlService extends Service {
             };
 
             // Create App Icon, this is set in the SdlManager builder
-            SdlArtwork appIcon = new SdlArtwork(APP_ICON, FileType.GRAPHIC_PNG, R.mipmap.ic_launcher, true);
+            SdlArtwork appIcon = new SdlArtwork(APP_ICON, FileType.GRAPHIC_PNG, R.drawable.icon, true);
 
             // The manager builder sets options for your session
             SdlManager.Builder builder = new SdlManager.Builder(this, APP_ID, "MobileWeather", listener);
             builder.setTransportType(transport);
             builder.setLanguage(mDesiredAppSdlLanguage);
             builder.setAppIcon(appIcon);
+
 
 
             // Set listeners list
@@ -1486,12 +1489,6 @@ public class SdlService extends Service {
             }
         }
 
-        // Upload files if graphics supported
-        if (mGraphicsSupported) {
-            uploadFiles();
-        }
-
-
         if (mDisplayLayoutSupported) {
             SetDisplayLayout layoutRequest = new SetDisplayLayout();
             layoutRequest.setDisplayLayout("NON-MEDIA");
@@ -1575,67 +1572,6 @@ public class SdlService extends Service {
         SubscribeButton msg = new SubscribeButton(ButtonName.PRESET_1);
         msg.setCorrelationID(autoIncCorrId++);
         sdlManager.sendRPC(msg);
-    }
-
-    private void uploadFiles() {
-        if (mUploadedFiles == null ||
-                !mUploadedFiles.contains(APP_ICON)) {
-            uploadFile(APP_ICON_NAME);
-        }
-    }
-
-    private void uploadFile(String fileResource) {
-        if (fileResource != null) {
-            Bitmap bm = ImageProcessor.getBitmapFromResources(fileResource);
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            bm.compress(Bitmap.CompressFormat.PNG, 100, stream);
-            PutFile putfileRequest = new PutFile();
-            putfileRequest.setSdlFileName(fileResource + ".png");
-            putfileRequest.setFileType(FileType.GRAPHIC_PNG);
-            putfileRequest.setSystemFile(false);
-            putfileRequest.setPersistentFile(true);
-            putfileRequest.setCorrelationID(autoIncCorrId++);
-            putfileRequest.setBulkData(stream.toByteArray());
-            putfileRequest.setOnRPCResponseListener(new OnRPCResponseListener() {
-                @Override
-                public void onResponse(int correlationId, RPCResponse response) {
-                    Log.i(SdlApplication.TAG, String.format(Locale.getDefault(), "PutFile response success: %b", response.getSuccess()));
-                    Log.i(SdlApplication.TAG, String.format(Locale.getDefault(), "PutFile response corrId: %d", response.getCorrelationID()));
-                    Log.i(SdlApplication.TAG, String.format(Locale.getDefault(), "PutFile response info: %s", response.getInfo()));
-
-                    // Add uploaded files to the list if they're not already there
-                    String currentFile = mPutFileMap.get(response.getCorrelationID());
-                    if (response.getSuccess() && currentFile != null) {
-                        if (mUploadedFiles == null) {
-                            mUploadedFiles = new ArrayList<String>();
-                        }
-                        if (!mUploadedFiles.contains(currentFile)) {
-                            mUploadedFiles.add(currentFile);
-                        }
-
-                        // Set AppIcon
-                        if (mGraphicsSupported && APP_ICON.equals(currentFile)) {
-//							SetAppIcon request = new SetAppIcon();
-//							request.setSdlFileName(APP_ICON);
-//							request.setCorrelationID(autoIncCorrId++);
-//							try {
-//								proxy.sendRPCRequest(request);
-//							} catch (SdlException e) {}
-                        } else if (mGraphicsSupported && currentFile.equals(mConditionIconFileName) && (mShowPendingPutFile != null)) {
-                            sdlManager.sendRPC(mShowPendingPutFile);
-                        }
-                    }
-                }
-            });
-            mPutFileMap.put(putfileRequest.getCorrelationID(), putfileRequest.getSdlFileName());
-            try {
-                stream.close();
-                sdlManager.sendRPC(putfileRequest);
-            } catch (IOException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            }
-        }
     }
 
     private void getSdlFiles() {
@@ -2656,6 +2592,7 @@ public class SdlService extends Service {
 
     public void addCommand(Integer commandID,
                            String menuText, Vector<String> vrCommands, Integer correlationID) {
+       // MenuCell cell = new MenuCell(menuText, null,vrCommands, (MenuSelectionListener) addCommandResponseListener);
 
         AddCommand msg = new AddCommand(commandID);
         msg.setCorrelationID(correlationID);
