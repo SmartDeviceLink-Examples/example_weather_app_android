@@ -33,9 +33,11 @@ import com.sdl.mobileweather.weather.WeatherConditions;
 import com.sdl.mobileweather.weather.WeatherDataManager;
 import com.smartdevicelink.exception.SdlException;
 import com.smartdevicelink.managers.BaseSubManager;
+import com.smartdevicelink.managers.CompletionListener;
 import com.smartdevicelink.managers.SdlManager;
 import com.smartdevicelink.managers.SdlManagerListener;
 import com.smartdevicelink.managers.file.filetypes.SdlArtwork;
+import com.smartdevicelink.managers.lifecycle.LifecycleConfigurationUpdate;
 import com.smartdevicelink.managers.screen.SoftButtonObject;
 import com.smartdevicelink.managers.screen.SoftButtonState;
 import com.smartdevicelink.protocol.enums.FunctionID;
@@ -1210,6 +1212,11 @@ public class SdlService extends Service {
                 @Override
                 public void onError(String info, Exception e) {
                 }
+
+                @Override
+                public LifecycleConfigurationUpdate managerShouldUpdateLifecycle(Language language) {
+                    return null;
+                }
             };
 
             // Create App Icon, this is set in the SdlManager builder
@@ -1256,7 +1263,7 @@ public class SdlService extends Service {
                     switch (currentHMILevel) {
                         case HMI_FULL:
                             Log.i(SdlApplication.TAG, "HMI_FULL");
-                            mLocalizationUtil.changeLocale(mLocalizationUtil.getAdjustedLocaleLanguage(), mLocalizationUtil.getAdjustedLocaleCountry(), getApplicationContext());
+                           // mLocalizationUtil.changeLocale(mLocalizationUtil.getAdjustedLocaleLanguage(), mLocalizationUtil.getAdjustedLocaleCountry(), getApplicationContext());
                             if (onHMIStatus.getFirstRun()) {
                                 // Custom help and timeout messages
                                 setGlobalProperties((getResources().getString(R.string.gp_help_prompt)), (getResources().getString(R.string.gp_timeout_prompt)), autoIncCorrId++);
@@ -1338,7 +1345,7 @@ public class SdlService extends Service {
      * Shows and speaks a welcome message
      */
     private void showWelcomeMessage() {
-        Show showRequest = new Show();
+      /*  Show showRequest = new Show();
         showRequest.setMainField1(getResources().getString(R.string.welcome_textfield1));
         showRequest.setMainField2(getResources().getString(R.string.welcome_textfield2));
         showRequest.setMainField3(getResources().getString(R.string.welcome_textfield3));
@@ -1346,7 +1353,19 @@ public class SdlService extends Service {
         showRequest.setAlignment(TextAlignment.CENTERED);
         showRequest.setCorrelationID(autoIncCorrId++);
         sdlManager.sendRPC(showRequest);
-        mWelcomeCorrId = autoIncCorrId++;
+        mWelcomeCorrId = autoIncCorrId++;*/
+      sdlManager.getScreenManager().beginTransaction();
+      sdlManager.getScreenManager().setTextField1(getResources().getString(R.string.welcome_textfield1));
+        sdlManager.getScreenManager().setTextField2(getResources().getString(R.string.welcome_textfield2));
+        sdlManager.getScreenManager().setTextField3(getResources().getString(R.string.welcome_textfield3));
+        sdlManager.getScreenManager().setTextField4(getResources().getString(R.string.welcome_textfield4));
+        sdlManager.getScreenManager().setTextAlignment(TextAlignment.CENTERED);
+        sdlManager.getScreenManager().commit(new CompletionListener() {
+            @Override
+            public void onComplete(boolean success) {
+
+            }
+        });
         Speak msg = new Speak(TTSChunkFactory.createSimpleTTSChunks((getResources().getString(R.string.welcome_speak))));
         msg.setCorrelationID(mWelcomeCorrId);
         msg.setOnRPCResponseListener(new OnRPCResponseListener() {
