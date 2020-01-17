@@ -41,6 +41,9 @@ import com.smartdevicelink.managers.lifecycle.LifecycleConfigurationUpdate;
 import com.smartdevicelink.managers.screen.SoftButtonObject;
 import com.smartdevicelink.managers.screen.SoftButtonState;
 import com.smartdevicelink.managers.screen.choiceset.ChoiceCell;
+import com.smartdevicelink.managers.screen.choiceset.ChoiceSet;
+import com.smartdevicelink.managers.screen.choiceset.ChoiceSetLayout;
+import com.smartdevicelink.managers.screen.choiceset.ChoiceSetSelectionListener;
 import com.smartdevicelink.managers.screen.menu.MenuCell;
 import com.smartdevicelink.managers.screen.menu.MenuSelectionListener;
 import com.smartdevicelink.protocol.enums.FunctionID;
@@ -92,6 +95,7 @@ import com.smartdevicelink.proxy.rpc.enums.SystemAction;
 import com.smartdevicelink.proxy.rpc.enums.SystemCapabilityType;
 import com.smartdevicelink.proxy.rpc.enums.TextAlignment;
 import com.smartdevicelink.proxy.rpc.enums.TextFieldName;
+import com.smartdevicelink.proxy.rpc.enums.TriggerSource;
 import com.smartdevicelink.proxy.rpc.listeners.OnRPCNotificationListener;
 import com.smartdevicelink.proxy.rpc.listeners.OnRPCResponseListener;
 import com.smartdevicelink.transport.BaseTransportConfig;
@@ -274,6 +278,7 @@ public class SdlService extends Service {
     private boolean mFirstAPIError = true;
     private boolean mFirstUnknownError = true;
     private LocalizationUtil mLocalizationUtil = null;
+    List<ChoiceCell> choiceCellList = null;
 
     /**
      * Runnable that stops this service if there hasn't been a connection to SDL
@@ -409,6 +414,8 @@ public class SdlService extends Service {
             }
         }
     };
+
+
 
     private OnRPCResponseListener addCommandResponseListener = new OnRPCResponseListener() {
         @Override
@@ -883,8 +890,23 @@ public class SdlService extends Service {
             @Override
             public void onPress(SoftButtonObject softButtonObject, OnButtonPress onButtonPress) {
                 forecast_item_counter = 0;
-                mTimedShowHandler.removeCallbacks(mTimedShowRunnable);
-                prepareListItemsCmds();
+                //mTimedShowHandler.removeCallbacks(mTimedShowRunnable);
+                //prepareListItemsCmds();
+                ChoiceSet choicSet = new ChoiceSet("Test", choiceCellList, new ChoiceSetSelectionListener() {
+                    @Override
+                    public void onChoiceSelected(ChoiceCell choiceCell, TriggerSource triggerSource, int rowIndex) {
+                        Log.i("Julian", "onChoiceSelected: Clicked" + choiceCell.getText());
+                        forecast_item_counter = rowIndex;
+                        writeDisplay(true);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+
+                    }
+                });
+                choicSet.setLayout(ChoiceSetLayout.CHOICE_SET_LAYOUT_TILES);
+                sdlManager.getScreenManager().presentChoiceSet(choicSet,InteractionMode.MANUAL_ONLY);
             }
 
             @Override
@@ -1409,7 +1431,7 @@ public class SdlService extends Service {
                     @Override
                     public void onResponse(int correlationId, RPCResponse response) {
                         if ((response.getResultCode().equals(Result.SUCCESS)) && (response.getSuccess())) {
-                            /*store the registered language if ChangeRegistration has been successful */
+                            //store the registered language if ChangeRegistration has been successful
                             Log.i(SdlApplication.TAG, "ChangeRegistrationResponse: SUCCESS");
                             mRegisteredAppSdlLanguage = mCurrentSdlLanguage;
                             mRegisteredAppHmiLanguage = mCurrentHmiLanguage;
@@ -2100,6 +2122,7 @@ public class SdlService extends Service {
 
     private void createForecastChoiceSet() {
         /* Choices for Hourly Forecast to be created */
+        choiceCellList = null;
         if (mActiveInfoType == InfoType.HOURLY_FORECAST) {
             sdlManager.getScreenManager().setPrimaryGraphic(new SdlArtwork(mConditionIconFileName, FileType.GRAPHIC_PNG, conditionsID, true ));
 
@@ -2117,7 +2140,7 @@ public class SdlService extends Service {
             ChoiceCell cell12 = new ChoiceCell(forecast_items[11].timeString,new Vector<String>(Arrays.asList(new String[]{forecast_items[11].timeString})),getArtWork(forecast_items[11].conditionIcon));
 
 
-            List<ChoiceCell> choiceCellList = Arrays.asList(cell1,cell2,cell3,cell4,cell5,cell6,cell7,cell8,cell9,cell10,cell11,cell12);
+             choiceCellList = Arrays.asList(cell1,cell2,cell3,cell4,cell5,cell6,cell7,cell8,cell9,cell10,cell11,cell12);
 
             sdlManager.getScreenManager().preloadChoices(choiceCellList,null);
         }
@@ -2136,7 +2159,7 @@ public class SdlService extends Service {
             ChoiceCell cell7 = new ChoiceCell(forecast_items[6].fullDateString,new Vector<String>(Arrays.asList(new String[]{forecast_items[6].timeString})),getArtWork(forecast_items[6].conditionIcon));
             ChoiceCell cell8 = new ChoiceCell(forecast_items[7].fullDateString,new Vector<String>(Arrays.asList(new String[]{forecast_items[7].timeString})),getArtWork(forecast_items[7].conditionIcon));
 
-            List<ChoiceCell> choiceCellList = Arrays.asList(cell1,cell2,cell3,cell4,cell5,cell6,cell7,cell8);
+            choiceCellList = Arrays.asList(cell1,cell2,cell3,cell4,cell5,cell6,cell7,cell8);
 
             sdlManager.getScreenManager().preloadChoices(choiceCellList,null);
         } else {
