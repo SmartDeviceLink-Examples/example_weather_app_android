@@ -327,7 +327,7 @@ public class SdlService extends Service {
     private OnRPCResponseListener onPerformInteractionResponseListener = new OnRPCResponseListener() {
         @Override
         public void onResponse(int correlationId, RPCResponse response) {
-            PerformInteractionResponse performInteractionResponse = (PerformInteractionResponse) response;
+           /* PerformInteractionResponse performInteractionResponse = (PerformInteractionResponse) response;
             if (response.getSuccess()) {
                 Integer choiceID = performInteractionResponse.getChoiceID();
                 switch (choiceID) {
@@ -411,7 +411,7 @@ public class SdlService extends Service {
                         break;
                 }
                 writeDisplay(true);
-            }
+            }*/
         }
     };
 
@@ -2122,7 +2122,11 @@ public class SdlService extends Service {
 
     private void createForecastChoiceSet() {
         /* Choices for Hourly Forecast to be created */
+        if(choiceCellList != null){
+            sdlManager.getScreenManager().deleteChoices(choiceCellList);
+        }
         choiceCellList = null;
+
         if (mActiveInfoType == InfoType.HOURLY_FORECAST) {
             sdlManager.getScreenManager().setPrimaryGraphic(new SdlArtwork(mConditionIconFileName, FileType.GRAPHIC_PNG, conditionsID, true ));
 
@@ -2150,14 +2154,14 @@ public class SdlService extends Service {
 
             sdlManager.getScreenManager().setPrimaryGraphic(new SdlArtwork(mConditionIconFileName, FileType.GRAPHIC_PNG, conditionsID, true ));
 
-            ChoiceCell cell1 = new ChoiceCell(getResources().getString(R.string.cmd_today),new Vector<String>(Arrays.asList(new String[]{forecast_items[0].timeString})),getArtWork(forecast_items[0].conditionIcon));
-            ChoiceCell cell2 = new ChoiceCell(getResources().getString(R.string.cmd_tomorrow),new Vector<String>(Arrays.asList(new String[]{forecast_items[1].timeString})),getArtWork(forecast_items[1].conditionIcon));
-            ChoiceCell cell3 = new ChoiceCell(forecast_items[2].fullDateString,new Vector<String>(Arrays.asList(new String[]{forecast_items[2].timeString})),getArtWork(forecast_items[2].conditionIcon));
-            ChoiceCell cell4 = new ChoiceCell(forecast_items[3].fullDateString,new Vector<String>(Arrays.asList(new String[]{forecast_items[3].timeString})),getArtWork(forecast_items[3].conditionIcon));
-            ChoiceCell cell5 = new ChoiceCell(forecast_items[4].fullDateString,new Vector<String>(Arrays.asList(new String[]{forecast_items[4].timeString})),getArtWork(forecast_items[4].conditionIcon));
-            ChoiceCell cell6 = new ChoiceCell(forecast_items[5].fullDateString,new Vector<String>(Arrays.asList(new String[]{forecast_items[5].timeString})),getArtWork(forecast_items[5].conditionIcon));
-            ChoiceCell cell7 = new ChoiceCell(forecast_items[6].fullDateString,new Vector<String>(Arrays.asList(new String[]{forecast_items[6].timeString})),getArtWork(forecast_items[6].conditionIcon));
-            ChoiceCell cell8 = new ChoiceCell(forecast_items[7].fullDateString,new Vector<String>(Arrays.asList(new String[]{forecast_items[7].timeString})),getArtWork(forecast_items[7].conditionIcon));
+            ChoiceCell cell1 = new ChoiceCell(getResources().getString(R.string.cmd_today),new Vector<String>(Arrays.asList(new String[] { getResources().getString(R.string.cmd_today)})),getArtWork(forecast_items[0].conditionIcon));
+            ChoiceCell cell2 = new ChoiceCell(getResources().getString(R.string.cmd_tomorrow),new Vector<String>(Arrays.asList(new String[] { getResources().getString(R.string.cmd_tomorrow)})),getArtWork(forecast_items[1].conditionIcon));
+            ChoiceCell cell3 = new ChoiceCell(forecast_items[2].fullDateString,new Vector<String>(Arrays.asList(new String[]{forecast_items[2].fullDateString})),getArtWork(forecast_items[2].conditionIcon));
+            ChoiceCell cell4 = new ChoiceCell(forecast_items[3].fullDateString,new Vector<String>(Arrays.asList(new String[]{forecast_items[3].fullDateString})),getArtWork(forecast_items[3].conditionIcon));
+            ChoiceCell cell5 = new ChoiceCell(forecast_items[4].fullDateString,new Vector<String>(Arrays.asList(new String[]{forecast_items[4].fullDateString})),getArtWork(forecast_items[4].conditionIcon));
+            ChoiceCell cell6 = new ChoiceCell(forecast_items[5].fullDateString,new Vector<String>(Arrays.asList(new String[]{forecast_items[5].fullDateString})),getArtWork(forecast_items[5].conditionIcon));
+            ChoiceCell cell7 = new ChoiceCell(forecast_items[6].fullDateString,new Vector<String>(Arrays.asList(new String[]{forecast_items[6].fullDateString})),getArtWork(forecast_items[6].conditionIcon));
+            ChoiceCell cell8 = new ChoiceCell(forecast_items[7].fullDateString,new Vector<String>(Arrays.asList(new String[]{forecast_items[7].fullDateString})),getArtWork(forecast_items[7].conditionIcon));
 
             choiceCellList = Arrays.asList(cell1,cell2,cell3,cell4,cell5,cell6,cell7,cell8);
 
