@@ -19,6 +19,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.util.SparseArray;
+import android.view.Menu;
 
 import com.sdl.mobileweather.R;
 import com.sdl.mobileweather.artifact.WeatherLocation;
@@ -44,6 +45,7 @@ import com.smartdevicelink.managers.screen.choiceset.ChoiceCell;
 import com.smartdevicelink.managers.screen.choiceset.ChoiceSet;
 import com.smartdevicelink.managers.screen.choiceset.ChoiceSetLayout;
 import com.smartdevicelink.managers.screen.choiceset.ChoiceSetSelectionListener;
+import com.smartdevicelink.managers.screen.menu.DynamicMenuUpdatesMode;
 import com.smartdevicelink.managers.screen.menu.MenuCell;
 import com.smartdevicelink.managers.screen.menu.MenuSelectionListener;
 import com.smartdevicelink.protocol.enums.FunctionID;
@@ -281,6 +283,15 @@ public class SdlService extends Service {
     List<ChoiceCell> choiceCellList = null;
     List<ChoiceCell> changeUnitCellList = null;
     List<MenuCell> menuCells = null;
+    MenuCell mainCell1 = null;
+    MenuCell mainCell2 = null;
+    MenuCell mainCell3 = null;
+    MenuCell mainCell4 = null;
+    MenuCell mainCell5 = null;
+    MenuCell nextCell = null;
+    MenuCell listCell = null;
+    MenuCell prevCell = null;
+
 
 
 
@@ -844,18 +855,7 @@ public class SdlService extends Service {
         mShowPrevItem = new SoftButtonObject("mShowPrevItem", Arrays.asList(mShowPrevItemState1, mShowPrevItemState2), mShowPrevItemState2.getName(), new SoftButtonObject.OnEventListener() {
             @Override
             public void onPress(SoftButtonObject softButtonObject, OnButtonPress onButtonPress) {
-                int mtemp_counter = forecast_item_counter;
-                mtemp_counter--;
-                if (mtemp_counter >= 0) {
-                    if (mtemp_counter == 0) {
-                        previous_cmd_deleted_corrId = autoIncCorrId;
-                     //   deleteCommand(PREVIOUS, autoIncCorrId++);
-                    }
-                    forecast_item_counter = mtemp_counter;
-                    writeDisplay(true);
-                } else {
-                    speak("You have reached the beginning of the forecast list", autoIncCorrId++);
-                }
+               showPrev();
             }
 
             @Override
@@ -869,18 +869,7 @@ public class SdlService extends Service {
         mShowNextItem = new SoftButtonObject("mShowNextItem", Arrays.asList(mShowNextItemState1, mShowNextItemState2), mShowNextItemState1.getName(), new SoftButtonObject.OnEventListener() {
             @Override
             public void onPress(SoftButtonObject softButtonObject, OnButtonPress onButtonPress) {
-                int mtemp_counter = forecast_item_counter;
-                mtemp_counter++;
-                if (mtemp_counter < forecast_items.length) {
-                    forecast_item_counter = mtemp_counter;
-                    writeDisplay(true);
-                }
-                if (mtemp_counter >= forecast_items.length) {
-                    next_cmd_deleted_corrId = autoIncCorrId;
-                 //   deleteCommand(NEXT, autoIncCorrId++);
-
-                    speak("You have reached the end of the forecast list", autoIncCorrId++);
-                }
+                showNext();
             }
 
             @Override
@@ -893,29 +882,7 @@ public class SdlService extends Service {
         mShowListItems = new SoftButtonObject("mShowListItems", Collections.singletonList(mShowListItemsState), mShowListItemsState.getName(), new SoftButtonObject.OnEventListener() {
             @Override
             public void onPress(SoftButtonObject softButtonObject, OnButtonPress onButtonPress) {
-                forecast_item_counter = 0;
-                String choiceSetText = "";
-                if(mActiveInfoType == InfoType.HOURLY_FORECAST){
-                    choiceSetText = "Please select a Time:";
-                }
-                else{
-                    choiceSetText = "Please select a day:";
-                }
-                ChoiceSet choiceSet = new ChoiceSet(choiceSetText, choiceCellList, new ChoiceSetSelectionListener() {
-                    @Override
-                    public void onChoiceSelected(ChoiceCell choiceCell, TriggerSource triggerSource, int rowIndex) {
-                        Log.i("Julian", "onChoiceSelected: Clicked" + choiceCell.getText());
-                        forecast_item_counter = rowIndex;
-                        writeDisplay(true);
-                    }
-
-                    @Override
-                    public void onError(String error) {
-
-                    }
-                });
-                choiceSet.setLayout(ChoiceSetLayout.CHOICE_SET_LAYOUT_TILES);
-                sdlManager.getScreenManager().presentChoiceSet(choiceSet,InteractionMode.MANUAL_ONLY);
+                showList();
             }
 
             @Override
@@ -929,8 +896,8 @@ public class SdlService extends Service {
             @Override
             public void onPress(SoftButtonObject softButtonObject, OnButtonPress onButtonPress) {
                 mActiveInfoType = InfoType.WEATHER_CONDITIONS;
-                //prepareBackCmds();
                 forecast_item_counter = 0;
+                createMenuCells();
                 updateHmi(false);
             }
 
@@ -966,6 +933,55 @@ public class SdlService extends Service {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             enterForeground();
+        }
+    }
+    private void showPrev(){
+        int mtemp_counter = forecast_item_counter;
+        mtemp_counter--;
+        if (mtemp_counter >= 0) {
+            forecast_item_counter = mtemp_counter;
+            setUpMenu();
+            writeDisplay(true);
+        } else {
+            speak("You have reached the beginning of the forecast list", autoIncCorrId++);
+        }
+    }
+
+    //show forecast in tiles on screen;
+    private void showList(){
+        forecast_item_counter = 0;
+        String choiceSetText = "";
+        if(mActiveInfoType == InfoType.HOURLY_FORECAST){
+            choiceSetText = "Please select a Time:";
+        }
+        else{
+            choiceSetText = "Please select a day:";
+        }
+        ChoiceSet choiceSet = new ChoiceSet(choiceSetText, choiceCellList, new ChoiceSetSelectionListener() {
+            @Override
+            public void onChoiceSelected(ChoiceCell choiceCell, TriggerSource triggerSource, int rowIndex) {
+                forecast_item_counter = rowIndex;
+                writeDisplay(true);
+            }
+
+            @Override
+            public void onError(String error) {
+
+            }
+        });
+        choiceSet.setLayout(ChoiceSetLayout.CHOICE_SET_LAYOUT_TILES);
+        sdlManager.getScreenManager().presentChoiceSet(choiceSet,InteractionMode.MANUAL_ONLY);
+    }
+    private void showNext(){
+        int mtemp_counter = forecast_item_counter;
+        mtemp_counter++;
+        if (mtemp_counter < forecast_items.length) {
+            forecast_item_counter = mtemp_counter;
+            setUpMenu();
+            writeDisplay(true);
+        }
+        if (mtemp_counter >= forecast_items.length) {
+            speak("You have reached the end of the forecast list", autoIncCorrId++);
         }
     }
 
@@ -1391,7 +1407,7 @@ public class SdlService extends Service {
             public void onComplete(boolean success) {
                 Log.i(TAG, "ScreenManager update complete: " + success);
                //addCommands();
-                setMenu();
+                createMenuCells();
 
             }
         });
@@ -1586,48 +1602,70 @@ public class SdlService extends Service {
 
     }*/
 
-    private void setMenu(){
+    private void createMenuCells(){
+
         menuCells = null;
         Vector<String> vrCommands = null;
-        vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_current), getResources().getString(R.string.vr_current_cond)));
-        MenuCell mainCell1 = new MenuCell(getResources().getString(R.string.cmd_current_cond), null, vrCommands, new MenuSelectionListener() {
+
+        vrCommands = new Vector<>(Arrays.asList(getResources().getString(R.string.vr_current), getResources().getString(R.string.vr_current_cond)));
+
+        mainCell1 = new MenuCell(getResources().getString(R.string.cmd_current_cond), null, null, new MenuSelectionListener() {
             @Override
             public void onTriggered(TriggerSource trigger) {
-                Log.i("Julian", "onTriggered: CurrentConditions");
                 mActiveInfoType = InfoType.WEATHER_CONDITIONS;
+
+               setUpMenu();
                 updateHmi(true);
+
             }
         });
-        vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_daily),
+
+        vrCommands = new Vector<>(Arrays.asList(getResources().getString(R.string.vr_daily),
                 getResources().getString(R.string.vr_daily_forecast)));
-        MenuCell mainCell2 = new MenuCell(getResources().getString(R.string.cmd_daily_forecast), null, vrCommands, new MenuSelectionListener() {
+
+        mainCell2 = new MenuCell(getResources().getString(R.string.cmd_daily_forecast), null, null, new MenuSelectionListener() {
             @Override
             public void onTriggered(TriggerSource trigger) {
-                Log.i("Julian", "onTriggered: Daily");
                 mActiveInfoType = InfoType.DAILY_FORECAST;
+/*                if (forecast_item_counter == DAILY_FORECAST_DAYS - 1) {
+                    menuCells = Arrays.asList(mainCell1,listCell,mainCell3,mainCell4,mainCell5);
+                } else {
+                    menuCells = Arrays.asList(mainCell1,nextCell, listCell,mainCell3,mainCell4,mainCell5);
+                }*/
+                setUpMenu();
+
+
                 updateHmi(true);
             }
         });
-        vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_hourly),
+
+        vrCommands = new Vector<>(Arrays.asList(getResources().getString(R.string.vr_hourly),
                 getResources().getString(R.string.vr_hourly_forecast)));
-        MenuCell mainCell3 = new MenuCell(getResources().getString(R.string.cmd_hourly_forecast), null, vrCommands, new MenuSelectionListener() {
+
+        mainCell3 = new MenuCell(getResources().getString(R.string.cmd_hourly_forecast), null, null, new MenuSelectionListener() {
             @Override
             public void onTriggered(TriggerSource trigger) {
-                Log.i("Julian", "onTriggered: Daily");
                 mActiveInfoType = InfoType.HOURLY_FORECAST;
+  /*              if (forecast_item_counter == HOURLY_FORECAST_HOURS - 1) {
+                    menuCells = Arrays.asList(mainCell1,listCell,mainCell2,mainCell4,mainCell5);
+                } else {
+                    menuCells = Arrays.asList(mainCell1,nextCell,listCell,mainCell2,mainCell4,mainCell5);
+                }*/
+                setUpMenu();
                 updateHmi(true);
+
             }
         });
-        vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_change_units),
+
+        vrCommands = new Vector<>(Arrays.asList(getResources().getString(R.string.vr_change_units),
                 getResources().getString(R.string.vr_units)));
-        MenuCell mainCell4 = new MenuCell(getResources().getString(R.string.cmd_change_units), null, vrCommands, new MenuSelectionListener() {
+
+        mainCell4 = new MenuCell(getResources().getString(R.string.cmd_change_units), null, null, new MenuSelectionListener() {
             @Override
             public void onTriggered(TriggerSource trigger) {
-                Log.i("Julian", "onTriggered: change Units");
                 ChoiceSet changeUnitChoiceSet = new ChoiceSet("Units:", changeUnitCellList, new ChoiceSetSelectionListener() {
                     @Override
                     public void onChoiceSelected(ChoiceCell choiceCell, TriggerSource triggerSource, int rowIndex) {
-                        Log.i("Julian", "onChoiceSelected: Clicked" + choiceCell.getText());
                         if(choiceCell.getText().equals("Imperial")){
                             setUnitsImp();
                         }
@@ -1645,26 +1683,85 @@ public class SdlService extends Service {
                 sdlManager.getScreenManager().presentChoiceSet(changeUnitChoiceSet,InteractionMode.MANUAL_ONLY);
             }
         });
-        vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_alerts)));
-        MenuCell mainCell5 = new MenuCell(getResources().getString(R.string.cmd_alerts), null, vrCommands, new MenuSelectionListener() {
+
+        vrCommands = new Vector<>(Arrays.asList(getResources().getString(R.string.vr_alerts)));
+        mainCell5 = new MenuCell(getResources().getString(R.string.cmd_alerts), null, vrCommands, new MenuSelectionListener() {
             @Override
             public void onTriggered(TriggerSource trigger) {
                 Log.i("Julian", "onTriggered: Alerts");
                 mActiveInfoType = InfoType.ALERTS;
                 updateHmi(true);
-
             }
         });
 
+        listCell = new MenuCell("List",null, null, new MenuSelectionListener() {
+            @Override
+            public void onTriggered(TriggerSource trigger) {
+                showList();
+            }
+        });
+        nextCell = new MenuCell("Next", null, null, new MenuSelectionListener() {
+            @Override
+            public void onTriggered(TriggerSource trigger) {
+                Log.i("Julian", "onTriggered: Here Next on Triggered");
+                showNext();
+
+            }
+        });
+        prevCell = new MenuCell("Prev.", null, null, new MenuSelectionListener() {
+            @Override
+            public void onTriggered(TriggerSource trigger) {
+                showPrev();
+            }
+        });
+        //check to see if this is needed
         menuCells = Arrays.asList(mainCell1,mainCell2,mainCell3,mainCell4,mainCell5);
-        sdlManager.getScreenManager().setMenu(menuCells);
-        // MenuCell mainCell1 = new MenuCell(getResources().getString(R.string.cmd_current_cond), null,new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_current), getResources().getString(R.string.vr_current_cond))),addCommandResponseListener)
+        setUpMenu();
+
     }
+
+   private void setUpMenu() {
+       if (mActiveInfoType == InfoType.WEATHER_CONDITIONS) {
+           menuCells = Arrays.asList(mainCell2, mainCell3, mainCell4, mainCell5);
+       }
+       else if (mActiveInfoType == InfoType.HOURLY_FORECAST) {
+           if (forecast_item_counter == HOURLY_FORECAST_HOURS - 1) {
+               menuCells = Arrays.asList(mainCell1, prevCell, listCell, mainCell2, mainCell4, mainCell5);
+
+           }
+           else {
+               if(forecast_item_counter >0){
+                   menuCells = Arrays.asList(mainCell1, nextCell, prevCell,listCell, mainCell2, mainCell4, mainCell5);
+               }
+               else{
+                   menuCells = Arrays.asList(mainCell1, nextCell, listCell, mainCell2, mainCell4, mainCell5);
+               }
+           }
+
+       }
+       else if (mActiveInfoType == InfoType.DAILY_FORECAST) {
+           if (forecast_item_counter == DAILY_FORECAST_DAYS - 1) {
+               menuCells = Arrays.asList(mainCell1, listCell, mainCell3, mainCell4, mainCell5);
+           }
+           else {
+               if(forecast_item_counter>0){
+                   menuCells = Arrays.asList(mainCell1, nextCell,prevCell,listCell, mainCell3, mainCell4, mainCell5);
+               }
+               else{
+                   menuCells = Arrays.asList(mainCell1, nextCell,listCell, mainCell3, mainCell4, mainCell5);
+               }
+           }
+       }
+       Log.i("Julian", "setUpMenu: het at setupMenu");
+       sdlManager.getScreenManager().setMenu(menuCells);
+       Log.i("Julian", "setUpMenu: here after setupMenu");
+   }
+
 
     private void createChangeUnitsInteractionChoiceSet() {
         changeUnitCellList = null;
-        ChoiceCell changUnitCell1 = new ChoiceCell("Metric",new Vector<String>(Arrays.asList(getResources().getString(R.string.choice_metric_vr))),null);
-        ChoiceCell changUnitCell2 = new ChoiceCell("Imperial",new Vector<String>(Arrays.asList(getResources().getString(R.string.choice_imperial_vr))),null);
+        ChoiceCell changUnitCell1 = new ChoiceCell("Metric", new Vector<>(Arrays.asList(getResources().getString(R.string.choice_metric_vr))),null);
+        ChoiceCell changUnitCell2 = new ChoiceCell("Imperial", new Vector<>(Arrays.asList(getResources().getString(R.string.choice_imperial_vr))),null);
         changeUnitCellList = Arrays.asList(changUnitCell1,changUnitCell2);
         sdlManager.getScreenManager().preloadChoices(changeUnitCellList,null);
 
@@ -1948,7 +2045,7 @@ public class SdlService extends Service {
         sdlManager.getScreenManager().commit(new CompletionListener() {
             @Override
             public void onComplete(boolean success) {
-                Log.i(TAG, "ScreenManager update complete: " + success);
+
 
             }
         });
@@ -1976,17 +2073,8 @@ public class SdlService extends Service {
         if (mActiveInfoType == InfoType.HOURLY_FORECAST) {
             forecast = mHourlyForecast;
 
-            if (HourlyForecast_ChoiceSet_created) {
-                delete_HourlyForecast_ChoiceSet_corrId = autoIncCorrId;
-                deleteInteractionChoiceSet(mHourlyForecast_ChoiceSetID, autoIncCorrId++);
-            }
         } else {
             forecast = mForecast;
-
-            if (DailyForecast_ChoiceSet_created) {
-                delete_DailyForecast_ChoiceSet_corrId = autoIncCorrId;
-                deleteInteractionChoiceSet(mDailyForecast_ChoiceSetID, autoIncCorrId++);
-            }
         }
 
         if (mDataManager.isInErrorState()) {
@@ -2203,22 +2291,21 @@ public class SdlService extends Service {
         choiceCellList = null;
 
         if (mActiveInfoType == InfoType.HOURLY_FORECAST) {
-            sdlManager.getScreenManager().setPrimaryGraphic(new SdlArtwork(mConditionIconFileName, FileType.GRAPHIC_PNG, conditionsID, true ));
 
-            ChoiceCell cell1 = new ChoiceCell(forecast_items[0].timeString,new Vector<String>(Arrays.asList(new String[]{forecast_items[0].timeString})),getArtWork(forecast_items[0].conditionIcon));
-            ChoiceCell cell2 = new ChoiceCell(forecast_items[1].timeString,new Vector<String>(Arrays.asList(new String[]{forecast_items[1].timeString})),getArtWork(forecast_items[1].conditionIcon));
-            ChoiceCell cell3 = new ChoiceCell(forecast_items[2].timeString,new Vector<String>(Arrays.asList(new String[]{forecast_items[2].timeString})),getArtWork(forecast_items[2].conditionIcon));
-            ChoiceCell cell4 = new ChoiceCell(forecast_items[3].timeString,new Vector<String>(Arrays.asList(new String[]{forecast_items[3].timeString})),getArtWork(forecast_items[3].conditionIcon));
-            ChoiceCell cell5 = new ChoiceCell(forecast_items[4].timeString,new Vector<String>(Arrays.asList(new String[]{forecast_items[4].timeString})),getArtWork(forecast_items[4].conditionIcon));
-            ChoiceCell cell6 = new ChoiceCell(forecast_items[5].timeString,new Vector<String>(Arrays.asList(new String[]{forecast_items[5].timeString})),getArtWork(forecast_items[5].conditionIcon));
-            ChoiceCell cell7 = new ChoiceCell(forecast_items[6].timeString,new Vector<String>(Arrays.asList(new String[]{forecast_items[6].timeString})),getArtWork(forecast_items[6].conditionIcon));
-            ChoiceCell cell8 = new ChoiceCell(forecast_items[7].timeString,new Vector<String>(Arrays.asList(new String[]{forecast_items[7].timeString})),getArtWork(forecast_items[7].conditionIcon));
-            ChoiceCell cell9 = new ChoiceCell(forecast_items[8].timeString,new Vector<String>(Arrays.asList(new String[]{forecast_items[8].timeString})),getArtWork(forecast_items[8].conditionIcon));
-            ChoiceCell cell10 = new ChoiceCell(forecast_items[9].timeString,new Vector<String>(Arrays.asList(new String[]{forecast_items[9].timeString})),getArtWork(forecast_items[9].conditionIcon));
-            ChoiceCell cell11 = new ChoiceCell(forecast_items[10].timeString,new Vector<String>(Arrays.asList(new String[]{forecast_items[10].timeString})),getArtWork(forecast_items[10].conditionIcon));
-            ChoiceCell cell12 = new ChoiceCell(forecast_items[11].timeString,new Vector<String>(Arrays.asList(new String[]{forecast_items[11].timeString})),getArtWork(forecast_items[11].conditionIcon));
+            ChoiceCell cell1 = new ChoiceCell(forecast_items[0].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[0].timeString})),getArtWork(forecast_items[0].conditionIcon));
+            ChoiceCell cell2 = new ChoiceCell(forecast_items[1].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[1].timeString})),getArtWork(forecast_items[1].conditionIcon));
+            ChoiceCell cell3 = new ChoiceCell(forecast_items[2].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[2].timeString})),getArtWork(forecast_items[2].conditionIcon));
+            ChoiceCell cell4 = new ChoiceCell(forecast_items[3].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[3].timeString})),getArtWork(forecast_items[3].conditionIcon));
+            ChoiceCell cell5 = new ChoiceCell(forecast_items[4].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[4].timeString})),getArtWork(forecast_items[4].conditionIcon));
+            ChoiceCell cell6 = new ChoiceCell(forecast_items[5].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[5].timeString})),getArtWork(forecast_items[5].conditionIcon));
+            ChoiceCell cell7 = new ChoiceCell(forecast_items[6].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[6].timeString})),getArtWork(forecast_items[6].conditionIcon));
+            ChoiceCell cell8 = new ChoiceCell(forecast_items[7].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[7].timeString})),getArtWork(forecast_items[7].conditionIcon));
+            ChoiceCell cell9 = new ChoiceCell(forecast_items[8].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[8].timeString})),getArtWork(forecast_items[8].conditionIcon));
+            ChoiceCell cell10 = new ChoiceCell(forecast_items[9].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[9].timeString})),getArtWork(forecast_items[9].conditionIcon));
+            ChoiceCell cell11 = new ChoiceCell(forecast_items[10].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[10].timeString})),getArtWork(forecast_items[10].conditionIcon));
+            ChoiceCell cell12 = new ChoiceCell(forecast_items[11].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[11].timeString})),getArtWork(forecast_items[11].conditionIcon));
 
-
+            forecast_item_counter = 0;
              choiceCellList = Arrays.asList(cell1,cell2,cell3,cell4,cell5,cell6,cell7,cell8,cell9,cell10,cell11,cell12);
 
             sdlManager.getScreenManager().preloadChoices(choiceCellList,null);
@@ -2227,18 +2314,18 @@ public class SdlService extends Service {
         /* Choices for Daily Forecast to be created */
         else if (mActiveInfoType == InfoType.DAILY_FORECAST) {
 
-            sdlManager.getScreenManager().setPrimaryGraphic(new SdlArtwork(mConditionIconFileName, FileType.GRAPHIC_PNG, conditionsID, true ));
 
-            ChoiceCell cell1 = new ChoiceCell(getResources().getString(R.string.cmd_today),new Vector<String>(Arrays.asList(new String[] { getResources().getString(R.string.cmd_today)})),getArtWork(forecast_items[0].conditionIcon));
-            ChoiceCell cell2 = new ChoiceCell(getResources().getString(R.string.cmd_tomorrow),new Vector<String>(Arrays.asList(new String[] { getResources().getString(R.string.cmd_tomorrow)})),getArtWork(forecast_items[1].conditionIcon));
-            ChoiceCell cell3 = new ChoiceCell(forecast_items[2].fullDateString,new Vector<String>(Arrays.asList(new String[]{forecast_items[2].fullDateString})),getArtWork(forecast_items[2].conditionIcon));
-            ChoiceCell cell4 = new ChoiceCell(forecast_items[3].fullDateString,new Vector<String>(Arrays.asList(new String[]{forecast_items[3].fullDateString})),getArtWork(forecast_items[3].conditionIcon));
-            ChoiceCell cell5 = new ChoiceCell(forecast_items[4].fullDateString,new Vector<String>(Arrays.asList(new String[]{forecast_items[4].fullDateString})),getArtWork(forecast_items[4].conditionIcon));
-            ChoiceCell cell6 = new ChoiceCell(forecast_items[5].fullDateString,new Vector<String>(Arrays.asList(new String[]{forecast_items[5].fullDateString})),getArtWork(forecast_items[5].conditionIcon));
-            ChoiceCell cell7 = new ChoiceCell(forecast_items[6].fullDateString,new Vector<String>(Arrays.asList(new String[]{forecast_items[6].fullDateString})),getArtWork(forecast_items[6].conditionIcon));
-            ChoiceCell cell8 = new ChoiceCell(forecast_items[7].fullDateString,new Vector<String>(Arrays.asList(new String[]{forecast_items[7].fullDateString})),getArtWork(forecast_items[7].conditionIcon));
+            ChoiceCell cell1 = new ChoiceCell(getResources().getString(R.string.cmd_today), new Vector<>(Arrays.asList(new String[]{getResources().getString(R.string.cmd_today)})),getArtWork(forecast_items[0].conditionIcon));
+            ChoiceCell cell2 = new ChoiceCell(getResources().getString(R.string.cmd_tomorrow), new Vector<>(Arrays.asList(new String[]{getResources().getString(R.string.cmd_tomorrow)})),getArtWork(forecast_items[1].conditionIcon));
+            ChoiceCell cell3 = new ChoiceCell(forecast_items[2].fullDateString, new Vector<>(Arrays.asList(new String[]{forecast_items[2].fullDateString})),getArtWork(forecast_items[2].conditionIcon));
+            ChoiceCell cell4 = new ChoiceCell(forecast_items[3].fullDateString, new Vector<>(Arrays.asList(new String[]{forecast_items[3].fullDateString})),getArtWork(forecast_items[3].conditionIcon));
+            ChoiceCell cell5 = new ChoiceCell(forecast_items[4].fullDateString, new Vector<>(Arrays.asList(new String[]{forecast_items[4].fullDateString})),getArtWork(forecast_items[4].conditionIcon));
+            ChoiceCell cell6 = new ChoiceCell(forecast_items[5].fullDateString, new Vector<>(Arrays.asList(new String[]{forecast_items[5].fullDateString})),getArtWork(forecast_items[5].conditionIcon));
+            ChoiceCell cell7 = new ChoiceCell(forecast_items[6].fullDateString, new Vector<>(Arrays.asList(new String[]{forecast_items[6].fullDateString})),getArtWork(forecast_items[6].conditionIcon));
+            ChoiceCell cell8 = new ChoiceCell(forecast_items[7].fullDateString, new Vector<>(Arrays.asList(new String[]{forecast_items[7].fullDateString})),getArtWork(forecast_items[7].conditionIcon));
 
             choiceCellList = Arrays.asList(cell1,cell2,cell3,cell4,cell5,cell6,cell7,cell8);
+            forecast_item_counter = 0;
 
             sdlManager.getScreenManager().preloadChoices(choiceCellList,null);
         } else {
