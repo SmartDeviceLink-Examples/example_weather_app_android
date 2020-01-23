@@ -128,54 +128,6 @@ public class SdlService extends Service {
     private static final int STANDARD_FORECAST_DAYS = 3;
     private static final int DAILY_FORECAST_DAYS = 8; /* max. 8 days might be shown */
     private static final int HOURLY_FORECAST_HOURS = 12;
-    private static final int VIEW_CURRENT_CONDITIONS = 1;
-    private static final int VIEW_STANDARD_FORECAST = 2;
-    private static final int VIEW_DAILY_FORECAST = 3;
-    private static final int CHANGE_UNITS = 4;
-    private static final int CHANGE_UNITS_CHOICESET = 1;
-    private static final int METRIC_CHOICE = 1;
-    private static final int IMPERIAL_CHOICE = 2;
-    private static final int VIEW_HOURLY_FORECAST = 5;
-    private static final int VIEW_ALERTS = 6;
-    private static final int PREVIOUS = 7;
-    private static final int NEXT = 8;
-    private static final int LIST = 9;
-    private static final int BACK = 10;
-    private static final int TODAY = 11;
-    private static final int TOMORROW = 12;
-    private static final int NOW = 13;
-    private static Boolean DailyForecast_ChoiceSet_created = false;
-    private static Boolean HourlyForecast_ChoiceSet_created = false;
-    private static int mDailyForecast_ChoiceSetID = 400;
-    private static int mHourlyForecast_ChoiceSetID = 600;
-    private int delete_DailyForecast_ChoiceSet_corrId = 0;
-    private int delete_HourlyForecast_ChoiceSet_corrId = 0;
-    private int create_DailyForecast_ChoiceSet_corrId = 0;
-    private int create_HourlyForecast_ChoiceSet_corrId = 0;
-    private static final int CHOICE_ITEM1_ID = 200;
-    private static final int CHOICE_ITEM2_ID = 201;
-    private static final int CHOICE_ITEM3_ID = 202;
-    private static final int CHOICE_ITEM4_ID = 203;
-    private static final int CHOICE_ITEM5_ID = 204;
-    private static final int CHOICE_ITEM6_ID = 205;
-    private static final int CHOICE_ITEM7_ID = 206;
-    private static final int CHOICE_ITEM8_ID = 207;
-    private static final int CHOICE_ITEM9_ID = 208;
-    private static final int CHOICE_ITEM10_ID = 209;
-    private static final int CHOICE_ITEM11_ID = 210;
-    private static final int CHOICE_ITEM12_ID = 211;
-    private static final int CHOICE_ITEM13_ID = 212;
-    private static final int CHOICE_ITEM14_ID = 213;
-    private static final int CHOICE_ITEM15_ID = 214;
-    private static final int CHOICE_ITEM16_ID = 215;
-    private static final int CHOICE_ITEM17_ID = 216;
-    private static final int CHOICE_ITEM18_ID = 217;
-    private static final int CHOICE_ITEM19_ID = 218;
-    private static final int CHOICE_ITEM20_ID = 219;
-    private static final int CHOICE_ITEM21_ID = 220;
-    private static final int CHOICE_ITEM22_ID = 221;
-    private static final int CHOICE_ITEM23_ID = 222;
-    private static final int CHOICE_ITEM24_ID = 223;
     private static final int TIMED_SHOW_DELAY = 8000;
     private static final String APP_ICON_NAME = "icon";
     private static final String APP_ICON = APP_ICON_NAME + ".png";
@@ -230,34 +182,9 @@ public class SdlService extends Service {
     private SoftButtonObject mShowBack = null;
     private ForecastItem[] forecast_items = null;
     private static int forecast_item_counter = 0;
-    private Boolean next_cmd_added = false;
-    private Boolean previous_cmd_added = false;
-    private Boolean now_cmd_added = false;
-    private Boolean today_cmd_added = false;
-    private Boolean tomorrow_cmd_added = false;
-    private Boolean list_cmd_added = false;
-    private Boolean daily_forecast_cmd_added = false;
-    private Boolean hourly_forecast_cmd_added = false;
-    private int daily_forecast_cmd_added_corrId = 0;
-    private int daily_forecast_cmd_deleted_corrId = 0;
-    private int hourly_forecast_cmd_added_corrId = 0;
-    private int hourly_forecast_cmd_deleted_corrId = 0;
-    private int next_cmd_added_corrId = 0;
-    private int next_cmd_deleted_corrId = 0;
-    private int previous_cmd_added_corrId = 0;
-    private int previous_cmd_deleted_corrId = 0;
-    private int now_cmd_added_corrId = 0;
-    private int now_cmd_deleted_corrId = 0;
-    private int today_cmd_added_corrId = 0;
-    private int today_cmd_deleted_corrId = 0;
-    private int tomorrow_cmd_added_corrId = 0;
-    private int tomorrow_cmd_deleted_corrId = 0;
-    private int list_cmd_added_corrId = 0;
-    private int list_cmd_deleted_corrId = 0;
     private Handler mTimedShowHandler = null;
     private ArrayList<String> mUploadedFiles = null;
     private SparseArray<String> mPutFileMap = null;
-    private Show mShowPendingPutFile = null;
     private String mConditionIconFileName = null;
     private WeatherDataManager mDataManager = null;
     private Boolean unitsInMetric = true;
@@ -267,7 +194,6 @@ public class SdlService extends Service {
     private String lengthUnitsFull = "millimeters";
     private Handler mHandler = null;
     private HMILevel currentHMILevel = HMILevel.HMI_NONE;
-    private DriverDistractionState currentDDState = DriverDistractionState.DD_OFF;
     private LinkedList<WeatherAlert> mAlertQueue = new LinkedList<WeatherAlert>();
     private int mLastAlertId;
     private int mWelcomeCorrId;
@@ -280,20 +206,15 @@ public class SdlService extends Service {
     private boolean mFirstAPIError = true;
     private boolean mFirstUnknownError = true;
     private LocalizationUtil mLocalizationUtil = null;
-    List<ChoiceCell> choiceCellList = null;
-    List<ChoiceCell> changeUnitCellList = null;
-    List<MenuCell> menuCells = null;
-    MenuCell mainCell1 = null;
-    MenuCell mainCell2 = null;
-    MenuCell mainCell3 = null;
-    MenuCell mainCell4 = null;
-    MenuCell mainCell5 = null;
-    MenuCell nextCell = null;
-    MenuCell listCell = null;
-    MenuCell prevCell = null;
-
-
-
+    //choice set variables
+    private List<ChoiceCell> choiceCellList = null;
+    private List<ChoiceCell> changeUnitCellList = null;
+    private List<MenuCell> menuCells = null;
+    private MenuCell mainCell1 = null;
+    private MenuCell mainCell2 = null;
+    private MenuCell mainCell3 = null;
+    private MenuCell mainCell4 = null;
+    private MenuCell mainCell5 = null;
 
     /**
      * Runnable that stops this service if there hasn't been a connection to SDL
@@ -339,161 +260,6 @@ public class SdlService extends Service {
         }
     };
 
-    private OnRPCResponseListener onPerformInteractionResponseListener = new OnRPCResponseListener() {
-        @Override
-        public void onResponse(int correlationId, RPCResponse response) {
-           /* PerformInteractionResponse performInteractionResponse = (PerformInteractionResponse) response;
-            if (response.getSuccess()) {
-                Integer choiceID = performInteractionResponse.getChoiceID();
-                switch (choiceID) {
-                    case METRIC_CHOICE:
-                        setUnitsMetric();
-                        break;
-                    case IMPERIAL_CHOICE:
-                        setUnitsImp();
-                        break;
-                    case CHOICE_ITEM1_ID:
-                        forecast_item_counter = 0;
-                        break;
-                    case CHOICE_ITEM2_ID:
-                        forecast_item_counter = 1;
-                        break;
-                    case CHOICE_ITEM3_ID:
-                        forecast_item_counter = 2;
-                        break;
-                    case CHOICE_ITEM4_ID:
-                        forecast_item_counter = 3;
-                        break;
-                    case CHOICE_ITEM5_ID:
-                        forecast_item_counter = 4;
-                        break;
-                    case CHOICE_ITEM6_ID:
-                        forecast_item_counter = 5;
-                        break;
-                    case CHOICE_ITEM7_ID:
-                        forecast_item_counter = 6;
-                        break;
-                    case CHOICE_ITEM8_ID:
-                        forecast_item_counter = 7;
-                        break;
-                    case CHOICE_ITEM9_ID:
-                        forecast_item_counter = 8;
-                        break;
-                    case CHOICE_ITEM10_ID:
-                        forecast_item_counter = 9;
-                        break;
-                    case CHOICE_ITEM11_ID:
-                        forecast_item_counter = 10;
-                        break;
-                    case CHOICE_ITEM12_ID:
-                        forecast_item_counter = 11;
-                        break;
-                    case CHOICE_ITEM13_ID:
-                        forecast_item_counter = 12;
-                        break;
-                    case CHOICE_ITEM14_ID:
-                        forecast_item_counter = 13;
-                        break;
-                    case CHOICE_ITEM15_ID:
-                        forecast_item_counter = 14;
-                        break;
-                    case CHOICE_ITEM16_ID:
-                        forecast_item_counter = 15;
-                        break;
-                    case CHOICE_ITEM17_ID:
-                        forecast_item_counter = 16;
-                        break;
-                    case CHOICE_ITEM18_ID:
-                        forecast_item_counter = 17;
-                        break;
-                    case CHOICE_ITEM19_ID:
-                        forecast_item_counter = 18;
-                        break;
-                    case CHOICE_ITEM20_ID:
-                        forecast_item_counter = 19;
-                        break;
-                    case CHOICE_ITEM21_ID:
-                        forecast_item_counter = 20;
-                        break;
-                    case CHOICE_ITEM22_ID:
-                        forecast_item_counter = 21;
-                        break;
-                    case CHOICE_ITEM23_ID:
-                        forecast_item_counter = 22;
-                        break;
-                    case CHOICE_ITEM24_ID:
-                        forecast_item_counter = 23;
-                        break;
-                }
-                writeDisplay(true);
-            }*/
-        }
-    };
-
-
-
-    private OnRPCResponseListener addCommandResponseListener = new OnRPCResponseListener() {
-        @Override
-        public void onResponse(int correlationId, RPCResponse response) {
-            if (response.getSuccess()) {
-                String help_prompt = (getResources().getString(R.string.gp_help_prompt_start));
-                if (response.getCorrelationID() == next_cmd_added_corrId) {
-                    next_cmd_added = true;
-                    help_prompt += (getResources().getString(R.string.vr_next));
-                }
-                if (response.getCorrelationID() == previous_cmd_added_corrId) {
-                    previous_cmd_added = true;
-                    help_prompt += (getResources().getString(R.string.vr_prev));
-                }
-                if (response.getCorrelationID() == now_cmd_added_corrId) {
-                    now_cmd_added = true;
-                    help_prompt += (getResources().getString(R.string.vr_now));
-                }
-                if (response.getCorrelationID() == today_cmd_added_corrId) {
-                    today_cmd_added = true;
-                    help_prompt += (getResources().getString(R.string.vr_today));
-                }
-                if (response.getCorrelationID() == tomorrow_cmd_added_corrId) {
-                    tomorrow_cmd_added = true;
-                    help_prompt += (getResources().getString(R.string.vr_tomorrow));
-                }
-                if (response.getCorrelationID() == list_cmd_added_corrId) {
-                    list_cmd_added = true;
-                    help_prompt += (getResources().getString(R.string.vr_list));
-                }
-                if (response.getCorrelationID() == daily_forecast_cmd_added_corrId) {
-                    daily_forecast_cmd_added = true;
-                    help_prompt += (getResources().getString(R.string.vr_daily_forecast));
-                }
-                if (response.getCorrelationID() == hourly_forecast_cmd_added_corrId) {
-                    hourly_forecast_cmd_added = true;
-                    help_prompt += (getResources().getString(R.string.vr_hourly_forecast));
-                }
-
-                help_prompt += (getResources().getString(R.string.gp_help_prompt_end));
-
-                setGlobalProperties(help_prompt, (getResources().getString(R.string.gp_timeout_prompt)), autoIncCorrId++);
-            }
-        }
-    };
-
-    private OnRPCResponseListener createInteractionChoiceSetListener = new OnRPCResponseListener() {
-        @Override
-        public void onResponse(int correlationId, RPCResponse response) {
-            if (response.getCorrelationID() == create_DailyForecast_ChoiceSet_corrId) {
-                if (response.getSuccess()) {
-                    DailyForecast_ChoiceSet_created = true;
-                    HourlyForecast_ChoiceSet_created = false;
-                }
-            }
-            if (response.getCorrelationID() == create_HourlyForecast_ChoiceSet_corrId) {
-                if (response.getSuccess()) {
-                    HourlyForecast_ChoiceSet_created = true;
-                    DailyForecast_ChoiceSet_created = false;
-                }
-            }
-        }
-    };
 
     public SdlManager getSdlManager() {
         return sdlManager;
@@ -770,8 +536,6 @@ public class SdlService extends Service {
             public void onPress(SoftButtonObject softButtonObject, OnButtonPress onButtonPress) {
                 int mtemp_counter = forecast_item_counter;
                 mActiveInfoType = InfoType.WEATHER_CONDITIONS;
-                /* add cmds relevant for Current Weather Conditions, remove cmds not needed */
-              //  prepareCurrentCondCmds();
                 forecast_item_counter = mtemp_counter;
                 updateHmi(true);
             }
@@ -804,9 +568,6 @@ public class SdlService extends Service {
             public void onPress(SoftButtonObject softButtonObject, OnButtonPress onButtonPress) {
                 int mtemp_counter = forecast_item_counter;
                 mActiveInfoType = InfoType.DAILY_FORECAST;
-                /* add cmds relevant for Daily Forecast, remove cmds not needed */
-              //  prepareDailyForecastCmds();
-                mtemp_counter = 0;
                 forecast_item_counter = mtemp_counter;
                 updateHmi(true);
             }
@@ -823,9 +584,6 @@ public class SdlService extends Service {
             public void onPress(SoftButtonObject softButtonObject, OnButtonPress onButtonPress) {
                 int mtemp_counter = forecast_item_counter;
                 mActiveInfoType = InfoType.HOURLY_FORECAST;
-                /* add cmds relevant for Hourly Forecast, remove cmds not needed */
-              //  prepareHourlyForecastCmds();
-                mtemp_counter = 0;
                 forecast_item_counter = mtemp_counter;
                 updateHmi(true);            }
 
@@ -855,7 +613,14 @@ public class SdlService extends Service {
         mShowPrevItem = new SoftButtonObject("mShowPrevItem", Arrays.asList(mShowPrevItemState1, mShowPrevItemState2), mShowPrevItemState2.getName(), new SoftButtonObject.OnEventListener() {
             @Override
             public void onPress(SoftButtonObject softButtonObject, OnButtonPress onButtonPress) {
-               showPrev();
+                int mtemp_counter = forecast_item_counter;
+                mtemp_counter--;
+                if (mtemp_counter >= 0) {
+                    forecast_item_counter = mtemp_counter;
+                    writeDisplay(true);
+                } else {
+                    speak("You have reached the beginning of the forecast list", autoIncCorrId++);
+                }
             }
 
             @Override
@@ -869,7 +634,15 @@ public class SdlService extends Service {
         mShowNextItem = new SoftButtonObject("mShowNextItem", Arrays.asList(mShowNextItemState1, mShowNextItemState2), mShowNextItemState1.getName(), new SoftButtonObject.OnEventListener() {
             @Override
             public void onPress(SoftButtonObject softButtonObject, OnButtonPress onButtonPress) {
-                showNext();
+                int mtemp_counter = forecast_item_counter;
+                mtemp_counter++;
+                if (mtemp_counter < forecast_items.length) {
+                    forecast_item_counter = mtemp_counter;
+                    writeDisplay(true);
+                }
+                if (mtemp_counter >= forecast_items.length) {
+                    speak("You have reached the end of the forecast list", autoIncCorrId++);
+                }
             }
 
             @Override
@@ -882,7 +655,28 @@ public class SdlService extends Service {
         mShowListItems = new SoftButtonObject("mShowListItems", Collections.singletonList(mShowListItemsState), mShowListItemsState.getName(), new SoftButtonObject.OnEventListener() {
             @Override
             public void onPress(SoftButtonObject softButtonObject, OnButtonPress onButtonPress) {
-                showList();
+                forecast_item_counter = 0;
+                String choiceSetText = "";
+                if(mActiveInfoType == InfoType.HOURLY_FORECAST){
+                    choiceSetText = "Please select a Time:";
+                }
+                else{
+                    choiceSetText = "Please select a day:";
+                }
+                ChoiceSet choiceSet = new ChoiceSet(choiceSetText, choiceCellList, new ChoiceSetSelectionListener() {
+                    @Override
+                    public void onChoiceSelected(ChoiceCell choiceCell, TriggerSource triggerSource, int rowIndex) {
+                        forecast_item_counter = rowIndex;
+                        writeDisplay(true);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+
+                    }
+                });
+                choiceSet.setLayout(ChoiceSetLayout.CHOICE_SET_LAYOUT_TILES);
+                sdlManager.getScreenManager().presentChoiceSet(choiceSet,InteractionMode.MANUAL_ONLY);
             }
 
             @Override
@@ -922,7 +716,6 @@ public class SdlService extends Service {
         // Initialize weather and location data
         mCurrentLocation = mDataManager.getCurrentLocation();
         mWeatherConditions = mDataManager.getWeatherConditions();
-        // mRoadConditions = mDataManager.getRoadConditions();
         mAlerts = mDataManager.getAlerts();
         mForecast = mDataManager.getForecast();
         mHourlyForecast = mDataManager.getHourlyForecast();
@@ -933,55 +726,6 @@ public class SdlService extends Service {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             enterForeground();
-        }
-    }
-    private void showPrev(){
-        int mtemp_counter = forecast_item_counter;
-        mtemp_counter--;
-        if (mtemp_counter >= 0) {
-            forecast_item_counter = mtemp_counter;
-            setUpMenu();
-            writeDisplay(true);
-        } else {
-            speak("You have reached the beginning of the forecast list", autoIncCorrId++);
-        }
-    }
-
-    //show forecast in tiles on screen;
-    private void showList(){
-        forecast_item_counter = 0;
-        String choiceSetText = "";
-        if(mActiveInfoType == InfoType.HOURLY_FORECAST){
-            choiceSetText = "Please select a Time:";
-        }
-        else{
-            choiceSetText = "Please select a day:";
-        }
-        ChoiceSet choiceSet = new ChoiceSet(choiceSetText, choiceCellList, new ChoiceSetSelectionListener() {
-            @Override
-            public void onChoiceSelected(ChoiceCell choiceCell, TriggerSource triggerSource, int rowIndex) {
-                forecast_item_counter = rowIndex;
-                writeDisplay(true);
-            }
-
-            @Override
-            public void onError(String error) {
-
-            }
-        });
-        choiceSet.setLayout(ChoiceSetLayout.CHOICE_SET_LAYOUT_TILES);
-        sdlManager.getScreenManager().presentChoiceSet(choiceSet,InteractionMode.MANUAL_ONLY);
-    }
-    private void showNext(){
-        int mtemp_counter = forecast_item_counter;
-        mtemp_counter++;
-        if (mtemp_counter < forecast_items.length) {
-            forecast_item_counter = mtemp_counter;
-            setUpMenu();
-            writeDisplay(true);
-        }
-        if (mtemp_counter >= forecast_items.length) {
-            speak("You have reached the end of the forecast list", autoIncCorrId++);
         }
     }
 
@@ -1127,128 +871,6 @@ public class SdlService extends Service {
                             Log.i(SdlApplication.TAG, "onOnLanguageChange: HmiDisplayLanguage = " + mDesiredAppHmiLanguage);
                         }
                     });
-
-
-//                    sdlManager.addOnRPCNotificationListener(FunctionID.ON_COMMAND, new OnRPCNotificationListener() {
-//                        @Override
-//                        public void onNotified(RPCNotification notification) {
-//                            OnCommand onCommand = (OnCommand) notification;
-//                            int mtemp_counter = forecast_item_counter;
-//
-//                            if (notification != null) {
-//                                int command = onCommand.getCmdID();
-//                                switch (command) {
-//                                    case VIEW_CURRENT_CONDITIONS:
-//                                        mActiveInfoType = InfoType.WEATHER_CONDITIONS;
-//                                        /* add cmds relevant for Current Weather Conditions, remove cmds not needed */
-//                                        prepareCurrentCondCmds();
-//                                        break;
-//                                    case VIEW_STANDARD_FORECAST:
-//                                        mActiveInfoType = InfoType.STANDARD_FORECAST;
-//                                        break;
-//                                    case VIEW_DAILY_FORECAST:
-//                                        mActiveInfoType = InfoType.DAILY_FORECAST;
-//                                        /* add cmds relevant for Daily Forecast, remove cmds not needed */
-//                                        prepareDailyForecastCmds();
-//                                        mtemp_counter = 0;
-//                                        break;
-//                                    case VIEW_HOURLY_FORECAST:
-//                                        mActiveInfoType = InfoType.HOURLY_FORECAST;
-//                                        /* add cmds relevant for Hourly Forecast, remove cmds not needed */
-//                                        prepareHourlyForecastCmds();
-//                                        mtemp_counter = 0;
-//                                        break;
-//                                    case VIEW_ALERTS:
-//                                        mActiveInfoType = InfoType.ALERTS;
-//                                        break;
-//                                    case NEXT:
-//                                        mtemp_counter++;
-//                                        if (mtemp_counter < forecast_items.length) {
-//                                            forecast_item_counter = mtemp_counter;
-//                                            writeDisplay(true);
-//                                        }
-//                                        if (mtemp_counter >= forecast_items.length) {
-//                                            next_cmd_deleted_corrId = autoIncCorrId;
-//                                            deleteCommand(NEXT, autoIncCorrId++);
-//
-//                                            speak("You have reached the end of the forecast list", autoIncCorrId++);
-//                                        }
-//                                        return;
-//                                    case PREVIOUS:
-//                                        mtemp_counter--;
-//                                        if (mtemp_counter >= 0) {
-//                                            if (mtemp_counter == 0) {
-//                                                previous_cmd_deleted_corrId = autoIncCorrId;
-//                                                deleteCommand(PREVIOUS, autoIncCorrId++);
-//                                            }
-//                                            forecast_item_counter = mtemp_counter;
-//                                            writeDisplay(true);
-//                                        } else {
-//                                            speak("You have reached the beginning of the forecast list", autoIncCorrId++);
-//                                        }
-//                                        return;
-//
-//                                    case LIST:
-//                                        mTimedShowHandler.removeCallbacks(mTimedShowRunnable);
-//                                        forecast_item_counter = 0;
-//                                        prepareListItemsCmds();
-//                                        return;
-//
-//                                    case BACK:
-//                                        mActiveInfoType = InfoType.WEATHER_CONDITIONS;
-//                                        prepareBackCmds();
-//                                        forecast_item_counter = 0;
-//                                        updateHmi(false);
-//                                        return;
-//
-//                                    case TODAY:
-//                                        mtemp_counter = 0;
-//                                        break;
-//                                    case TOMORROW:
-//                                        if (mtemp_counter < forecast_items.length) {
-//                                            mActiveInfoType = InfoType.DAILY_FORECAST;
-//                                            mtemp_counter = 1;
-//                                        } else {
-//                                            speak("You have reached the end of the forecast list", autoIncCorrId++);
-//                                            return;
-//                                        }
-//                                        break;
-//
-//                                    case NOW:
-//                                        mtemp_counter = 0;
-//                                        break;
-//
-//                                    case CHANGE_UNITS:
-//                                        mTimedShowHandler.removeCallbacks(mTimedShowRunnable);
-//
-//                                        Vector<Integer> interactionChoiceSetIDs = new Vector<Integer>();
-//                                        interactionChoiceSetIDs.add(CHANGE_UNITS_CHOICESET);
-//                                        Vector<TTSChunk> initChunks = TTSChunkFactory.createSimpleTTSChunks(getResources().getString(R.string.interaction_units_prompt));
-//                                        Vector<TTSChunk> helpChunks = TTSChunkFactory.createSimpleTTSChunks(getResources().getString(R.string.interaction_units_help_prompt));
-//                                        Vector<TTSChunk> timeoutChunks = TTSChunkFactory.createSimpleTTSChunks(getResources().getString(R.string.interaction_units_timeout_prompt));
-//                                        PerformInteraction msg = new PerformInteraction(getResources().getString(R.string.interaction_units_displaytext), InteractionMode.BOTH, interactionChoiceSetIDs);
-//                                        msg.setInitialPrompt(initChunks);
-//                                        msg.setTimeout(100000);
-//                                        msg.setHelpPrompt(helpChunks);
-//                                        msg.setTimeoutPrompt(timeoutChunks);
-//                                        msg.setCorrelationID(autoIncCorrId++);
-//                                        msg.setOnRPCResponseListener(onPerformInteractionResponseListener);
-//                                        sdlManager.sendRPC(msg);
-//
-//                                        // Fall through to default to avoid showing prematurely
-//                                        // onPerformInteractionResponse() will perform the show once the user selects units
-//                                    default:
-//                                        // Return to avoid showing early for CHANGE_UNITS or unknown commands.
-//                                        return;
-//                                }
-//                                forecast_item_counter = mtemp_counter;
-//                                updateHmi(true);
-//
-//                            }
-//                        }
-//                    });
-
-
                 }
 
                 @Override
@@ -1278,8 +900,6 @@ public class SdlService extends Service {
             builder.setTransportType(transport);
             builder.setLanguage(mDesiredAppSdlLanguage);
             builder.setAppIcon(appIcon);
-
-
 
             // Set listeners list
             Map<FunctionID, OnRPCNotificationListener> onRPCNotificationListenerMap = new HashMap<>();
@@ -1322,13 +942,11 @@ public class SdlService extends Service {
                                 // Perform welcome
                                 showWelcomeMessage();
 
-
-
                                 // Create InteractionChoicedSet for changing units
                                 createChangeUnitsInteractionChoiceSet();
 
                                 // Subscribe buttons
-                                //subscribeButtons();
+                                subscribeButtons();
                             }
                             break;
                         case HMI_LIMITED:
@@ -1355,8 +973,6 @@ public class SdlService extends Service {
                 }
             });
             builder.setRPCNotificationListeners(onRPCNotificationListenerMap);
-
-
             sdlManager = builder.build();
             sdlManager.start();
 
@@ -1411,7 +1027,6 @@ public class SdlService extends Service {
 
             }
         });
-
        // mWelcomeCorrId = autoIncCorrId++;
         Speak msg = new Speak(TTSChunkFactory.createSimpleTTSChunks((getResources().getString(R.string.welcome_speak))));
         msg.setCorrelationID(mWelcomeCorrId);
@@ -1437,7 +1052,6 @@ public class SdlService extends Service {
         });
         sdlManager.sendRPC(msg);
     }
-
 
     private void getSdlSettings() {
         mActiveInfoType = InfoType.NONE;
@@ -1576,32 +1190,6 @@ public class SdlService extends Service {
         return units;
     }
 
-
-  /* private void addCommands() {
-        Vector<String> vrCommands = null;
-
-        vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_current), getResources().getString(R.string.vr_current_cond)));
-        addCommand(VIEW_CURRENT_CONDITIONS, getResources().getString(R.string.cmd_current_cond), vrCommands, autoIncCorrId++);
-
-        vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_daily),
-                getResources().getString(R.string.vr_daily_forecast)));
-        daily_forecast_cmd_added_corrId = autoIncCorrId;
-        addCommand(VIEW_DAILY_FORECAST, getResources().getString(R.string.cmd_daily_forecast), vrCommands, autoIncCorrId++);
-
-        vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_change_units),
-                getResources().getString(R.string.vr_units)));
-        addCommand(CHANGE_UNITS, getResources().getString(R.string.cmd_change_units), vrCommands, autoIncCorrId++);
-
-        vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_hourly),
-                getResources().getString(R.string.vr_hourly_forecast)));
-        hourly_forecast_cmd_added_corrId = autoIncCorrId;
-        addCommand(VIEW_HOURLY_FORECAST, getResources().getString(R.string.cmd_hourly_forecast), vrCommands, autoIncCorrId++);
-
-        vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_alerts)));
-        addCommand(VIEW_ALERTS, getResources().getString(R.string.cmd_alerts), vrCommands, autoIncCorrId++);
-
-    }*/
-
     private void createMenuCells(){
 
         menuCells = null;
@@ -1609,32 +1197,21 @@ public class SdlService extends Service {
 
         vrCommands = new Vector<>(Arrays.asList(getResources().getString(R.string.vr_current), getResources().getString(R.string.vr_current_cond)));
 
-        mainCell1 = new MenuCell(getResources().getString(R.string.cmd_current_cond), null, null, new MenuSelectionListener() {
+        mainCell1 = new MenuCell(getResources().getString(R.string.cmd_current_cond), null, vrCommands, new MenuSelectionListener() {
             @Override
             public void onTriggered(TriggerSource trigger) {
                 mActiveInfoType = InfoType.WEATHER_CONDITIONS;
-
-               setUpMenu();
                 updateHmi(true);
-
             }
         });
 
         vrCommands = new Vector<>(Arrays.asList(getResources().getString(R.string.vr_daily),
                 getResources().getString(R.string.vr_daily_forecast)));
 
-        mainCell2 = new MenuCell(getResources().getString(R.string.cmd_daily_forecast), null, null, new MenuSelectionListener() {
+        mainCell2 = new MenuCell(getResources().getString(R.string.cmd_daily_forecast), null, vrCommands, new MenuSelectionListener() {
             @Override
             public void onTriggered(TriggerSource trigger) {
                 mActiveInfoType = InfoType.DAILY_FORECAST;
-/*                if (forecast_item_counter == DAILY_FORECAST_DAYS - 1) {
-                    menuCells = Arrays.asList(mainCell1,listCell,mainCell3,mainCell4,mainCell5);
-                } else {
-                    menuCells = Arrays.asList(mainCell1,nextCell, listCell,mainCell3,mainCell4,mainCell5);
-                }*/
-                setUpMenu();
-
-
                 updateHmi(true);
             }
         });
@@ -1642,25 +1219,18 @@ public class SdlService extends Service {
         vrCommands = new Vector<>(Arrays.asList(getResources().getString(R.string.vr_hourly),
                 getResources().getString(R.string.vr_hourly_forecast)));
 
-        mainCell3 = new MenuCell(getResources().getString(R.string.cmd_hourly_forecast), null, null, new MenuSelectionListener() {
+        mainCell3 = new MenuCell(getResources().getString(R.string.cmd_hourly_forecast), null, vrCommands, new MenuSelectionListener() {
             @Override
             public void onTriggered(TriggerSource trigger) {
                 mActiveInfoType = InfoType.HOURLY_FORECAST;
-  /*              if (forecast_item_counter == HOURLY_FORECAST_HOURS - 1) {
-                    menuCells = Arrays.asList(mainCell1,listCell,mainCell2,mainCell4,mainCell5);
-                } else {
-                    menuCells = Arrays.asList(mainCell1,nextCell,listCell,mainCell2,mainCell4,mainCell5);
-                }*/
-                setUpMenu();
                 updateHmi(true);
-
             }
         });
 
         vrCommands = new Vector<>(Arrays.asList(getResources().getString(R.string.vr_change_units),
                 getResources().getString(R.string.vr_units)));
 
-        mainCell4 = new MenuCell(getResources().getString(R.string.cmd_change_units), null, null, new MenuSelectionListener() {
+        mainCell4 = new MenuCell(getResources().getString(R.string.cmd_change_units), null, vrCommands, new MenuSelectionListener() {
             @Override
             public void onTriggered(TriggerSource trigger) {
                 ChoiceSet changeUnitChoiceSet = new ChoiceSet("Units:", changeUnitCellList, new ChoiceSetSelectionListener() {
@@ -1683,7 +1253,6 @@ public class SdlService extends Service {
                 sdlManager.getScreenManager().presentChoiceSet(changeUnitChoiceSet,InteractionMode.MANUAL_ONLY);
             }
         });
-
         vrCommands = new Vector<>(Arrays.asList(getResources().getString(R.string.vr_alerts)));
         mainCell5 = new MenuCell(getResources().getString(R.string.cmd_alerts), null, vrCommands, new MenuSelectionListener() {
             @Override
@@ -1693,70 +1262,10 @@ public class SdlService extends Service {
                 updateHmi(true);
             }
         });
-
-        listCell = new MenuCell("List",null, null, new MenuSelectionListener() {
-            @Override
-            public void onTriggered(TriggerSource trigger) {
-                showList();
-            }
-        });
-        nextCell = new MenuCell("Next", null, null, new MenuSelectionListener() {
-            @Override
-            public void onTriggered(TriggerSource trigger) {
-                Log.i("Julian", "onTriggered: Here Next on Triggered");
-                showNext();
-
-            }
-        });
-        prevCell = new MenuCell("Prev.", null, null, new MenuSelectionListener() {
-            @Override
-            public void onTriggered(TriggerSource trigger) {
-                showPrev();
-            }
-        });
-        //check to see if this is needed
         menuCells = Arrays.asList(mainCell1,mainCell2,mainCell3,mainCell4,mainCell5);
-        setUpMenu();
+        sdlManager.getScreenManager().setMenu(menuCells);
 
     }
-
-   private void setUpMenu() {
-       if (mActiveInfoType == InfoType.WEATHER_CONDITIONS) {
-           menuCells = Arrays.asList(mainCell2, mainCell3, mainCell4, mainCell5);
-       }
-       else if (mActiveInfoType == InfoType.HOURLY_FORECAST) {
-           if (forecast_item_counter == HOURLY_FORECAST_HOURS - 1) {
-               menuCells = Arrays.asList(mainCell1, prevCell, listCell, mainCell2, mainCell4, mainCell5);
-
-           }
-           else {
-               if(forecast_item_counter >0){
-                   menuCells = Arrays.asList(mainCell1, nextCell, prevCell,listCell, mainCell2, mainCell4, mainCell5);
-               }
-               else{
-                   menuCells = Arrays.asList(mainCell1, nextCell, listCell, mainCell2, mainCell4, mainCell5);
-               }
-           }
-
-       }
-       else if (mActiveInfoType == InfoType.DAILY_FORECAST) {
-           if (forecast_item_counter == DAILY_FORECAST_DAYS - 1) {
-               menuCells = Arrays.asList(mainCell1, listCell, mainCell3, mainCell4, mainCell5);
-           }
-           else {
-               if(forecast_item_counter>0){
-                   menuCells = Arrays.asList(mainCell1, nextCell,prevCell,listCell, mainCell3, mainCell4, mainCell5);
-               }
-               else{
-                   menuCells = Arrays.asList(mainCell1, nextCell,listCell, mainCell3, mainCell4, mainCell5);
-               }
-           }
-       }
-       Log.i("Julian", "setUpMenu: het at setupMenu");
-       sdlManager.getScreenManager().setMenu(menuCells);
-       Log.i("Julian", "setUpMenu: here after setupMenu");
-   }
-
 
     private void createChangeUnitsInteractionChoiceSet() {
         changeUnitCellList = null;
@@ -2526,280 +2035,6 @@ public class SdlService extends Service {
         return haveNewAlerts;
     }
 
-
-/*    private void prepareDailyForecastCmds() {
-        Vector<String> vrCommands = null;
-        if (next_cmd_added == false) {
-            next_cmd_added_corrId = autoIncCorrId;
-            vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_next)));
-            addCommand(NEXT, getResources().getString(R.string.cmd_next), vrCommands, autoIncCorrId++);
-        }
-        vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_back)));
-        addCommand(BACK, getResources().getString(R.string.cmd_back), vrCommands, autoIncCorrId++);
-
-        *//* add vc "Tomorrow" *//*
-        if (tomorrow_cmd_added == false) {
-            tomorrow_cmd_added_corrId = autoIncCorrId;
-            vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_tomorrow)));
-            addCommand(TOMORROW, getResources().getString(R.string.cmd_tomorrow), vrCommands, autoIncCorrId++);
-        }
-
-        *//* add vc "Today" *//*
-        if (today_cmd_added == false) {
-            today_cmd_added_corrId = autoIncCorrId;
-            vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_today)));
-            addCommand(TODAY, getResources().getString(R.string.cmd_today), vrCommands, autoIncCorrId++);
-        }
-
-        *//* add vc "List" *//*
-        if (list_cmd_added == false) {
-            list_cmd_added_corrId = autoIncCorrId;
-            vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_list)));
-            addCommand(LIST, "List", vrCommands, autoIncCorrId++);
-        }
-
-        if (now_cmd_added == true) {
-            now_cmd_deleted_corrId = autoIncCorrId;
-            deleteCommand(NOW, autoIncCorrId++);
-        }
-        *//* delete cmd "Daily Forecast" *//*
-        if (daily_forecast_cmd_added == true) {
-            daily_forecast_cmd_deleted_corrId = autoIncCorrId;
-            deleteCommand(VIEW_DAILY_FORECAST, autoIncCorrId++);
-        }
-        *//* add cmd "Hourly Forecast" *//*
-        if (hourly_forecast_cmd_added == false) {
-
-            vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_hourly),
-                    getResources().getString(R.string.vr_hourly_forecast)));
-            hourly_forecast_cmd_added_corrId = autoIncCorrId;
-            addCommand(VIEW_HOURLY_FORECAST, getResources().getString(R.string.cmd_hourly_forecast), vrCommands, autoIncCorrId++);
-
-        }
-    }*/
-
-
-  /*  private void prepareHourlyForecastCmds() {
-        Vector<String> vrCommands = null;
-        if (next_cmd_added == false) {
-            next_cmd_added_corrId = autoIncCorrId;
-            vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_next)));
-            addCommand(NEXT, getResources().getString(R.string.cmd_next), vrCommands, autoIncCorrId++);
-        }
-        vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_back)));
-        addCommand(BACK, getResources().getString(R.string.cmd_back), vrCommands, autoIncCorrId++);
-        *//* add cmd "Now" *//*
-        now_cmd_added_corrId = autoIncCorrId;
-        vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_now)));
-        addCommand(NOW, getResources().getString(R.string.cmd_now), vrCommands, autoIncCorrId++);
-        *//* add cmd "List" *//*
-        if (list_cmd_added == false) {
-            list_cmd_added_corrId = autoIncCorrId;
-            vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_list)));
-            addCommand(LIST, "List", vrCommands, autoIncCorrId++);
-        }
-        *//* delete cmd "Today" *//*
-        if (today_cmd_added == true) {
-            today_cmd_deleted_corrId = autoIncCorrId;
-            deleteCommand(TODAY, autoIncCorrId++);
-        }
-        *//* delete cmd "Tomorrow" *//*
-        if (tomorrow_cmd_added == true) {
-            tomorrow_cmd_deleted_corrId = autoIncCorrId;
-            deleteCommand(TOMORROW, autoIncCorrId++);
-        }
-        *//* delete cmd Hourly Forecast *//*
-        if (hourly_forecast_cmd_added == true) {
-            hourly_forecast_cmd_deleted_corrId = autoIncCorrId;
-            deleteCommand(VIEW_HOURLY_FORECAST, autoIncCorrId++);
-        }
-        *//* add cmd "Daily Forecast" *//*
-        if (daily_forecast_cmd_added == false) {
-
-            vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_daily),
-                    getResources().getString(R.string.vr_daily_forecast)));
-            daily_forecast_cmd_added_corrId = autoIncCorrId;
-            addCommand(VIEW_DAILY_FORECAST, getResources().getString(R.string.cmd_daily_forecast), vrCommands, autoIncCorrId++);
-        }
-    }
-
-    private void prepareCurrentCondCmds() {
-        previous_cmd_deleted_corrId = autoIncCorrId;
-        deleteCommand(PREVIOUS, autoIncCorrId++);
-
-        next_cmd_deleted_corrId = autoIncCorrId;
-        deleteCommand(NEXT, autoIncCorrId++);
-
-        deleteCommand(BACK, autoIncCorrId++);
-        if (now_cmd_added == true) {
-            now_cmd_deleted_corrId = autoIncCorrId;
-            deleteCommand(NOW, autoIncCorrId++);
-        }
-        if (today_cmd_added == true) {
-            today_cmd_deleted_corrId = autoIncCorrId;
-            deleteCommand(TODAY, autoIncCorrId++);
-        }
-        if (tomorrow_cmd_added == true) {
-            tomorrow_cmd_deleted_corrId = autoIncCorrId;
-            deleteCommand(TOMORROW, autoIncCorrId++);
-        }
-
-        if (list_cmd_added == true) {
-            list_cmd_deleted_corrId = autoIncCorrId;
-            deleteCommand(LIST, autoIncCorrId++);
-        }
-    }*/
-
-
-  /*  private void prepareListItemsCmds() {
-        String initialPrompt = "";
-        String helpPrompt = "";
-        String timeoutPrompt = getResources().getString(R.string.interaction_forecastlist_timeoutprompt);
-        String initialText = "";
-
-        if (mActiveInfoType == InfoType.HOURLY_FORECAST) {
-            initialPrompt = getResources().getString(R.string.interaction_hourly_forecastlist_initprompt);
-            helpPrompt = getResources().getString(R.string.interaction_hourly_forecastlist_helpprompt);
-            initialText = getResources().getString(R.string.interaction_hourly_forecastlist_inittext);
-        }
-        if (mActiveInfoType == InfoType.DAILY_FORECAST) {
-            initialPrompt = getResources().getString(R.string.interaction_daily_forecastlist_initprompt);
-            helpPrompt = getResources().getString(R.string.interaction_daily_forecastlist_helpprompt);
-            initialText = getResources().getString(R.string.interaction_daily_forecastlist_inittext);
-        }
-        Vector<TTSChunk> intitial_prompt = TTSChunkFactory.createSimpleTTSChunks(initialPrompt);
-        Vector<TTSChunk> help_prompt = TTSChunkFactory.createSimpleTTSChunks(helpPrompt);
-        Vector<TTSChunk> timeout_prompt = TTSChunkFactory.createSimpleTTSChunks(timeoutPrompt);
-        Vector<Integer> interactionChoiceSetIDs = new Vector<Integer>();
-        if (mActiveInfoType == InfoType.DAILY_FORECAST) {
-            interactionChoiceSetIDs.add(mDailyForecast_ChoiceSetID);
-        }
-        if (mActiveInfoType == InfoType.HOURLY_FORECAST) {
-            interactionChoiceSetIDs.add(mHourlyForecast_ChoiceSetID);
-        }
-
-        PerformInteraction performInterActionRequest = new PerformInteraction();
-        performInterActionRequest.setInitialPrompt(intitial_prompt);
-        performInterActionRequest.setHelpPrompt(help_prompt);
-        performInterActionRequest.setTimeoutPrompt(timeout_prompt);
-        performInterActionRequest.setInitialText(initialText);
-        performInterActionRequest.setTimeout(100000);
-        performInterActionRequest.setInteractionChoiceSetIDList(interactionChoiceSetIDs);
-        performInterActionRequest.setInteractionMode(InteractionMode.MANUAL_ONLY);
-        performInterActionRequest.setCorrelationID(autoIncCorrId++);
-        performInterActionRequest.setOnRPCResponseListener(onPerformInteractionResponseListener);
-        sdlManager.sendRPC(performInterActionRequest);
-
-    }*/
-
-/*    private void prepareBackCmds() {
-        Vector<String> vrCommands = null;
-        previous_cmd_deleted_corrId = autoIncCorrId;
-        deleteCommand(PREVIOUS, autoIncCorrId++);
-
-        next_cmd_deleted_corrId = autoIncCorrId;
-        deleteCommand(NEXT, autoIncCorrId++);
-
-        deleteCommand(BACK, autoIncCorrId++);
-        if (now_cmd_added) {
-            now_cmd_deleted_corrId = autoIncCorrId;
-            deleteCommand(NOW, autoIncCorrId++);
-        }
-        if (today_cmd_added) {
-            today_cmd_deleted_corrId = autoIncCorrId;
-            deleteCommand(TODAY, autoIncCorrId++);
-        }
-        if (tomorrow_cmd_added) {
-            tomorrow_cmd_deleted_corrId = autoIncCorrId;
-            deleteCommand(TOMORROW, autoIncCorrId++);
-        }
-
-        if (list_cmd_added) {
-            list_cmd_deleted_corrId = autoIncCorrId;
-            deleteCommand(LIST, autoIncCorrId++);
-        }
-        if (HourlyForecast_ChoiceSet_created) {
-            delete_HourlyForecast_ChoiceSet_corrId = autoIncCorrId;
-            deleteInteractionChoiceSet(mHourlyForecast_ChoiceSetID, autoIncCorrId++);
-        }
-        if (DailyForecast_ChoiceSet_created) {
-            delete_DailyForecast_ChoiceSet_corrId = autoIncCorrId;
-            deleteInteractionChoiceSet(mDailyForecast_ChoiceSetID, autoIncCorrId++);
-        }
-
-        *//* add cmd "Daily Forecast" *//*
-        if (!daily_forecast_cmd_added) {
-            vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_daily),
-                    getResources().getString(R.string.vr_daily_forecast)));
-            daily_forecast_cmd_added_corrId = autoIncCorrId;
-            addCommand(VIEW_DAILY_FORECAST, getResources().getString(R.string.cmd_daily_forecast), vrCommands, autoIncCorrId++);
-        }
-
-        *//* add cmd "Hourly Forecast *//*
-        if (!hourly_forecast_cmd_added) {
-            vrCommands = new Vector<String>(Arrays.asList(getResources().getString(R.string.vr_hourly),
-                    getResources().getString(R.string.vr_hourly_forecast)));
-            hourly_forecast_cmd_added_corrId = autoIncCorrId;
-            addCommand(VIEW_HOURLY_FORECAST, getResources().getString(R.string.cmd_hourly_forecast), vrCommands, autoIncCorrId++);
-
-        }
-
-    }
-
-    public void deleteCommand(@NonNull Integer commandID, Integer correlationID) {
-
-        DeleteCommand msg = new DeleteCommand(commandID);
-        msg.setCorrelationID(correlationID);
-        msg.setOnRPCResponseListener(new OnRPCResponseListener() {
-            @Override
-            public void onResponse(int correlationId, RPCResponse response) {
-                if (response.getSuccess()) {
-                    if (response.getCorrelationID() == next_cmd_deleted_corrId) {
-                        next_cmd_added = false;
-                    }
-                    if (response.getCorrelationID() == previous_cmd_deleted_corrId) {
-                        previous_cmd_added = false;
-                    }
-                    if (response.getCorrelationID() == now_cmd_deleted_corrId) {
-                        now_cmd_added = false;
-                    }
-                    if (response.getCorrelationID() == today_cmd_deleted_corrId) {
-                        today_cmd_added = false;
-                    }
-                    if (response.getCorrelationID() == tomorrow_cmd_deleted_corrId) {
-                        tomorrow_cmd_added = false;
-                    }
-                    if (response.getCorrelationID() == list_cmd_deleted_corrId) {
-                        list_cmd_added = false;
-                    }
-                    if (response.getCorrelationID() == daily_forecast_cmd_deleted_corrId) {
-                        daily_forecast_cmd_added = false;
-                    }
-                    if (response.getCorrelationID() == hourly_forecast_cmd_deleted_corrId) {
-                        hourly_forecast_cmd_added = false;
-                    }
-                }
-            }
-        });
-        sdlManager.sendRPC(msg);
-    }*/
-
-   /* public void addCommand(Integer commandID,
-                           String menuText, Vector<String> vrCommands, Integer correlationID) {
-       // MenuCell cell = new MenuCell(menuText, null,vrCommands, (MenuSelectionListener) addCommandResponseListener);
-
-        AddCommand msg = new AddCommand(commandID);
-        msg.setCorrelationID(correlationID);
-        msg.setVrCommands(vrCommands);
-        if (menuText != null) {
-            MenuParams menuParams = new MenuParams();
-            menuParams.setMenuName(menuText);
-            msg.setMenuParams(menuParams);
-        }
-        msg.setOnRPCResponseListener(addCommandResponseListener);
-        sdlManager.sendRPC(msg);
-    }*/
-
     public void speak(@NonNull String ttsText, Integer correlationID) {
 
         Speak msg = new Speak(TTSChunkFactory.createSimpleTTSChunks(ttsText));
@@ -2808,27 +2043,6 @@ public class SdlService extends Service {
         sdlManager.sendRPC(msg);
     }
 
-    public void deleteInteractionChoiceSet(@NonNull Integer interactionChoiceSetID, Integer correlationID) {
-
-        DeleteInteractionChoiceSet msg = new DeleteInteractionChoiceSet(interactionChoiceSetID);
-        msg.setCorrelationID(correlationID);
-        msg.setOnRPCResponseListener(new OnRPCResponseListener() {
-            @Override
-            public void onResponse(int correlationId, RPCResponse response) {
-                if (response.getCorrelationID() == delete_DailyForecast_ChoiceSet_corrId) {
-                    if (response.getSuccess()) {
-                        DailyForecast_ChoiceSet_created = false;
-                    }
-                }
-                if (response.getCorrelationID() == delete_HourlyForecast_ChoiceSet_corrId) {
-                    if (response.getSuccess()) {
-                        HourlyForecast_ChoiceSet_created = false;
-                    }
-                }
-            }
-        });
-        sdlManager.sendRPC(msg);
-    }
 
     public void setGlobalProperties(
             String helpPrompt, String timeoutPrompt, Integer correlationID) {
