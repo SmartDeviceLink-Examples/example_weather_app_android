@@ -39,6 +39,7 @@ import com.smartdevicelink.managers.SdlManager;
 import com.smartdevicelink.managers.SdlManagerListener;
 import com.smartdevicelink.managers.file.filetypes.SdlArtwork;
 import com.smartdevicelink.managers.lifecycle.LifecycleConfigurationUpdate;
+import com.smartdevicelink.managers.lockscreen.LockScreenConfig;
 import com.smartdevicelink.managers.screen.SoftButtonObject;
 import com.smartdevicelink.managers.screen.SoftButtonState;
 import com.smartdevicelink.managers.screen.choiceset.ChoiceCell;
@@ -894,13 +895,15 @@ public class SdlService extends Service {
 
             // Create App Icon, this is set in the SdlManager builder
             SdlArtwork appIcon = new SdlArtwork(APP_ICON, FileType.GRAPHIC_PNG, R.drawable.icon, true);
-
+            LockScreenConfig lockScreenConfig = new LockScreenConfig();
+            lockScreenConfig.setCustomView(R.layout.lockscreen);
+            lockScreenConfig.setDisplayMode(LockScreenConfig.DISPLAY_MODE_ALWAYS);
             // The manager builder sets options for your session
             SdlManager.Builder builder = new SdlManager.Builder(this, APP_ID, "MobileWeather", listener);
             builder.setTransportType(transport);
             builder.setLanguage(mDesiredAppSdlLanguage);
             builder.setAppIcon(appIcon);
-
+            builder.setLockScreenConfig(lockScreenConfig);
             // Set listeners list
             Map<FunctionID, OnRPCNotificationListener> onRPCNotificationListenerMap = new HashMap<>();
             onRPCNotificationListenerMap.put(FunctionID.ON_HMI_STATUS, new OnRPCNotificationListener() {
@@ -1250,6 +1253,7 @@ public class SdlService extends Service {
 
                     }
                 });
+                changeUnitChoiceSet.setLayout(ChoiceSetLayout.CHOICE_SET_LAYOUT_TILES);
                 sdlManager.getScreenManager().presentChoiceSet(changeUnitChoiceSet,InteractionMode.MANUAL_ONLY);
             }
         });

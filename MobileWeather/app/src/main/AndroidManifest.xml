@@ -45,9 +45,8 @@
 
         <activity android:name="net.hockeyapp.android.UpdateActivity" />
 
-        <activity
-            android:name="com.smartdevicelink.managers.lockscreen.SDLLockScreenActivity"
-            android:launchMode="singleTop" />
+        <activity android:name="com.smartdevicelink.managers.lockscreen.SDLLockScreenActivity"
+            android:launchMode="singleTop"/>
 
         <service android:name="com.sdl.mobileweather.smartdevicelink.SdlService"/>
         <service android:name="com.sdl.mobileweather.wunderground.WUndergroundService"/>
