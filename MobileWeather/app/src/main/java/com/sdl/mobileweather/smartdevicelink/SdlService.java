@@ -1823,7 +1823,7 @@ public class SdlService extends Service {
             ChoiceCell cell10 = new ChoiceCell(forecast_items[9].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[9].timeString})),getArtWork(forecast_items[9].conditionIcon));
             ChoiceCell cell11 = new ChoiceCell(forecast_items[10].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[10].timeString})),getArtWork(forecast_items[10].conditionIcon));
             ChoiceCell cell12 = new ChoiceCell(forecast_items[11].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[11].timeString})),getArtWork(forecast_items[11].conditionIcon));
-
+            forecast_item_counter = 0;
             choiceCellList = Arrays.asList(cell1,cell2,cell3,cell4,cell5,cell6,cell7,cell8,cell9,cell10,cell11,cell12);
             sdlManager.getScreenManager().preloadChoices(choiceCellList,null);
 
@@ -1840,7 +1840,7 @@ public class SdlService extends Service {
             ChoiceCell cell6 = new ChoiceCell(forecast_items[5].fullDateString, new Vector<>(Arrays.asList(new String[]{forecast_items[5].fullDateString})),getArtWork(forecast_items[5].conditionIcon));
             ChoiceCell cell7 = new ChoiceCell(forecast_items[6].fullDateString, new Vector<>(Arrays.asList(new String[]{forecast_items[6].fullDateString})),getArtWork(forecast_items[6].conditionIcon));
             ChoiceCell cell8 = new ChoiceCell(forecast_items[7].fullDateString, new Vector<>(Arrays.asList(new String[]{forecast_items[7].fullDateString})),getArtWork(forecast_items[7].conditionIcon));
-
+            forecast_item_counter = 0;
             choiceCellList = Arrays.asList(cell1,cell2,cell3,cell4,cell5,cell6,cell7,cell8);
             sdlManager.getScreenManager().preloadChoices(choiceCellList,null);
 
