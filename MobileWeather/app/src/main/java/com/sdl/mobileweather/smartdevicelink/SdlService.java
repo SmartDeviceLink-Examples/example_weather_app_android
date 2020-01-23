@@ -895,6 +895,7 @@ public class SdlService extends Service {
 
             // Create App Icon, this is set in the SdlManager builder
             SdlArtwork appIcon = new SdlArtwork(APP_ICON, FileType.GRAPHIC_PNG, R.drawable.icon, true);
+            //sets up LockScreen
             LockScreenConfig lockScreenConfig = new LockScreenConfig();
             lockScreenConfig.setCustomView(R.layout.lockscreen);
             lockScreenConfig.setDisplayMode(LockScreenConfig.DISPLAY_MODE_ALWAYS);
@@ -1193,8 +1194,10 @@ public class SdlService extends Service {
         return units;
     }
 
+    /**
+     * Creates and displays the menu
+     */
     private void createMenuCells(){
-
         menuCells = null;
         Vector<String> vrCommands = null;
 
@@ -1271,6 +1274,9 @@ public class SdlService extends Service {
 
     }
 
+    /**
+     * pre loads  the choiceset for changing units
+     */
     private void createChangeUnitsInteractionChoiceSet() {
         changeUnitCellList = null;
         ChoiceCell changUnitCell1 = new ChoiceCell("Metric", new Vector<>(Arrays.asList(getResources().getString(R.string.choice_metric_vr))),null);
@@ -1494,10 +1500,7 @@ public class SdlService extends Service {
             }
         });
         speak(errorTTSStr, autoIncCorrId++);
-
-
     }
-
 
     private void writeDisplay(boolean includeSpeak) {
         String field1 = "";
@@ -1577,7 +1580,6 @@ public class SdlService extends Service {
         }
         return;
     }
-
 
     private void showForecast(boolean includeSpeak, int numberOfForecasts) {
         mTimedShowHandler.removeCallbacks(mTimedShowRunnable);
@@ -1777,6 +1779,10 @@ public class SdlService extends Service {
         }
     }
 
+    /**
+     * @param icon_url
+     * @return sdlArtwork for Forecast choiceset
+     */
     private SdlArtwork getArtWork(URL icon_url){
         String mappedName = null;
         int conditionID = 0;
@@ -1791,11 +1797,11 @@ public class SdlService extends Service {
         }
         SdlArtwork tempArtworkName = new SdlArtwork(mConditionIconFileName,FileType.GRAPHIC_PNG,conditionID,true);
         return tempArtworkName;
-
-
     }
 
-
+    /**
+     * pre loads choiceset for Hourly and Daily forecast
+     */
     private void createForecastChoiceSet() {
         /* Choices for Hourly Forecast to be created */
         if(choiceCellList != null){
@@ -1818,15 +1824,13 @@ public class SdlService extends Service {
             ChoiceCell cell11 = new ChoiceCell(forecast_items[10].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[10].timeString})),getArtWork(forecast_items[10].conditionIcon));
             ChoiceCell cell12 = new ChoiceCell(forecast_items[11].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[11].timeString})),getArtWork(forecast_items[11].conditionIcon));
 
-            forecast_item_counter = 0;
-             choiceCellList = Arrays.asList(cell1,cell2,cell3,cell4,cell5,cell6,cell7,cell8,cell9,cell10,cell11,cell12);
-
+            choiceCellList = Arrays.asList(cell1,cell2,cell3,cell4,cell5,cell6,cell7,cell8,cell9,cell10,cell11,cell12);
             sdlManager.getScreenManager().preloadChoices(choiceCellList,null);
+
         }
 
         /* Choices for Daily Forecast to be created */
         else if (mActiveInfoType == InfoType.DAILY_FORECAST) {
-
 
             ChoiceCell cell1 = new ChoiceCell(getResources().getString(R.string.cmd_today), new Vector<>(Arrays.asList(new String[]{getResources().getString(R.string.cmd_today)})),getArtWork(forecast_items[0].conditionIcon));
             ChoiceCell cell2 = new ChoiceCell(getResources().getString(R.string.cmd_tomorrow), new Vector<>(Arrays.asList(new String[]{getResources().getString(R.string.cmd_tomorrow)})),getArtWork(forecast_items[1].conditionIcon));
@@ -1838,9 +1842,8 @@ public class SdlService extends Service {
             ChoiceCell cell8 = new ChoiceCell(forecast_items[7].fullDateString, new Vector<>(Arrays.asList(new String[]{forecast_items[7].fullDateString})),getArtWork(forecast_items[7].conditionIcon));
 
             choiceCellList = Arrays.asList(cell1,cell2,cell3,cell4,cell5,cell6,cell7,cell8);
-            forecast_item_counter = 0;
-
             sdlManager.getScreenManager().preloadChoices(choiceCellList,null);
+
         } else {
             Log.d(SdlApplication.TAG, "CreateInteractioinChoiceSet requested for something else than hourly or daily forecast");
         }
@@ -2046,7 +2049,6 @@ public class SdlService extends Service {
 
         sdlManager.sendRPC(msg);
     }
-
 
     public void setGlobalProperties(
             String helpPrompt, String timeoutPrompt, Integer correlationID) {
