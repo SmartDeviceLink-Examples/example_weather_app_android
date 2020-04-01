@@ -83,6 +83,7 @@ import com.smartdevicelink.proxy.rpc.Speak;
 import com.smartdevicelink.proxy.rpc.SubscribeButton;
 import com.smartdevicelink.proxy.rpc.TTSChunk;
 import com.smartdevicelink.proxy.rpc.TextField;
+import com.smartdevicelink.proxy.rpc.enums.AppHMIType;
 import com.smartdevicelink.proxy.rpc.enums.ButtonName;
 import com.smartdevicelink.proxy.rpc.enums.DisplayType;
 import com.smartdevicelink.proxy.rpc.enums.DriverDistractionState;
@@ -103,6 +104,7 @@ import com.smartdevicelink.proxy.rpc.listeners.OnRPCNotificationListener;
 import com.smartdevicelink.proxy.rpc.listeners.OnRPCResponseListener;
 import com.smartdevicelink.transport.BaseTransportConfig;
 import com.smartdevicelink.transport.MultiplexTransportConfig;
+import com.smartdevicelink.transport.TCPTransportConfig;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -404,6 +406,7 @@ public class SdlService extends Service {
 
         @Override
         public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "ON RECEIVE CALLED");
             if (mDataManager != null) {
                 mWeatherConditions = mDataManager.getWeatherConditions();
                 if (currentHMILevel.equals(HMILevel.HMI_FULL) &&
@@ -522,11 +525,11 @@ public class SdlService extends Service {
         instance = this;
         mHandler = new Handler();
         LocalBroadcastManager lbManager = LocalBroadcastManager.getInstance(this);
-        lbManager.registerReceiver(mChangeLocationReceiver, new IntentFilter("com.ford.mobileweather.Location"));
-        lbManager.registerReceiver(mWeatherConditionsReceiver, new IntentFilter("com.ford.mobileweather.WeatherConditions"));
-        lbManager.registerReceiver(mAlertsReceiver, new IntentFilter("com.ford.mobileweather.Alerts"));
-        lbManager.registerReceiver(mForecastReceiver, new IntentFilter("com.ford.mobileweather.Forecast"));
-        lbManager.registerReceiver(mHourlyForecastReceiver, new IntentFilter("com.ford.mobileweather.HourlyForecast"));
+        lbManager.registerReceiver(mChangeLocationReceiver, new IntentFilter("com.sdl.mobileweather.Location"));
+        lbManager.registerReceiver(mWeatherConditionsReceiver, new IntentFilter("com.sdl.mobileweather.WeatherConditions"));
+        lbManager.registerReceiver(mAlertsReceiver, new IntentFilter("com.sdl.mobileweather.Alerts"));
+        lbManager.registerReceiver(mForecastReceiver, new IntentFilter("com.sdl.mobileweather.Forecast"));
+        lbManager.registerReceiver(mHourlyForecastReceiver, new IntentFilter("com.sdl.mobileweather.HourlyForecast"));
         lbManager.registerReceiver(mErrorReceiver, new IntentFilter("com.ford.mobileweather.ErrorUpdate"));
         // lbManager.registerReceiver(mRoadConditionsReceiver, new IntentFilter("com.ford.mobileweather.RoadConditions"));
 
@@ -752,15 +755,17 @@ public class SdlService extends Service {
         // Remove any previous stop service runnables that could be from a recent ACL Disconnect
         mHandler.removeCallbacks(mStopServiceRunnable);
 
-        if (intent != null) {
-            mBtAdapter = BluetoothAdapter.getDefaultAdapter();
-            if (mBtAdapter != null) {
-                if (mBtAdapter.isEnabled()) {
-                    //Check if this was started with a flag to force a transport connect
-                    startProxy();
-                }
-            }
-        }
+//        if (intent != null) {
+//            mBtAdapter = BluetoothAdapter.getDefaultAdapter();
+//            if (mBtAdapter != null) {
+//                if (mBtAdapter.isEnabled()) {
+//                    //Check if this was started with a flag to force a transport connect
+//                    startProxy();
+//                }
+//            }
+//        }
+
+        startProxy();
 
         // Queue the check connection runnable to stop the service if no connection is made
         mHandler.removeCallbacks(mCheckConnectionRunnable);
@@ -817,10 +822,10 @@ public class SdlService extends Service {
     }
 
     public void startProxy() {
+        Log.i(TAG, "Start Proxy called");
         if (sdlManager == null) {
             Log.i(TAG, "Starting SDL Proxy");
             BaseTransportConfig transport = new MultiplexTransportConfig(getBaseContext(), APP_ID, MultiplexTransportConfig.FLAG_MULTI_SECURITY_OFF);
-
             // The manager listener helps you know when certain events that pertain to the SDL Manager happen
             // Here we will listen for ON_HMI_STATUS and ON_COMMAND notifications
             SdlManagerListener listener = new SdlManagerListener() {
@@ -904,7 +909,7 @@ public class SdlService extends Service {
             builder.setTransportType(transport);
             builder.setLanguage(mDesiredAppSdlLanguage);
             builder.setAppIcon(appIcon);
-            builder.setLockScreenConfig(lockScreenConfig);
+//            builder.setLockScreenConfig(lockScreenConfig);
             // Set listeners list
             Map<FunctionID, OnRPCNotificationListener> onRPCNotificationListenerMap = new HashMap<>();
             onRPCNotificationListenerMap.put(FunctionID.ON_HMI_STATUS, new OnRPCNotificationListener() {

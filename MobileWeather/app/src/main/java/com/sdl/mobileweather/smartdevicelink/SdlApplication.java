@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
+import android.os.Build;
 import android.util.Log;
 
 import com.sdl.mobileweather.R;
@@ -95,17 +96,24 @@ public class SdlApplication extends Application {
 	
     public void startSdlProxyService() {
     	Log.i(SdlApplication.TAG, "Starting SmartDeviceLink service");
-        // Get the local Bluetooth adapter
-        BluetoothAdapter mBtAdapter = BluetoothAdapter.getDefaultAdapter();
-
-        // If BT adapter exists, is enabled, and there are paired devices, start service/proxy
-        if (mBtAdapter != null)
-		{
-			if ((mBtAdapter.isEnabled() && mBtAdapter.getBondedDevices().isEmpty() == false)) 
-			{
-				SdlReceiver.queryForConnectedService(this);
-			}
+    	Intent proxyIntent = new Intent(this, SdlService.class);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			startForegroundService(proxyIntent);
+		} else {
+			startService(proxyIntent);
 		}
+		// Get the local Bluetooth adapter
+//        BluetoothAdapter mBtAdapter = BluetoothAdapter.getDefaultAdapter();
+//
+//        // If BT adapter exists, is enabled, and there are paired devices, start service/proxy
+//        if (mBtAdapter != null)
+//		{
+//			if ((mBtAdapter.isEnabled() && mBtAdapter.getBondedDevices().isEmpty() == false))
+//			{
+//				Intent sdlServiceIntent = new Intent(this, SdlService.class); // used for TCP
+//				startService(sdlServiceIntent);
+//			}
+//		}
 	}
     
     // Recycle the proxy
