@@ -1045,8 +1045,6 @@ public class SdlService extends Service {
                     }
                 });
                 sdlManager.sendRPC(msg);
-
-
             }
         }
 
