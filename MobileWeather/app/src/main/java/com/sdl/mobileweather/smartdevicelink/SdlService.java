@@ -32,7 +32,6 @@ import com.sdl.mobileweather.weather.UnitConverter;
 import com.sdl.mobileweather.weather.WeatherAlert;
 import com.sdl.mobileweather.weather.WeatherConditions;
 import com.sdl.mobileweather.weather.WeatherDataManager;
-import com.smartdevicelink.exception.SdlException;
 import com.smartdevicelink.managers.BaseSubManager;
 import com.smartdevicelink.managers.CompletionListener;
 import com.smartdevicelink.managers.SdlManager;
@@ -46,55 +45,37 @@ import com.smartdevicelink.managers.screen.choiceset.ChoiceCell;
 import com.smartdevicelink.managers.screen.choiceset.ChoiceSet;
 import com.smartdevicelink.managers.screen.choiceset.ChoiceSetLayout;
 import com.smartdevicelink.managers.screen.choiceset.ChoiceSetSelectionListener;
-import com.smartdevicelink.managers.screen.menu.DynamicMenuUpdatesMode;
 import com.smartdevicelink.managers.screen.menu.MenuCell;
 import com.smartdevicelink.managers.screen.menu.MenuSelectionListener;
 import com.smartdevicelink.protocol.enums.FunctionID;
 import com.smartdevicelink.proxy.RPCNotification;
 import com.smartdevicelink.proxy.RPCResponse;
 import com.smartdevicelink.proxy.TTSChunkFactory;
-import com.smartdevicelink.proxy.rpc.AddCommand;
 import com.smartdevicelink.proxy.rpc.Alert;
 import com.smartdevicelink.proxy.rpc.ChangeRegistration;
-import com.smartdevicelink.proxy.rpc.Choice;
-import com.smartdevicelink.proxy.rpc.CreateInteractionChoiceSet;
-import com.smartdevicelink.proxy.rpc.DeleteCommand;
-import com.smartdevicelink.proxy.rpc.DeleteInteractionChoiceSet;
 import com.smartdevicelink.proxy.rpc.DeviceStatus;
 import com.smartdevicelink.proxy.rpc.DisplayCapabilities;
-import com.smartdevicelink.proxy.rpc.Image;
 import com.smartdevicelink.proxy.rpc.ListFiles;
 import com.smartdevicelink.proxy.rpc.ListFilesResponse;
-import com.smartdevicelink.proxy.rpc.MenuParams;
 import com.smartdevicelink.proxy.rpc.OnButtonEvent;
 import com.smartdevicelink.proxy.rpc.OnButtonPress;
-import com.smartdevicelink.proxy.rpc.OnCommand;
 import com.smartdevicelink.proxy.rpc.OnHMIStatus;
 import com.smartdevicelink.proxy.rpc.OnLanguageChange;
 import com.smartdevicelink.proxy.rpc.OnVehicleData;
-import com.smartdevicelink.proxy.rpc.PerformInteraction;
-import com.smartdevicelink.proxy.rpc.PerformInteractionResponse;
-import com.smartdevicelink.proxy.rpc.PutFile;
 import com.smartdevicelink.proxy.rpc.SetDisplayLayout;
 import com.smartdevicelink.proxy.rpc.SetGlobalProperties;
-import com.smartdevicelink.proxy.rpc.Show;
-import com.smartdevicelink.proxy.rpc.SoftButton;
 import com.smartdevicelink.proxy.rpc.Speak;
 import com.smartdevicelink.proxy.rpc.SubscribeButton;
 import com.smartdevicelink.proxy.rpc.TTSChunk;
 import com.smartdevicelink.proxy.rpc.TextField;
 import com.smartdevicelink.proxy.rpc.enums.ButtonName;
 import com.smartdevicelink.proxy.rpc.enums.DisplayType;
-import com.smartdevicelink.proxy.rpc.enums.DriverDistractionState;
 import com.smartdevicelink.proxy.rpc.enums.FileType;
 import com.smartdevicelink.proxy.rpc.enums.HMILevel;
-import com.smartdevicelink.proxy.rpc.enums.ImageType;
 import com.smartdevicelink.proxy.rpc.enums.InteractionMode;
 import com.smartdevicelink.proxy.rpc.enums.Language;
 import com.smartdevicelink.proxy.rpc.enums.Result;
-import com.smartdevicelink.proxy.rpc.enums.SoftButtonType;
 import com.smartdevicelink.proxy.rpc.enums.SpeechCapabilities;
-import com.smartdevicelink.proxy.rpc.enums.SystemAction;
 import com.smartdevicelink.proxy.rpc.enums.SystemCapabilityType;
 import com.smartdevicelink.proxy.rpc.enums.TextAlignment;
 import com.smartdevicelink.proxy.rpc.enums.TextFieldName;
@@ -104,8 +85,6 @@ import com.smartdevicelink.proxy.rpc.listeners.OnRPCResponseListener;
 import com.smartdevicelink.transport.BaseTransportConfig;
 import com.smartdevicelink.transport.MultiplexTransportConfig;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -132,7 +111,6 @@ public class SdlService extends Service {
     private static final int TIMED_SHOW_DELAY = 8000;
     private static final String APP_ICON_NAME = "icon";
     private static final String APP_ICON = APP_ICON_NAME + ".png";
-    private static final String CLEAR_ICON = "";
     // Service shutdown timing constants
     private static final int CONNECTION_TIMEOUT = 120000;
     private static final int STOP_SERVICE_DELAY = 5000;
@@ -267,7 +245,7 @@ public class SdlService extends Service {
     }
 
     private class ForecastItem extends Forecast {
-        private Integer numberOfForecasts;
+        private Integer numberOfForecasts; //TODO we set some of theses itmes, do we use them?
         private String title;
         private String fullDateString;
         private String shortDateString;
@@ -344,25 +322,16 @@ public class SdlService extends Service {
                         field4 = "";
                     }
                 }
-                Image appImage = null;
-                if (mGraphicsSupported) {
-                    appImage = new Image();
-                    appImage.setImageType(ImageType.DYNAMIC);
-                    appImage.setValue(CLEAR_ICON);
-                }
 
+                sdlManager.getScreenManager().beginTransaction();
                 sdlManager.getScreenManager().setSoftButtonObjects(mSoftButtonObjects);
-
-
-                Show showRequest = new Show();
-                showRequest.setMainField1(field1);
-                showRequest.setMainField2(field2);
-                showRequest.setMainField3(field3);
-                showRequest.setMainField4(field4);
-                showRequest.setAlignment(TextAlignment.LEFT_ALIGNED);
-                showRequest.setGraphic(appImage);
-                showRequest.setCorrelationID(autoIncCorrId++);
-                sdlManager.sendRPC(showRequest);
+                sdlManager.getScreenManager().setTextField1(field1);
+                sdlManager.getScreenManager().setTextField2(field2);
+                sdlManager.getScreenManager().setTextField3(field3);
+                sdlManager.getScreenManager().setTextField4(field4);
+                sdlManager.getScreenManager().setTextAlignment(TextAlignment.LEFT_ALIGNED);
+                sdlManager.getScreenManager().setPrimaryGraphic(null);
+                sdlManager.getScreenManager().commit(null);
             }
         }
 
@@ -464,7 +433,6 @@ public class SdlService extends Service {
                 } else if (currentHMILevel.equals(HMILevel.HMI_FULL) &&
                         mActiveInfoType == InfoType.STANDARD_FORECAST) {
                     writeDisplay(false);
-
                 }
             }
         }
@@ -484,7 +452,6 @@ public class SdlService extends Service {
                     writeDisplay(false);
                 }
             }
-
         }
     };
 
@@ -510,12 +477,13 @@ public class SdlService extends Service {
     /**
      * Receiver to handle updates to road conditions.
      */
-	
+	// Check if IOS has implemented
 	/*private final BroadcastReceiver mRoadConditionsReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 		}
 	};*/
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -529,7 +497,6 @@ public class SdlService extends Service {
         lbManager.registerReceiver(mHourlyForecastReceiver, new IntentFilter("com.ford.mobileweather.HourlyForecast"));
         lbManager.registerReceiver(mErrorReceiver, new IntentFilter("com.ford.mobileweather.ErrorUpdate"));
         // lbManager.registerReceiver(mRoadConditionsReceiver, new IntentFilter("com.ford.mobileweather.RoadConditions"));
-
 
         SoftButtonState mShowConditionsState = new SoftButtonState("mShowConditionsState", getResources().getString(R.string.sb1), null);
         mShowConditions = new SoftButtonObject("mShowConditions", Collections.singletonList(mShowConditionsState), mShowConditionsState.getName(), new SoftButtonObject.OnEventListener() {
@@ -586,7 +553,8 @@ public class SdlService extends Service {
                 int mtemp_counter = forecast_item_counter;
                 mActiveInfoType = InfoType.HOURLY_FORECAST;
                 forecast_item_counter = mtemp_counter;
-                updateHmi(true);            }
+                updateHmi(true);
+            }
 
             @Override
             public void onEvent(SoftButtonObject softButtonObject, OnButtonEvent onButtonEvent) {
@@ -601,7 +569,8 @@ public class SdlService extends Service {
                 int mtemp_counter = forecast_item_counter;
                 mActiveInfoType = InfoType.ALERTS;
                 forecast_item_counter = mtemp_counter;
-                updateHmi(true);            }
+                updateHmi(true);
+            }
 
             @Override
             public void onEvent(SoftButtonObject softButtonObject, OnButtonEvent onButtonEvent) {
@@ -658,10 +627,9 @@ public class SdlService extends Service {
             public void onPress(SoftButtonObject softButtonObject, OnButtonPress onButtonPress) {
                 forecast_item_counter = 0;
                 String choiceSetText = "";
-                if(mActiveInfoType == InfoType.HOURLY_FORECAST){
+                if (mActiveInfoType == InfoType.HOURLY_FORECAST) {
                     choiceSetText = "Please select a Time:";
-                }
-                else{
+                } else {
                     choiceSetText = "Please select a day:";
                 }
                 ChoiceSet choiceSet = new ChoiceSet(choiceSetText, choiceCellList, new ChoiceSetSelectionListener() {
@@ -677,7 +645,7 @@ public class SdlService extends Service {
                     }
                 });
                 choiceSet.setLayout(ChoiceSetLayout.CHOICE_SET_LAYOUT_TILES);
-                sdlManager.getScreenManager().presentChoiceSet(choiceSet,InteractionMode.MANUAL_ONLY);
+                sdlManager.getScreenManager().presentChoiceSet(choiceSet, InteractionMode.MANUAL_ONLY);
             }
 
             @Override
@@ -692,6 +660,7 @@ public class SdlService extends Service {
             public void onPress(SoftButtonObject softButtonObject, OnButtonPress onButtonPress) {
                 mActiveInfoType = InfoType.WEATHER_CONDITIONS;
                 forecast_item_counter = 0;
+                // TODO not sure if createMenuCells is needed anymore here.
                 createMenuCells();
                 updateHmi(false);
             }
@@ -701,7 +670,6 @@ public class SdlService extends Service {
 
             }
         });
-
 
         if (!AbbreviationDictionary.isPrepared())
             AbbreviationDictionary.loadDictionary(this);
@@ -806,7 +774,6 @@ public class SdlService extends Service {
         return instance;
     }
 
-
     /**
      * Queue's a runnable that stops the service after a small delay,
      * unless the proxy reconnects to SDL.
@@ -846,7 +813,6 @@ public class SdlService extends Service {
                         }
                     });
 
-
                     sdlManager.addOnRPCNotificationListener(FunctionID.ON_BUTTON_PRESS, new OnRPCNotificationListener() {
                         @Override
                         public void onNotified(RPCNotification notification) {
@@ -860,7 +826,6 @@ public class SdlService extends Service {
                             }
                         }
                     });
-
 
                     sdlManager.addOnRPCNotificationListener(FunctionID.ON_LANGUAGE_CHANGE, new OnRPCNotificationListener() {
                         @Override
@@ -890,7 +855,6 @@ public class SdlService extends Service {
                 public LifecycleConfigurationUpdate managerShouldUpdateLifecycle(Language language) {
                     return null;
                 }
-
             };
 
             // Create App Icon, this is set in the SdlManager builder
@@ -943,6 +907,7 @@ public class SdlService extends Service {
                             if (onHMIStatus.getFirstRun()) {
                                 // Custom help and timeout messages
                                 setGlobalProperties((getResources().getString(R.string.gp_help_prompt)), (getResources().getString(R.string.gp_timeout_prompt)), autoIncCorrId++);
+
                                 // Perform welcome
                                 showWelcomeMessage();
 
@@ -972,8 +937,6 @@ public class SdlService extends Service {
                             }
                             break;
                     }
-
-
                 }
             });
             builder.setRPCNotificationListeners(onRPCNotificationListenerMap);
@@ -1026,12 +989,10 @@ public class SdlService extends Service {
             @Override
             public void onComplete(boolean success) {
                 Log.i(TAG, "ScreenManager update complete: " + success);
-               //addCommands();
                 createMenuCells();
 
             }
         });
-       // mWelcomeCorrId = autoIncCorrId++;
         Speak msg = new Speak(TTSChunkFactory.createSimpleTTSChunks((getResources().getString(R.string.welcome_speak))));
         msg.setCorrelationID(mWelcomeCorrId);
         msg.setOnRPCResponseListener(new OnRPCResponseListener() {
@@ -1197,7 +1158,7 @@ public class SdlService extends Service {
     /**
      * Creates and displays the menu
      */
-    private void createMenuCells(){
+    private void createMenuCells() {
         menuCells = null;
         Vector<String> vrCommands = null;
 
@@ -1242,10 +1203,9 @@ public class SdlService extends Service {
                 ChoiceSet changeUnitChoiceSet = new ChoiceSet("Units:", changeUnitCellList, new ChoiceSetSelectionListener() {
                     @Override
                     public void onChoiceSelected(ChoiceCell choiceCell, TriggerSource triggerSource, int rowIndex) {
-                        if(choiceCell.getText().equals("Imperial")){
+                        if (choiceCell.getText().equals("Imperial")) {
                             setUnitsImp();
-                        }
-                        else{
+                        } else {
                             setUnitsMetric();
                         }
                         updateHmi(true);
@@ -1257,7 +1217,7 @@ public class SdlService extends Service {
                     }
                 });
                 changeUnitChoiceSet.setLayout(ChoiceSetLayout.CHOICE_SET_LAYOUT_TILES);
-                sdlManager.getScreenManager().presentChoiceSet(changeUnitChoiceSet,InteractionMode.MANUAL_ONLY);
+                sdlManager.getScreenManager().presentChoiceSet(changeUnitChoiceSet, InteractionMode.MANUAL_ONLY);
             }
         });
         vrCommands = new Vector<>(Arrays.asList(getResources().getString(R.string.vr_alerts)));
@@ -1269,9 +1229,8 @@ public class SdlService extends Service {
                 updateHmi(true);
             }
         });
-        menuCells = Arrays.asList(mainCell1,mainCell2,mainCell3,mainCell4,mainCell5);
+        menuCells = Arrays.asList(mainCell1, mainCell2, mainCell3, mainCell4, mainCell5);
         sdlManager.getScreenManager().setMenu(menuCells);
-
     }
 
     /**
@@ -1279,19 +1238,20 @@ public class SdlService extends Service {
      */
     private void createChangeUnitsInteractionChoiceSet() {
         changeUnitCellList = null;
-        ChoiceCell changUnitCell1 = new ChoiceCell("Metric", new Vector<>(Arrays.asList(getResources().getString(R.string.choice_metric_vr))),null);
-        ChoiceCell changUnitCell2 = new ChoiceCell("Imperial", new Vector<>(Arrays.asList(getResources().getString(R.string.choice_imperial_vr))),null);
-        changeUnitCellList = Arrays.asList(changUnitCell1,changUnitCell2);
-        sdlManager.getScreenManager().preloadChoices(changeUnitCellList,null);
-
+        ChoiceCell changUnitCell1 = new ChoiceCell("Metric", new Vector<>(Arrays.asList(getResources().getString(R.string.choice_metric_vr))), null);
+        ChoiceCell changUnitCell2 = new ChoiceCell("Imperial", new Vector<>(Arrays.asList(getResources().getString(R.string.choice_imperial_vr))), null);
+        changeUnitCellList = Arrays.asList(changUnitCell1, changUnitCell2);
+        sdlManager.getScreenManager().preloadChoices(changeUnitCellList, null);
     }
 
+    //TODO why is this here
     private void subscribeButtons() {
         SubscribeButton msg = new SubscribeButton(ButtonName.PRESET_1);
         msg.setCorrelationID(autoIncCorrId++);
         sdlManager.sendRPC(msg);
     }
 
+    //TODO why
     private void getSdlFiles() {
         final ListFiles request = new ListFiles();
         request.setCorrelationID(autoIncCorrId++);
@@ -1356,11 +1316,11 @@ public class SdlService extends Service {
                 }
             }
 
-            String field1 = "";
+            String field1;
             String field2 = "";
             String field3 = "";
             String field4 = "";
-            String mediatrack = String.valueOf((int) precipitation) + "%";
+            String mediatrack = ((int) precipitation) + "%";
 
             if (mNumberOfTextFields < 2) {
                 field1 = String.format(Locale.getDefault(), "%s", abbreviate(title)) +
@@ -1385,7 +1345,7 @@ public class SdlService extends Service {
             sdlManager.getScreenManager().setTextField4(field4);
             sdlManager.getScreenManager().setMediaTrackTextField(mediatrack);
             sdlManager.getScreenManager().setTextAlignment(TextAlignment.LEFT_ALIGNED);
-            sdlManager.getScreenManager().setPrimaryGraphic(new SdlArtwork(mConditionIconFileName, FileType.GRAPHIC_PNG, conditionsID, true ));
+            sdlManager.getScreenManager().setPrimaryGraphic(new SdlArtwork(mConditionIconFileName, FileType.GRAPHIC_PNG, conditionsID, true));
 
             if (mDisplayType != DisplayType.CID && mDisplayType != DisplayType.NGN) {
                 Log.d(SdlApplication.TAG, "Sending soft buttons");
@@ -1428,7 +1388,6 @@ public class SdlService extends Service {
         }
     }
 
-
     private void resetFirstErrorFlags() {
         mFirstConnectionError = true;
         mFirstLocationError = true;
@@ -1457,10 +1416,10 @@ public class SdlService extends Service {
     }
 
     private void showWeatherError() {
-       sdlManager.getScreenManager().beginTransaction();
-       sdlManager.getScreenManager().setTextField3(getResources().getString(R.string.network_txt_field3));
-       sdlManager.getScreenManager().setTextField4(getResources().getString(R.string.network_txt_field4));
-       sdlManager.getScreenManager().setTextAlignment(TextAlignment.CENTERED);
+        sdlManager.getScreenManager().beginTransaction();
+        sdlManager.getScreenManager().setTextField3(getResources().getString(R.string.network_txt_field3));
+        sdlManager.getScreenManager().setTextField4(getResources().getString(R.string.network_txt_field4));
+        sdlManager.getScreenManager().setTextAlignment(TextAlignment.CENTERED);
         String errorTTSStr = null;
         String field3 = "";
         String field4 = "";
@@ -1552,7 +1511,7 @@ public class SdlService extends Service {
         }
 
         sdlManager.getScreenManager().setTextAlignment(TextAlignment.LEFT_ALIGNED);
-        sdlManager.getScreenManager().setPrimaryGraphic(new SdlArtwork(mConditionIconFileName, FileType.GRAPHIC_PNG, conditionsID, true ));
+        sdlManager.getScreenManager().setPrimaryGraphic(new SdlArtwork(mConditionIconFileName, FileType.GRAPHIC_PNG, conditionsID, true));
 
         if (mDisplayType != DisplayType.CID && mDisplayType != DisplayType.NGN) {
             sdlManager.getScreenManager().setSoftButtonObjects(softButtonObjects);
@@ -1561,8 +1520,7 @@ public class SdlService extends Service {
         sdlManager.getScreenManager().commit(new CompletionListener() {
             @Override
             public void onComplete(boolean success) {
-
-
+                Log.i(TAG, "ScreenManager update complete: " + success);
             }
         });
 
@@ -1719,7 +1677,6 @@ public class SdlService extends Service {
                     }
                     forecast_items[forecastCounter].speakString = speakStrings;
 
-
                     if (mLengthOfTextFields < 40) {
                         if (mActiveInfoType == InfoType.HOURLY_FORECAST) {
                             showStrings = (String.format(Locale.getDefault(),
@@ -1804,46 +1761,42 @@ public class SdlService extends Service {
      */
     private void createForecastChoiceSet() {
         /* Choices for Hourly Forecast to be created */
-        if(choiceCellList != null){
+        if (choiceCellList != null) {
             sdlManager.getScreenManager().deleteChoices(choiceCellList);
         }
         choiceCellList = null;
 
         if (mActiveInfoType == InfoType.HOURLY_FORECAST) {
-
-            ChoiceCell cell1 = new ChoiceCell(forecast_items[0].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[0].timeString})),getArtWork(forecast_items[0].conditionIcon));
-            ChoiceCell cell2 = new ChoiceCell(forecast_items[1].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[1].timeString})),getArtWork(forecast_items[1].conditionIcon));
-            ChoiceCell cell3 = new ChoiceCell(forecast_items[2].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[2].timeString})),getArtWork(forecast_items[2].conditionIcon));
-            ChoiceCell cell4 = new ChoiceCell(forecast_items[3].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[3].timeString})),getArtWork(forecast_items[3].conditionIcon));
-            ChoiceCell cell5 = new ChoiceCell(forecast_items[4].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[4].timeString})),getArtWork(forecast_items[4].conditionIcon));
-            ChoiceCell cell6 = new ChoiceCell(forecast_items[5].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[5].timeString})),getArtWork(forecast_items[5].conditionIcon));
-            ChoiceCell cell7 = new ChoiceCell(forecast_items[6].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[6].timeString})),getArtWork(forecast_items[6].conditionIcon));
-            ChoiceCell cell8 = new ChoiceCell(forecast_items[7].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[7].timeString})),getArtWork(forecast_items[7].conditionIcon));
-            ChoiceCell cell9 = new ChoiceCell(forecast_items[8].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[8].timeString})),getArtWork(forecast_items[8].conditionIcon));
-            ChoiceCell cell10 = new ChoiceCell(forecast_items[9].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[9].timeString})),getArtWork(forecast_items[9].conditionIcon));
-            ChoiceCell cell11 = new ChoiceCell(forecast_items[10].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[10].timeString})),getArtWork(forecast_items[10].conditionIcon));
-            ChoiceCell cell12 = new ChoiceCell(forecast_items[11].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[11].timeString})),getArtWork(forecast_items[11].conditionIcon));
+            ChoiceCell cell1 = new ChoiceCell(forecast_items[0].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[0].timeString})), getArtWork(forecast_items[0].conditionIcon));
+            ChoiceCell cell2 = new ChoiceCell(forecast_items[1].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[1].timeString})), getArtWork(forecast_items[1].conditionIcon));
+            ChoiceCell cell3 = new ChoiceCell(forecast_items[2].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[2].timeString})), getArtWork(forecast_items[2].conditionIcon));
+            ChoiceCell cell4 = new ChoiceCell(forecast_items[3].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[3].timeString})), getArtWork(forecast_items[3].conditionIcon));
+            ChoiceCell cell5 = new ChoiceCell(forecast_items[4].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[4].timeString})), getArtWork(forecast_items[4].conditionIcon));
+            ChoiceCell cell6 = new ChoiceCell(forecast_items[5].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[5].timeString})), getArtWork(forecast_items[5].conditionIcon));
+            ChoiceCell cell7 = new ChoiceCell(forecast_items[6].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[6].timeString})), getArtWork(forecast_items[6].conditionIcon));
+            ChoiceCell cell8 = new ChoiceCell(forecast_items[7].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[7].timeString})), getArtWork(forecast_items[7].conditionIcon));
+            ChoiceCell cell9 = new ChoiceCell(forecast_items[8].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[8].timeString})), getArtWork(forecast_items[8].conditionIcon));
+            ChoiceCell cell10 = new ChoiceCell(forecast_items[9].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[9].timeString})), getArtWork(forecast_items[9].conditionIcon));
+            ChoiceCell cell11 = new ChoiceCell(forecast_items[10].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[10].timeString})), getArtWork(forecast_items[10].conditionIcon));
+            ChoiceCell cell12 = new ChoiceCell(forecast_items[11].timeString, new Vector<>(Arrays.asList(new String[]{forecast_items[11].timeString})), getArtWork(forecast_items[11].conditionIcon));
             forecast_item_counter = 0;
-            choiceCellList = Arrays.asList(cell1,cell2,cell3,cell4,cell5,cell6,cell7,cell8,cell9,cell10,cell11,cell12);
-            sdlManager.getScreenManager().preloadChoices(choiceCellList,null);
-
+            choiceCellList = Arrays.asList(cell1, cell2, cell3, cell4, cell5, cell6, cell7, cell8, cell9, cell10, cell11, cell12);
+            sdlManager.getScreenManager().preloadChoices(choiceCellList, null);
         }
 
         /* Choices for Daily Forecast to be created */
         else if (mActiveInfoType == InfoType.DAILY_FORECAST) {
-
-            ChoiceCell cell1 = new ChoiceCell(getResources().getString(R.string.cmd_today), new Vector<>(Arrays.asList(new String[]{getResources().getString(R.string.cmd_today)})),getArtWork(forecast_items[0].conditionIcon));
-            ChoiceCell cell2 = new ChoiceCell(getResources().getString(R.string.cmd_tomorrow), new Vector<>(Arrays.asList(new String[]{getResources().getString(R.string.cmd_tomorrow)})),getArtWork(forecast_items[1].conditionIcon));
-            ChoiceCell cell3 = new ChoiceCell(forecast_items[2].fullDateString, new Vector<>(Arrays.asList(new String[]{forecast_items[2].fullDateString})),getArtWork(forecast_items[2].conditionIcon));
-            ChoiceCell cell4 = new ChoiceCell(forecast_items[3].fullDateString, new Vector<>(Arrays.asList(new String[]{forecast_items[3].fullDateString})),getArtWork(forecast_items[3].conditionIcon));
-            ChoiceCell cell5 = new ChoiceCell(forecast_items[4].fullDateString, new Vector<>(Arrays.asList(new String[]{forecast_items[4].fullDateString})),getArtWork(forecast_items[4].conditionIcon));
-            ChoiceCell cell6 = new ChoiceCell(forecast_items[5].fullDateString, new Vector<>(Arrays.asList(new String[]{forecast_items[5].fullDateString})),getArtWork(forecast_items[5].conditionIcon));
-            ChoiceCell cell7 = new ChoiceCell(forecast_items[6].fullDateString, new Vector<>(Arrays.asList(new String[]{forecast_items[6].fullDateString})),getArtWork(forecast_items[6].conditionIcon));
-            ChoiceCell cell8 = new ChoiceCell(forecast_items[7].fullDateString, new Vector<>(Arrays.asList(new String[]{forecast_items[7].fullDateString})),getArtWork(forecast_items[7].conditionIcon));
+            ChoiceCell cell1 = new ChoiceCell(getResources().getString(R.string.cmd_today), new Vector<>(Arrays.asList(new String[]{getResources().getString(R.string.cmd_today)})), getArtWork(forecast_items[0].conditionIcon));
+            ChoiceCell cell2 = new ChoiceCell(getResources().getString(R.string.cmd_tomorrow), new Vector<>(Arrays.asList(new String[]{getResources().getString(R.string.cmd_tomorrow)})), getArtWork(forecast_items[1].conditionIcon));
+            ChoiceCell cell3 = new ChoiceCell(forecast_items[2].fullDateString, new Vector<>(Arrays.asList(new String[]{forecast_items[2].fullDateString})), getArtWork(forecast_items[2].conditionIcon));
+            ChoiceCell cell4 = new ChoiceCell(forecast_items[3].fullDateString, new Vector<>(Arrays.asList(new String[]{forecast_items[3].fullDateString})), getArtWork(forecast_items[3].conditionIcon));
+            ChoiceCell cell5 = new ChoiceCell(forecast_items[4].fullDateString, new Vector<>(Arrays.asList(new String[]{forecast_items[4].fullDateString})), getArtWork(forecast_items[4].conditionIcon));
+            ChoiceCell cell6 = new ChoiceCell(forecast_items[5].fullDateString, new Vector<>(Arrays.asList(new String[]{forecast_items[5].fullDateString})), getArtWork(forecast_items[5].conditionIcon));
+            ChoiceCell cell7 = new ChoiceCell(forecast_items[6].fullDateString, new Vector<>(Arrays.asList(new String[]{forecast_items[6].fullDateString})), getArtWork(forecast_items[6].conditionIcon));
+            ChoiceCell cell8 = new ChoiceCell(forecast_items[7].fullDateString, new Vector<>(Arrays.asList(new String[]{forecast_items[7].fullDateString})), getArtWork(forecast_items[7].conditionIcon));
             forecast_item_counter = 0;
-            choiceCellList = Arrays.asList(cell1,cell2,cell3,cell4,cell5,cell6,cell7,cell8);
-            sdlManager.getScreenManager().preloadChoices(choiceCellList,null);
-
+            choiceCellList = Arrays.asList(cell1, cell2, cell3, cell4, cell5, cell6, cell7, cell8);
+            sdlManager.getScreenManager().preloadChoices(choiceCellList, null);
         } else {
             Log.d(SdlApplication.TAG, "CreateInteractioinChoiceSet requested for something else than hourly or daily forecast");
         }
@@ -1913,7 +1866,7 @@ public class SdlService extends Service {
                 Speak speakRequest = new Speak();
                 speakRequest.setTtsChunks(chunks);
                 speakRequest.setCorrelationID(autoIncCorrId++);
-                sdlManager.sendRPC(speakRequest);
+                sdlManager.sendRPC(speakRequest); //TODO here
             }
         } else {
             sdlManager.getScreenManager().beginTransaction();
@@ -1927,7 +1880,6 @@ public class SdlService extends Service {
                 @Override
                 public void onComplete(boolean success) {
                     Log.i(TAG, "ScreenManager update complete: " + success);
-
                 }
             });
 
@@ -2043,21 +1995,17 @@ public class SdlService extends Service {
     }
 
     public void speak(@NonNull String ttsText, Integer correlationID) {
-
         Speak msg = new Speak(TTSChunkFactory.createSimpleTTSChunks(ttsText));
         msg.setCorrelationID(correlationID);
 
-        sdlManager.sendRPC(msg);
+        sdlManager.sendRPC(msg); //TODO here
     }
 
-    public void setGlobalProperties(
-            String helpPrompt, String timeoutPrompt, Integer correlationID) {
-
+    public void setGlobalProperties(String helpPrompt, String timeoutPrompt, Integer correlationID) {
         SetGlobalProperties req = new SetGlobalProperties();
         req.setCorrelationID(correlationID);
         req.setHelpPrompt(TTSChunkFactory.createSimpleTTSChunks(helpPrompt));
         req.setTimeoutPrompt(TTSChunkFactory.createSimpleTTSChunks(timeoutPrompt));
-
         sdlManager.sendRPC(req);
     }
 }
