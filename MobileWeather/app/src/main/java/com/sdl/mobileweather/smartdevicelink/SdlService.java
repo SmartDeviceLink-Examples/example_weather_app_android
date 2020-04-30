@@ -764,7 +764,6 @@ public class SdlService extends Service {
             lbManager.unregisterReceiver(mForecastReceiver);
             lbManager.unregisterReceiver(mHourlyForecastReceiver);
             lbManager.unregisterReceiver(mErrorReceiver);
-            // lbManager.unregisterReceiver(mRoadConditionsReceiver);
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
         }
@@ -859,16 +858,13 @@ public class SdlService extends Service {
 
             // Create App Icon, this is set in the SdlManager builder
             SdlArtwork appIcon = new SdlArtwork(APP_ICON, FileType.GRAPHIC_PNG, R.drawable.icon, true);
-            //sets up LockScreen
-            LockScreenConfig lockScreenConfig = new LockScreenConfig();
-            lockScreenConfig.setCustomView(R.layout.lockscreen);
-            lockScreenConfig.setDisplayMode(LockScreenConfig.DISPLAY_MODE_ALWAYS);
+
             // The manager builder sets options for your session
             SdlManager.Builder builder = new SdlManager.Builder(this, APP_ID, "MobileWeather", listener);
             builder.setTransportType(transport);
             builder.setLanguage(mDesiredAppSdlLanguage);
             builder.setAppIcon(appIcon);
-            builder.setLockScreenConfig(lockScreenConfig);
+
             // Set listeners list
             Map<FunctionID, OnRPCNotificationListener> onRPCNotificationListenerMap = new HashMap<>();
             onRPCNotificationListenerMap.put(FunctionID.ON_HMI_STATUS, new OnRPCNotificationListener() {
@@ -978,7 +974,6 @@ public class SdlService extends Service {
      * Shows and speaks a welcome message
      */
     private void showWelcomeMessage() {
-
       sdlManager.getScreenManager().beginTransaction();
       sdlManager.getScreenManager().setTextField1("Welcome to");
       sdlManager.getScreenManager().setTextField2("MobileWeather");
