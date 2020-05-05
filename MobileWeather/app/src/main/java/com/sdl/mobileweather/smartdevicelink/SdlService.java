@@ -1002,11 +1002,9 @@ public class SdlService extends Service {
                                 performWeatherAlert(mAlertQueue.pop());
                             } else {
                                 mActiveInfoType = InfoType.WEATHER_CONDITIONS;
-                                updateHmi(true);
                             }
                         } else {
                             mActiveInfoType = InfoType.WEATHER_CONDITIONS;
-                            updateHmi(true);
                         }
                     }
                 }
