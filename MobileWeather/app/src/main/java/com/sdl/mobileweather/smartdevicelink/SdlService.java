@@ -953,16 +953,7 @@ public class SdlService extends Service {
         mFirstHmiNone = true;
         mActiveInfoType = InfoType.NONE;
         if (proxy != null) {
-//			try {
-//				proxy.resetProxy();
-//			} catch (SdlException e1) {
-//				e1.printStackTrace();
-//				// something goes wrong, & the proxy returns as null, stop the service.
-//				// do not want a running service with a null proxy
-//				if (proxy == null) {
-//					stopSelf();
-//				}
-//			}
+            disposeSyncProxy();
         } else {
             startProxy();
         }

@@ -122,15 +122,6 @@ public class SdlApplication extends Application {
 			}
 		}
 	}
-	
-	// Stop the SdlService
-	public void endSdlProxyService() {
-		Log.i(SdlApplication.TAG, "Ending SmartDeviceLink service");
-		SdlService serviceInstance = SdlService.getInstance();
-		if (serviceInstance != null){
-			serviceInstance.stopService();
-		}
-	}
 
     public void startWeatherUpdates() {
     	Log.i(SdlApplication.TAG, "Starting weather updates");
