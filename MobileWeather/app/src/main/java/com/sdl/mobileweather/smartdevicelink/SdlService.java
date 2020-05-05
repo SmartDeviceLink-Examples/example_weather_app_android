@@ -10,7 +10,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
@@ -18,8 +17,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.util.SparseArray;
-import android.view.Menu;
 
 import com.sdl.mobileweather.R;
 import com.sdl.mobileweather.artifact.WeatherLocation;
@@ -38,7 +35,6 @@ import com.smartdevicelink.managers.SdlManager;
 import com.smartdevicelink.managers.SdlManagerListener;
 import com.smartdevicelink.managers.file.filetypes.SdlArtwork;
 import com.smartdevicelink.managers.lifecycle.LifecycleConfigurationUpdate;
-import com.smartdevicelink.managers.lockscreen.LockScreenConfig;
 import com.smartdevicelink.managers.screen.SoftButtonObject;
 import com.smartdevicelink.managers.screen.SoftButtonState;
 import com.smartdevicelink.managers.screen.choiceset.ChoiceCell;
@@ -55,8 +51,6 @@ import com.smartdevicelink.proxy.rpc.Alert;
 import com.smartdevicelink.proxy.rpc.ChangeRegistration;
 import com.smartdevicelink.proxy.rpc.DeviceStatus;
 import com.smartdevicelink.proxy.rpc.DisplayCapabilities;
-import com.smartdevicelink.proxy.rpc.ListFiles;
-import com.smartdevicelink.proxy.rpc.ListFilesResponse;
 import com.smartdevicelink.proxy.rpc.OnButtonEvent;
 import com.smartdevicelink.proxy.rpc.OnButtonPress;
 import com.smartdevicelink.proxy.rpc.OnHMIStatus;
@@ -135,13 +129,10 @@ public class SdlService extends Service {
     private static Language mRegisteredAppHmiLanguage = Language.EN_US; // Stores the language of the display used at AppInterface registering
     private static Language mDesiredAppSdlLanguage = Language.EN_US; // Stores the language to be used for next AppInterface registering e.g. after onOnLanguageChange occurred
     private static Language mDesiredAppHmiLanguage = Language.EN_US; // Stores the language of the display to be used for next AppInterface registering e.g. after onOnLanguageChange occurred
-    // private Double mSpeed = 0.0; // Stores the current vehicle speed
-    // private Double mExternalTemperature = 0.0; // Stores the current external temperature
     private DeviceStatus mDeviceStatus = null; // Stores the current device (phone) status
     private InfoType mActiveInfoType = InfoType.NONE; // Stores the current type of information being displayed
     private WeatherLocation mCurrentLocation = null; // Stores the current location for weather
     private WeatherConditions mWeatherConditions = null; // Stores the current weather conditions
-    // private RoadConditions mRoadConditions = null; // Stores the current road conditions
     private WeatherAlert[] mAlerts = null; // Stores the current weather alerts
     private WeatherAlert[] mPreviousAlerts = {}; // Stores the last known weather alerts
     private Forecast[] mForecast = null; // Stores the current forecast
@@ -162,8 +153,6 @@ public class SdlService extends Service {
     private ForecastItem[] forecast_items = null;
     private static int forecast_item_counter = 0;
     private Handler mTimedShowHandler = null;
-    private ArrayList<String> mUploadedFiles = null;
-    private SparseArray<String> mPutFileMap = null;
     private String mConditionIconFileName = null;
     private WeatherDataManager mDataManager = null;
     private Boolean unitsInMetric = true;
@@ -245,7 +234,7 @@ public class SdlService extends Service {
     }
 
     private class ForecastItem extends Forecast {
-        private Integer numberOfForecasts; //TODO we set some of theses itmes, do we use them?
+        private Integer numberOfForecasts;
         private String title;
         private String fullDateString;
         private String shortDateString;
@@ -477,13 +466,12 @@ public class SdlService extends Service {
     /**
      * Receiver to handle updates to road conditions.
      */
-	// Check if IOS has implemented
+    // Check if IOS has implemented
 	/*private final BroadcastReceiver mRoadConditionsReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 		}
 	};*/
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -676,9 +664,6 @@ public class SdlService extends Service {
         mTimedShowHandler = new Handler();
         mDataManager = WeatherDataManager.getInstance();
         mLocalizationUtil = LocalizationUtil.getInstance();
-
-        mUploadedFiles = new ArrayList<String>();
-        mPutFileMap = new SparseArray<String>();
 
         // Initialize weather and location data
         mCurrentLocation = mDataManager.getCurrentLocation();
@@ -905,7 +890,7 @@ public class SdlService extends Service {
                                 // Perform welcome
                                 showWelcomeMessage();
 
-                                // Create InteractionChoicedSet for changing units
+                                // Create InteractionChoiceSet for changing units
                                 createChangeUnitsInteractionChoiceSet();
 
                                 // Subscribe buttons
@@ -1046,9 +1031,7 @@ public class SdlService extends Service {
             }
         }
 
-        // TODO: Save units in preferences
         String units = null;
-        //
         if (mCurrentHmiLanguage != null) {
             if (mCurrentHmiLanguage.compareTo(Language.EN_US) == 0 ||
                     mCurrentHmiLanguage.compareTo(Language.EN_GB) == 0) {
@@ -1106,7 +1089,6 @@ public class SdlService extends Service {
             if (mTextFields != null && mTextFields.size() > 0) {
                 for (TextField field : mTextFields) {
                     if (field.getName() == TextFieldName.mainField1) {
-                        // TODO: Workaround needed for GEN3 show issues
                         if (mDisplayType == DisplayType.GEN3_8_INCH) {
                             mLengthOfTextFields = 42;
                         } else {
@@ -1240,28 +1222,12 @@ public class SdlService extends Service {
         sdlManager.getScreenManager().preloadChoices(changeUnitCellList, null);
     }
 
-    //TODO why is this here
     private void subscribeButtons() {
         SubscribeButton msg = new SubscribeButton(ButtonName.PRESET_1);
         msg.setCorrelationID(autoIncCorrId++);
         sdlManager.sendRPC(msg);
     }
 
-    //TODO why
-    private void getSdlFiles() {
-        final ListFiles request = new ListFiles();
-        request.setCorrelationID(autoIncCorrId++);
-        request.setOnRPCResponseListener(new OnRPCResponseListener() {
-            @Override
-            public void onResponse(int correlationId, RPCResponse response) {
-                ListFilesResponse listFilesResponse = (ListFilesResponse) response;
-                if (listFilesResponse != null && listFilesResponse.getFilenames() != null) {
-                    mUploadedFiles = new ArrayList<String>(listFilesResponse.getFilenames());
-                }
-            }
-        });
-        sdlManager.sendRPC(request);
-    }
 
     /**
      * Display the current weather conditions.
@@ -1733,7 +1699,7 @@ public class SdlService extends Service {
      * @param icon_url
      * @return sdlArtwork for Forecast choiceset
      */
-    private SdlArtwork getArtWork(URL icon_url){
+    private SdlArtwork getArtWork(URL icon_url) {
         String mappedName = null;
         int conditionID = 0;
         if (mGraphicsSupported && mWeatherConditions.conditionIcon != null) {
@@ -1745,7 +1711,7 @@ public class SdlService extends Service {
                 conditionID = getResources().getIdentifier(mappedName, "drawable", getPackageName());
             }
         }
-        SdlArtwork tempArtworkName = new SdlArtwork(mConditionIconFileName,FileType.GRAPHIC_PNG,conditionID,true);
+        SdlArtwork tempArtworkName = new SdlArtwork(mConditionIconFileName, FileType.GRAPHIC_PNG, conditionID, true);
         return tempArtworkName;
     }
 
