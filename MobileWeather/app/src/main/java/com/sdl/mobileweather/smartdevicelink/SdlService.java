@@ -658,10 +658,8 @@ public class SdlService extends Service {
         mShowBack = new SoftButtonObject("mShowBack", Collections.singletonList(mShowBackState), mShowBackState.getName(), new SoftButtonObject.OnEventListener() {
             @Override
             public void onPress(SoftButtonObject softButtonObject, OnButtonPress onButtonPress) {
-                mActiveInfoType = InfoType.WEATHER_CONDITIONS;
+                mActiveInfoType = InfoType.WELCOME_SCREEN;
                 forecast_item_counter = 0;
-                // TODO not sure if createMenuCells is needed anymore here.
-                createMenuCells();
                 updateHmi(false);
             }
 
@@ -974,12 +972,16 @@ public class SdlService extends Service {
      * Shows and speaks a welcome message
      */
     private void showWelcomeMessage() {
-      sdlManager.getScreenManager().beginTransaction();
-      sdlManager.getScreenManager().setTextField1("Welcome to");
-      sdlManager.getScreenManager().setTextField2("MobileWeather");
-      sdlManager.getScreenManager().setTextField3("");
-      sdlManager.getScreenManager().setTextField4("");
-      sdlManager.getScreenManager().setTextAlignment(TextAlignment.CENTERED);
+        sdlManager.getScreenManager().beginTransaction();
+        sdlManager.getScreenManager().setTextField1("Welcome to");
+        sdlManager.getScreenManager().setTextField2("MobileWeather");
+        sdlManager.getScreenManager().setTextField3("");
+        sdlManager.getScreenManager().setTextField4("");
+        sdlManager.getScreenManager().setTextAlignment(TextAlignment.CENTERED);
+
+        if (mDisplayType != DisplayType.CID && mDisplayType != DisplayType.NGN) {
+            sdlManager.getScreenManager().setSoftButtonObjects(getSoftButtonsForMainScreens());
+        }
         sdlManager.getScreenManager().commit(new CompletionListener() {
             @Override
             public void onComplete(boolean success) {
@@ -1013,9 +1015,21 @@ public class SdlService extends Service {
         sdlManager.sendRPC(msg);
     }
 
+    /**
+     * @return List of Softbutton objects displayed on the welcomeScreen and currentConditons screen
+     */
+    private List<SoftButtonObject> getSoftButtonsForMainScreens() {
+        List<SoftButtonObject> softButtonObjects = new ArrayList<>();
+        Log.d(SdlApplication.TAG, "Sending soft buttons");
+        softButtonObjects.add(mShowConditions);
+        softButtonObjects.add(mShowDailyForecast);
+        softButtonObjects.add(mShowHourlyForecast);
+        softButtonObjects.add(mShowAlerts);
+        return softButtonObjects;
+    }
+
     private void getSdlSettings() {
         mActiveInfoType = InfoType.NONE;
-        getSdlFiles();
         // Change registration to match the language of the head unit if needed
         mCurrentHmiLanguage = sdlManager.getRegisterAppInterfaceResponse().getHmiDisplayLanguage();
         mCurrentSdlLanguage = sdlManager.getRegisterAppInterfaceResponse().getLanguage();
@@ -1341,12 +1355,7 @@ public class SdlService extends Service {
             sdlManager.getScreenManager().setPrimaryGraphic(new SdlArtwork(mConditionIconFileName, FileType.GRAPHIC_PNG, conditionsID, true));
 
             if (mDisplayType != DisplayType.CID && mDisplayType != DisplayType.NGN) {
-                Log.d(SdlApplication.TAG, "Sending soft buttons");
-                List<SoftButtonObject> softButtonObjects = new ArrayList<>();
-                softButtonObjects.add(mShowConditions);
-                softButtonObjects.add(mShowDailyForecast);
-                softButtonObjects.add(mShowHourlyForecast);
-                sdlManager.getScreenManager().setSoftButtonObjects(softButtonObjects);
+                sdlManager.getScreenManager().setSoftButtonObjects(getSoftButtonsForMainScreens());
             }
             sdlManager.getScreenManager().commit(new CompletionListener() {
                 @Override
@@ -1476,9 +1485,10 @@ public class SdlService extends Service {
         sdlManager.getScreenManager().beginTransaction();
         List<SoftButtonObject> softButtonObjects = new ArrayList<>();
         softButtonObjects.add(mShowPrevItem);
+        softButtonObjects.add(mShowListItems);
         softButtonObjects.add(mShowNextItem);
         softButtonObjects.add(mShowBack);
-        softButtonObjects.add(mShowListItems);
+
 
         if (forecast_items != null) {
             field1 = forecast_items[forecast_item_counter].showString_field1;
@@ -1712,9 +1722,10 @@ public class SdlService extends Service {
                             forecast_items[forecastCounter].showString_field1 = (String.format(Locale.getDefault(),
                                     "%s: %s",
                                     shortDateString, title));
-                            forecast_items[forecastCounter].showString_field2 = (String.format(Locale.getDefault(),
-                                    "%.0f %s",
-                                    high, tempUnitsShort));
+                            forecast_items[forecastCounter].showString_field2 = (String.format(Locale.getDefault(), "%s(" +
+                                            getResources().getString(R.string.weather_forecast_high_temp) + "%.0f / " +
+                                            getResources().getString(R.string.weather_forecast_low_temp) + "%.0f)",
+                                    precipChanceStringShort, high, low));
                         }
                     }
                     forecast_items[forecastCounter].showString = showStrings;
@@ -1926,6 +1937,9 @@ public class SdlService extends Service {
 
     private void updateHmi(boolean includeSpeaks) {
         switch (mActiveInfoType) {
+            case WELCOME_SCREEN:
+                showWelcomeMessage();
+                break;
             case WEATHER_CONDITIONS:
                 showWeatherConditions(includeSpeaks);
                 break;
