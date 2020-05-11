@@ -18,6 +18,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.sdl.mobileweather.BuildConfig;
 import com.sdl.mobileweather.R;
 import com.sdl.mobileweather.artifact.WeatherLocation;
 import com.sdl.mobileweather.localization.LocalizationUtil;
@@ -79,6 +80,7 @@ import com.smartdevicelink.proxy.rpc.listeners.OnRPCResponseListener;
 import com.smartdevicelink.transport.BaseTransportConfig;
 import com.smartdevicelink.transport.MultiplexTransportConfig;
 import com.smartdevicelink.transport.TCPTransportConfig;
+import com.smartdevicelink.util.DebugTool;
 
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -184,6 +186,12 @@ public class SdlService extends Service {
     private MenuCell mainCell3 = null;
     private MenuCell mainCell4 = null;
     private MenuCell mainCell5 = null;
+
+    // TCP/IP transport config
+    // The default port is 12345
+    // The IP is of the machine that is running SDL Core
+    private static final int TCP_PORT = 15815;
+    private static final String DEV_MACHINE_IP_ADDRESS = "m.sdl.tools";
 
     /**
      * Runnable that stops this service if there hasn't been a connection to SDL
@@ -693,20 +701,7 @@ public class SdlService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         // Remove any previous stop service runnables that could be from a recent ACL Disconnect
         mHandler.removeCallbacks(mStopServiceRunnable);
-        // For TCP connection comment out if statement below and just call startProxy
-        // Other changes need to be made in SdlService.startProxy and SdlApplication.startSdlProxyService
-        if (intent != null) {
-            mBtAdapter = BluetoothAdapter.getDefaultAdapter();
-            if (mBtAdapter != null) {
-                if (mBtAdapter.isEnabled()) {
-                    //Check if this was started with a flag to force a transport connect
-                    startProxy();
-                }
-            }
-        }
-        // For TCP
-        //startProxy();
-
+        startProxy();
         // Queue the check connection runnable to stop the service if no connection is made
         mHandler.removeCallbacks(mCheckConnectionRunnable);
         mHandler.postDelayed(mCheckConnectionRunnable, CONNECTION_TIMEOUT);
@@ -762,10 +757,15 @@ public class SdlService extends Service {
     public void startProxy() {
         if (sdlManager == null) {
             Log.i(TAG, "Starting SDL Proxy");
-            // For TCP applications comment out MultiplexTransportConfig and uncomment TCPTransportConfig
-            // Other changes need to be made in SdlService.onStartCommand and SdlApplication.startSdlProxyService
-            BaseTransportConfig transport = new MultiplexTransportConfig(getBaseContext(), APP_ID, MultiplexTransportConfig.FLAG_MULTI_SECURITY_OFF);
-            //BaseTransportConfig transport = new TCPTransportConfig(16139, "m.sdl.tools", false);
+            if (BuildConfig.DEBUG) {
+                DebugTool.enableDebugTool();
+            }
+            BaseTransportConfig transport = null;
+            if (BuildConfig.TRANSPORT.equals("MULTI")) {
+                transport = new MultiplexTransportConfig(getBaseContext(), APP_ID, MultiplexTransportConfig.FLAG_MULTI_SECURITY_OFF);
+            } else if (BuildConfig.TRANSPORT.equals("TCP")) {
+                transport = new TCPTransportConfig(TCP_PORT, DEV_MACHINE_IP_ADDRESS, true);
+            }
 
             // The manager listener helps you know when certain events that pertain to the SDL Manager happen
             // Here we will listen for ON_HMI_STATUS and ON_COMMAND notifications
@@ -882,6 +882,9 @@ public class SdlService extends Service {
                                 // Perform welcome
                                 showWelcomeMessage();
 
+                                // Perform welcome speak
+                                performWelcomeSpeak();
+
                                 // Create InteractionChoiceSet for changing units
                                 createChangeUnitsInteractionChoiceSet();
 
@@ -958,6 +961,13 @@ public class SdlService extends Service {
 
             }
         });
+    }
+
+    /**
+     *  Speaks "Welcome to MobileWeather" on first run
+     */
+    private void performWelcomeSpeak() {
+        mWelcomeCorrId = autoIncCorrId++;
         Speak msg = new Speak(TTSChunkFactory.createSimpleTTSChunks((getResources().getString(R.string.welcome_speak))));
         msg.setCorrelationID(mWelcomeCorrId);
         msg.setOnRPCResponseListener(new OnRPCResponseListener() {

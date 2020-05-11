@@ -16,6 +16,20 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    flavorDimensions "default"
+    productFlavors{
+        multi_sec_off {
+            buildConfigField 'String', 'TRANSPORT', '"MULTI"'
+            buildConfigField 'String', 'SECURITY', '"OFF"'
+        }
+        tcp {
+            buildConfigField 'String', 'TRANSPORT', '"TCP"'
+            buildConfigField 'String', 'SECURITY', '"OFF"'
+        }
+    }
+    lintOptions {
+        disable 'GoogleAppIndexingWarning'
+    }
 }
 
 dependencies {

@@ -1,30 +1,26 @@
 package com.sdl.mobileweather.smartdevicelink;
 
-import java.util.Locale;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Application;
-import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
-import android.os.Build;
 import android.util.Log;
 
 import com.sdl.mobileweather.R;
 import com.sdl.mobileweather.forecastio.ForecastIoService;
+import com.sdl.mobileweather.localization.LocalizationUtil;
 import com.sdl.mobileweather.location.PlayServicesConnectionChecker;
 import com.sdl.mobileweather.location.WeatherLocationServices;
 import com.sdl.mobileweather.weather.WeatherAlarmManager;
 import com.sdl.mobileweather.weather.WeatherDataManager;
 import com.sdl.mobileweather.weather.WeatherUpdateWakefulReceiver;
-import com.smartdevicelink.BuildConfig;
-import com.smartdevicelink.exception.SdlException;
+import com.sdl.mobileweather.BuildConfig;
 import com.smartdevicelink.managers.SdlManager;
-import com.smartdevicelink.proxy.SdlProxyALM;
-import com.sdl.mobileweather.localization.LocalizationUtil;
+
+import java.util.Locale;
 
 
 public class SdlApplication extends Application {
@@ -96,23 +92,14 @@ public class SdlApplication extends Application {
 
 	public void startSdlProxyService() {
 		Log.i(SdlApplication.TAG, "Starting SmartDeviceLink service");
-		// Get the local Bluetooth adapter
-		BluetoothAdapter mBtAdapter = BluetoothAdapter.getDefaultAdapter();
-
-		// If BT adapter exists, is enabled, and there are paired devices, start service/proxy
-		if (mBtAdapter != null) {
-			if ((mBtAdapter.isEnabled() && mBtAdapter.getBondedDevices().isEmpty() == false)) {
-				SdlReceiver.queryForConnectedService(this);
-			}
-		}
-		// For TCP Comment out above and uncomment out below
-		// Other changes need to be made in SdlService.startProxy and sdlService.onStartCommand
-		/*Intent proxyIntent = new Intent(this, SdlService.class);
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			startForegroundService(proxyIntent);
-		} else {
+		if (BuildConfig.TRANSPORT.equals("MULTI")) {
+			Log.i(TAG, "startSdlProxyService: Multiplex Selected");
+			SdlReceiver.queryForConnectedService(this);
+		} else if (BuildConfig.TRANSPORT.equals("TCP")) {
+			Log.i(TAG, "startSdlProxyService: TCP Selected");
+			Intent proxyIntent = new Intent(this, SdlService.class);
 			startService(proxyIntent);
-		}*/
+		}
 	}
     
     // Recycle the proxy
