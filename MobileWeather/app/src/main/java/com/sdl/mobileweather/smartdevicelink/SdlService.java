@@ -399,17 +399,6 @@ public class SdlService extends Service {
                 if (currentHMILevel.equals(HMILevel.HMI_FULL) &&
                         mActiveInfoType == InfoType.ALERTS) {
                     writeDisplay(false);
-
-                } else if (!currentHMILevel.equals(HMILevel.HMI_NONE)) {
-                    if (checkNewAlerts()) {
-                        performWeatherAlert(mAlertQueue.pop());
-                    }
-                }
-
-                if (mAlerts != null) {
-                    mPreviousAlerts = mAlerts.clone();
-                } else {
-                    mPreviousAlerts = null;
                 }
             }
         }
@@ -885,6 +874,9 @@ public class SdlService extends Service {
                                 // Perform welcome speak
                                 performWelcomeSpeak();
 
+                                // Create Menu Cells
+                                createMenuCells();
+
                                 // Create InteractionChoiceSet for changing units
                                 createChangeUnitsInteractionChoiceSet();
 
@@ -957,8 +949,6 @@ public class SdlService extends Service {
             @Override
             public void onComplete(boolean success) {
                 Log.i(TAG, "ScreenManager update complete: " + success);
-                createMenuCells();
-
             }
         });
     }
@@ -1812,6 +1802,7 @@ public class SdlService extends Service {
             softButtonObjects.add(mShowConditions);
             softButtonObjects.add(mShowDailyForecast);
             softButtonObjects.add(mShowHourlyForecast);
+            softButtonObjects.add(mShowBack);
 
             mTimedShowRunnable = new TimedShowRunnable(showStrings, softButtonObjects, 0, TIMED_SHOW_DELAY);
             mTimedShowHandler.post(mTimedShowRunnable);
@@ -1827,7 +1818,7 @@ public class SdlService extends Service {
                 Speak speakRequest = new Speak();
                 speakRequest.setTtsChunks(chunks);
                 speakRequest.setCorrelationID(autoIncCorrId++);
-                sdlManager.sendRPC(speakRequest); //TODO here
+                sdlManager.sendRPC(speakRequest);
             }
         } else {
             sdlManager.getScreenManager().beginTransaction();
@@ -1880,7 +1871,6 @@ public class SdlService extends Service {
                     } else if (mActiveInfoType == InfoType.NONE && mConditionsRdy && mLocationRdy) {
                         mWelcomeComplete = true;
                         mActiveInfoType = InfoType.WEATHER_CONDITIONS;
-                        updateHmi(true);
                     }
                 }
             }
