@@ -30,11 +30,11 @@ import android.widget.Toast;
 import com.sdl.mobileweather.R;
 import com.sdl.mobileweather.fragments.ConditionsFragment;
 import com.sdl.mobileweather.fragments.ForecastFragment;
-import com.sdl.mobileweather.smartdevicelink.SmartDeviceLinkActivity;
-import com.sdl.mobileweather.smartdevicelink.SmartDeviceLinkApplication;
+import com.sdl.mobileweather.smartdevicelink.SdlActivity;
+import com.sdl.mobileweather.smartdevicelink.SdlApplication;
 
 
-public class MainActivity extends SmartDeviceLinkActivity implements ActionBar.TabListener {
+public class MainActivity extends SdlActivity implements ActionBar.TabListener {
 
 	private static final String SELECTED_NAVIGATION_ITEM = "selected_navigation_item";
 	private static final String APP_ID = "bf2c3a7bad6b0c79152f50cc42ba1ace";
@@ -124,11 +124,11 @@ public class MainActivity extends SmartDeviceLinkActivity implements ActionBar.T
     			LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     	}
     	else if ((getResources().getString(R.string.drawer_item_reset_sync)).equals(item)){
-			SmartDeviceLinkApplication.getInstance().endSdlProxyInstance();
-			SmartDeviceLinkApplication.getInstance().startSdlProxyService();
+			SdlApplication.getInstance().endSdlProxyInstance();
+			SdlApplication.getInstance().startSdlProxyService();
     	}
     	else if ((getResources().getString(R.string.drawer_item_about)).equals(item)){
-    		SmartDeviceLinkApplication.getInstance().showAppVersion(this);
+    		SdlApplication.getInstance().showAppVersion(this);
     	}
     	mDrawerList.setItemChecked(position, false);
         mDrawerLayout.closeDrawer(mDrawerList);
@@ -142,7 +142,7 @@ public class MainActivity extends SmartDeviceLinkActivity implements ActionBar.T
 	
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
-    	Log.v(SmartDeviceLinkApplication.TAG, "onCreate main");
+    	Log.v(SdlApplication.TAG, "onCreate main");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         
@@ -198,7 +198,7 @@ public class MainActivity extends SmartDeviceLinkActivity implements ActionBar.T
 	
     @Override
 	protected void onStart() {
-    	Log.v(SmartDeviceLinkApplication.TAG, "onStart main");
+    	Log.v(SdlApplication.TAG, "onStart main");
 		super.onStart();
 		LocalBroadcastManager lbManager = LocalBroadcastManager.getInstance(this);
         lbManager.registerReceiver(mChangeLocationReceiver, new IntentFilter("com.sdl.mobileweather.Location"));
@@ -217,7 +217,7 @@ public class MainActivity extends SmartDeviceLinkActivity implements ActionBar.T
 	}
 
 	private void startServices() {
-		SmartDeviceLinkApplication app = SmartDeviceLinkApplication.getInstance();
+		SdlApplication app = SdlApplication.getInstance();
 		if (app != null) {
             app.startServices();
         }
@@ -225,20 +225,20 @@ public class MainActivity extends SmartDeviceLinkActivity implements ActionBar.T
 
 	@Override
 	protected void onResume() {
-    	Log.v(SmartDeviceLinkApplication.TAG, "onResume main");
+    	Log.v(SdlApplication.TAG, "onResume main");
 		super.onResume();
 		checkForCrashes();
     }
     
     @Override
 	protected void onPause() {
-		Log.v(SmartDeviceLinkApplication.TAG, "onPause main");
+		Log.v(SdlApplication.TAG, "onPause main");
 		super.onPause();
 	}
     
 	@Override
 	protected void onStop() {
-		Log.v(SmartDeviceLinkApplication.TAG, "onStop main");
+		Log.v(SdlApplication.TAG, "onStop main");
 		try {
 			LocalBroadcastManager lbManager = LocalBroadcastManager.getInstance(this);
 			lbManager.unregisterReceiver(mChangeLocationReceiver);
@@ -253,7 +253,7 @@ public class MainActivity extends SmartDeviceLinkActivity implements ActionBar.T
 	
 	@Override
 	protected void onDestroy() {
-		Log.v(SmartDeviceLinkApplication.TAG, "onDestroy main");
+		Log.v(SdlApplication.TAG, "onDestroy main");
 		super.onDestroy();
 	}
 

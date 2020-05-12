@@ -9,27 +9,27 @@ import android.util.Log;
 import com.smartdevicelink.transport.SdlBroadcastReceiver;
 import com.smartdevicelink.transport.SdlRouterService;
 
-public class SmartDeviceLinkReceiver extends SdlBroadcastReceiver {
+public class SdlReceiver extends SdlBroadcastReceiver {
 
 
     @Override
     public void onReceive(Context context, Intent intent) {
         // Start services on BT connection
         if (intent.getAction().compareTo(BluetoothDevice.ACTION_ACL_CONNECTED) == 0) {
-            Log.i(SmartDeviceLinkApplication.TAG, "ACL Connect");
-            SmartDeviceLinkApplication app = SmartDeviceLinkApplication.getInstance();
+            Log.i(SdlApplication.TAG, "ACL Connect");
+            SdlApplication app = SdlApplication.getInstance();
             if (app != null) {
-                Log.i(SmartDeviceLinkApplication.TAG, "Starting services");
+                Log.i(SdlApplication.TAG, "Starting services");
                 app.startLocationServices();
                 app.startWeatherUpdates();
             }
         }
         // Stop services on BT disconnection
         else if (intent.getAction().compareTo(BluetoothDevice.ACTION_ACL_DISCONNECTED) == 0) {
-            Log.i(SmartDeviceLinkApplication.TAG, "ACL Disconnect");
-            SmartDeviceLinkApplication app = SmartDeviceLinkApplication.getInstance();
+            Log.i(SdlApplication.TAG, "ACL Disconnect");
+            SdlApplication app = SdlApplication.getInstance();
             if (app != null) {
-                if (SmartDeviceLinkApplication.getCurrentActivity() == null) {
+                if (SdlApplication.getCurrentActivity() == null) {
                     app.stopServices();
                 }
             }
@@ -42,7 +42,7 @@ public class SmartDeviceLinkReceiver extends SdlBroadcastReceiver {
     @Override
     public void onSdlEnabled(Context context, Intent intent) {
         //Use the provided intent but set the class to the SdlService
-        intent.setClass(context, SmartDeviceLinkService.class);
+        intent.setClass(context, SdlService.class);
 
 
 //      SdlService needs to be foregrounded in Android O and above
