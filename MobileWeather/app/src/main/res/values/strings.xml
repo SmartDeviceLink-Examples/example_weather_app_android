@@ -229,14 +229,15 @@
     <string name="sb6">"sb6"</string>
     <string name="sb7">"sb7"</string>
     <string name="sb8">"sb8"</string>
+
     
     <!-- Softbuttons DD == on -->
     <string name="sb1_dd">"Current"</string>
     <string name="sb2_dd">"Daily"</string>
     <string name="sb3_dd">"Hourly"</string>
     
-    <string name="sb1_prev">"Prev."</string>
-    <string name="sb2_next">"Next"</string>
+    <string name="sb1_prev">"&lt;"</string>
+    <string name="sb2_next">"&gt;"</string>
     <string name="sb3_list">"List"</string>
     <string name="sb3_back">"Back"</string>         
     

@@ -13,7 +13,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.sdl.mobileweather.artifact.WeatherLocation;
-import com.sdl.mobileweather.smartdevicelink.SmartDeviceLinkApplication;
+import com.sdl.mobileweather.smartdevicelink.SdlApplication;
 
 public class WeatherAlarmManager {
 	
@@ -35,7 +35,7 @@ public class WeatherAlarmManager {
 		
         @Override
         public void onReceive(Context context, Intent intent) {
-        	Log.d(SmartDeviceLinkApplication.TAG, "UpdateIntervalReceiver");
+        	Log.d(SdlApplication.TAG, "UpdateIntervalReceiver");
         	if (mAlarmRunning && mDataManager != null) {
         		mUpdateInterval = mDataManager.getUpdateInterval();
         		restartAlarm(context);
@@ -101,10 +101,10 @@ public class WeatherAlarmManager {
 	};
 	
 	public WeatherAlarmManager(Class<?> weatherService) {
-		Log.d(SmartDeviceLinkApplication.TAG, "WeatherAlarmManager - constructed");
+		Log.d(SdlApplication.TAG, "WeatherAlarmManager - constructed");
 		mAlarmRunning = false;
 		mDataManager = WeatherDataManager.getInstance();
-		mAppContext = SmartDeviceLinkApplication.getInstance().getApplicationContext();
+		mAppContext = SdlApplication.getInstance().getApplicationContext();
 		if (mDataManager != null) {
 			mUpdateInterval = mDataManager.getUpdateInterval();
 		}
@@ -114,7 +114,7 @@ public class WeatherAlarmManager {
 	}
 	
 	public void startPendingLocation() {
-		Log.d(SmartDeviceLinkApplication.TAG, "WeatherAlarmManager - registering local receivers");
+		Log.d(SdlApplication.TAG, "WeatherAlarmManager - registering local receivers");
 		LocalBroadcastManager lbManager = LocalBroadcastManager.getInstance(mAppContext);
 		lbManager.registerReceiver(mChangeUpdateIntervalReceiver, new IntentFilter("com.sdl.mobileweather.ChangeUpdateInterval"));
 		lbManager.registerReceiver(mChangeLocationReceiver, new IntentFilter("com.sdl.mobileweather.Location"));
@@ -122,7 +122,7 @@ public class WeatherAlarmManager {
 	}
 	
 	public void stop() {
-		Log.d(SmartDeviceLinkApplication.TAG, "WeatherAlarmManager - unregistering local receivers");
+		Log.d(SdlApplication.TAG, "WeatherAlarmManager - unregistering local receivers");
 		cancelUpdates();
 		try {
 			LocalBroadcastManager lbManager = LocalBroadcastManager.getInstance(mAppContext);
@@ -140,7 +140,7 @@ public class WeatherAlarmManager {
 	 * This is used for periodic weather updates.
 	 */
 	private void restartAlarm(Context context) {
-		Log.d(SmartDeviceLinkApplication.TAG, "WeatherAlarmManager - restartAlarm");
+		Log.d(SdlApplication.TAG, "WeatherAlarmManager - restartAlarm");
 		if (mAlarmManager == null) {
 			mAlarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 		}
@@ -154,7 +154,7 @@ public class WeatherAlarmManager {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(System.currentTimeMillis());
         cal.add(Calendar.MINUTE, mUpdateInterval);
-        Log.d(SmartDeviceLinkApplication.TAG, "restartAlarm mUpdateInterval = " + mUpdateInterval);
+        Log.d(SdlApplication.TAG, "restartAlarm mUpdateInterval = " + mUpdateInterval);
 
 		mAlarmManager.setRepeating(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), (mUpdateInterval*60*1000), mAlarmIntent);
 		mAlarmRunning = true;
@@ -164,7 +164,7 @@ public class WeatherAlarmManager {
 	 * Stop and cancel any update alarm.
 	 */
 	private void cancelUpdates() {
-		Log.i(SmartDeviceLinkApplication.TAG, "Canceling periodic weather updates..");
+		Log.i(SdlApplication.TAG, "Canceling periodic weather updates..");
 		if (mAlarmManager != null && mAlarmIntent != null) {
 			mAlarmManager.cancel(mAlarmIntent);
 			mAlarmRunning = false;

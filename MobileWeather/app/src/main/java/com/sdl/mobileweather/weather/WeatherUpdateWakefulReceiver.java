@@ -1,6 +1,6 @@
 package com.sdl.mobileweather.weather;
 
-import com.sdl.mobileweather.smartdevicelink.SmartDeviceLinkApplication;
+import com.sdl.mobileweather.smartdevicelink.SdlApplication;
 
 import android.content.Context;
 import android.content.Intent;
@@ -20,11 +20,11 @@ public class WeatherUpdateWakefulReceiver extends WakefulBroadcastReceiver {
 				service = new Intent(context, Class.forName(className));
 		        startWakefulService(context, service);
 			} catch (ClassNotFoundException e) {
-				Log.d(SmartDeviceLinkApplication.TAG, "WakefulBroadcastReceiver - invalid class name");
+				Log.d(SdlApplication.TAG, "WakefulBroadcastReceiver - invalid class name");
 				e.printStackTrace();
 			}
 		}else{
-			Log.d(SmartDeviceLinkApplication.TAG, "WakefulBroadcastReceiver - no service specified");
+			Log.d(SdlApplication.TAG, "WakefulBroadcastReceiver - no service specified");
 		}
 	}
 }

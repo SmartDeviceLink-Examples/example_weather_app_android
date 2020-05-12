@@ -11,7 +11,7 @@ import org.json.JSONObject;
 
 import android.util.Log;
 
-import com.sdl.mobileweather.smartdevicelink.SmartDeviceLinkApplication;
+import com.sdl.mobileweather.smartdevicelink.SdlApplication;
 import com.sdl.mobileweather.weather.Forecast;
 import com.sdl.mobileweather.weather.UnitConverter;
 import com.sdl.mobileweather.weather.WeatherAlert;
@@ -66,7 +66,7 @@ public class ForecastIoWeatherJsonProcessor implements WeatherJsonProcessor {
 					try {
 						day = data.getJSONObject(dayCounter);
 					} catch (JSONException e1) {
-						Log.v(SmartDeviceLinkApplication.TAG, "No data in JSONArray for day " + dayCounter);
+						Log.v(SdlApplication.TAG, "No data in JSONArray for day " + dayCounter);
 					}
 
 					Forecast currentForecast = new Forecast();
@@ -75,7 +75,7 @@ public class ForecastIoWeatherJsonProcessor implements WeatherJsonProcessor {
 						try {
 							time = day.getLong(TIME);
 						} catch (JSONException e) {
-							Log.v(SmartDeviceLinkApplication.TAG, "No TIME in JSON for day " + dayCounter);
+							Log.v(SdlApplication.TAG, "No TIME in JSON for day " + dayCounter);
 							e.printStackTrace();
 						}
 						if (time != 0) {
@@ -87,57 +87,57 @@ public class ForecastIoWeatherJsonProcessor implements WeatherJsonProcessor {
 						try {
 							currentForecast.conditionTitle = day.getString(SUMMARY);
 						} catch (JSONException e) {
-							Log.v(SmartDeviceLinkApplication.TAG, "No SUMMARY in JSON for day " + dayCounter);
+							Log.v(SdlApplication.TAG, "No SUMMARY in JSON for day " + dayCounter);
 						}
 
 						try {
 							currentForecast.conditionIcon = new URL("http://localhost/" + day.getString(ICON) + ".gif");
 						} catch (MalformedURLException e) {
-							Log.v(SmartDeviceLinkApplication.TAG, "Bad icon URL for day " + dayCounter);
+							Log.v(SdlApplication.TAG, "Bad icon URL for day " + dayCounter);
 						} catch (JSONException e) {
-							Log.v(SmartDeviceLinkApplication.TAG, "Unable to get condition icon for JSON for day " + dayCounter);
+							Log.v(SdlApplication.TAG, "Unable to get condition icon for JSON for day " + dayCounter);
 						}
 
 						try {
 							currentForecast.temperature = UnitConverter.convertTemperatureToMetric(Float.valueOf((float) day.getDouble(TEMPERATURE)));
 						} catch (JSONException e) {
-							Log.v(SmartDeviceLinkApplication.TAG, "No TEMPERTATURE in JSON for day " + dayCounter);
+							Log.v(SdlApplication.TAG, "No TEMPERTATURE in JSON for day " + dayCounter);
 						}
 
 						try {
 							currentForecast.highTemperature = UnitConverter.convertTemperatureToMetric(Float.valueOf((float) day.getDouble(TEMPERATURE_MAX)));
 						} catch (JSONException e) {
-							Log.v(SmartDeviceLinkApplication.TAG, "No TEMPERATURE_MAX in JSON for day " + dayCounter);
+							Log.v(SdlApplication.TAG, "No TEMPERATURE_MAX in JSON for day " + dayCounter);
 						}
 
 						try {
 							currentForecast.lowTemperature = UnitConverter.convertTemperatureToMetric(Float.valueOf((float) day.getDouble(TEMPERATURE_MIN)));
 						} catch (JSONException e) {
-							Log.v(SmartDeviceLinkApplication.TAG, "No TEMPERATURE_MIN in JSON for day " + dayCounter);
+							Log.v(SdlApplication.TAG, "No TEMPERATURE_MIN in JSON for day " + dayCounter);
 						}
 						
 						try {
 							currentForecast.humidity = Float.valueOf((float) day.getDouble(HUMIDITY)) * 100.0f;
 						} catch (JSONException e) {
-							Log.v(SmartDeviceLinkApplication.TAG, "No HUMIDITY in JSON for day " + dayCounter);
+							Log.v(SdlApplication.TAG, "No HUMIDITY in JSON for day " + dayCounter);
 						}
 						
 						try {
 							currentForecast.windSpeed = UnitConverter.convertSpeedToMetric(Float.valueOf((float) day.getDouble(WIND_SPEED)));
 						} catch (JSONException e) {
-							Log.v(SmartDeviceLinkApplication.TAG, "No WIND_SPEED in JSON for day " + dayCounter);
+							Log.v(SdlApplication.TAG, "No WIND_SPEED in JSON for day " + dayCounter);
 						}
 						
 						try {
 							currentForecast.precipitationChance = (int) (Float.valueOf((float) day.getDouble(PRECIP_PROBABILITY)) * 100.0);
 						} catch (JSONException e) {
-							Log.v(SmartDeviceLinkApplication.TAG, "No PERCIP_PROBABILITY in JSON for day " + dayCounter);
+							Log.v(SdlApplication.TAG, "No PERCIP_PROBABILITY in JSON for day " + dayCounter);
 						}
 						
 						try {
 							currentForecast.snow = UnitConverter.convertLengthToMetric(Float.valueOf((float) day.getDouble(PRECIP_ACCUMULATION)));
 						} catch (JSONException e) {
-							Log.v(SmartDeviceLinkApplication.TAG, "No PERCIP_ACCUMULATION in JSON for day " + dayCounter);
+							Log.v(SdlApplication.TAG, "No PERCIP_ACCUMULATION in JSON for day " + dayCounter);
 						}
 
 						forecastVector.add(currentForecast);
@@ -175,7 +175,7 @@ public class ForecastIoWeatherJsonProcessor implements WeatherJsonProcessor {
 			try {
 				currently = conditions.getJSONObject(CURRENTLY);
 			} catch (JSONException e) {
-				Log.v(SmartDeviceLinkApplication.TAG, "No JSONObject available for CURRENTLY (Current conditions)");
+				Log.v(SdlApplication.TAG, "No JSONObject available for CURRENTLY (Current conditions)");
 			}
 			if (currently != null) {
 				// Parse JSON
@@ -183,51 +183,51 @@ public class ForecastIoWeatherJsonProcessor implements WeatherJsonProcessor {
 				try {
 					weatherConditions.conditionIcon = new URL("http://localhost/" + currently.getString(ICON) + ".gif");
 				} catch (MalformedURLException e) {
-					Log.d(SmartDeviceLinkApplication.TAG, "Bad icon URL for currently");
+					Log.d(SdlApplication.TAG, "Bad icon URL for currently");
 				} catch (JSONException e) {
-					Log.d(SmartDeviceLinkApplication.TAG, "Unable to get condition icon for JSON for currently");
+					Log.d(SdlApplication.TAG, "Unable to get condition icon for JSON for currently");
 				}
 				
 				try {
 					weatherConditions.conditionTitle = currently.getString(SUMMARY);
 				} catch (JSONException e) {
-					Log.v(SmartDeviceLinkApplication.TAG, "No SUMMARY in JSON for currently.");
+					Log.v(SdlApplication.TAG, "No SUMMARY in JSON for currently.");
 				}
 				
 				try {
 					weatherConditions.temperature = UnitConverter.convertTemperatureToMetric(Float.valueOf((float) currently.getDouble(TEMPERATURE)));
 				} catch (JSONException e) {
-					Log.v(SmartDeviceLinkApplication.TAG, "No TEMPERATURE in JSON for currently.");
+					Log.v(SdlApplication.TAG, "No TEMPERATURE in JSON for currently.");
 				}
 				
 				try {
 					weatherConditions.humidity = Float.valueOf((float) currently.getDouble(HUMIDITY)) * 100.0f;
 				} catch (JSONException e) {
-					Log.v(SmartDeviceLinkApplication.TAG, "No HUMIDITY in JSON for currently.");
+					Log.v(SdlApplication.TAG, "No HUMIDITY in JSON for currently.");
 				}
 				
 				try {
 					weatherConditions.windSpeed = UnitConverter.convertSpeedToMetric(Float.valueOf((float) currently.getDouble(WIND_SPEED)));
 				} catch (JSONException e) {
-					Log.v(SmartDeviceLinkApplication.TAG, "No WIND_SPEED in JSON for currently.");
+					Log.v(SdlApplication.TAG, "No WIND_SPEED in JSON for currently.");
 				}
 				
 				try {
 					weatherConditions.visibility = UnitConverter.convertLengthToMetric(Float.valueOf((float) currently.getDouble(VISIBILITY)));
 				} catch (JSONException e) {
-					Log.v(SmartDeviceLinkApplication.TAG, "No VISIBILITY in JSON for currently.");
+					Log.v(SdlApplication.TAG, "No VISIBILITY in JSON for currently.");
 				}
 				
 				try {
 					weatherConditions.feelsLikeTemperature = UnitConverter.convertTemperatureToMetric(Float.valueOf((float) currently.getDouble(APPARENT_TEMPERATURE)));
 				} catch (JSONException e) {
-					Log.v(SmartDeviceLinkApplication.TAG, "No APPARENT_TEMPERATURE in JSON for currently.");
+					Log.v(SdlApplication.TAG, "No APPARENT_TEMPERATURE in JSON for currently.");
 				}
 				
 				try {
 					weatherConditions.precipitation = Float.valueOf((float) currently.getDouble(PRECIP_PROBABILITY)) * 100.0f;
 				} catch (JSONException e) {
-					Log.v(SmartDeviceLinkApplication.TAG, "No PRECIP_PROBABILITY in JSON for currently.");
+					Log.v(SdlApplication.TAG, "No PRECIP_PROBABILITY in JSON for currently.");
 				}
 			}
 		}
@@ -243,7 +243,7 @@ public class ForecastIoWeatherJsonProcessor implements WeatherJsonProcessor {
 		try {
 			data = alertsJson.getJSONArray(ALERTS);
 		} catch (JSONException e) {
-			Log.d(SmartDeviceLinkApplication.TAG, "No ALERTS JSONArray available.");
+			Log.d(SdlApplication.TAG, "No ALERTS JSONArray available.");
 		}
 		if (data != null) {
 			int numberOfAlerts = data.length();
@@ -252,7 +252,7 @@ public class ForecastIoWeatherJsonProcessor implements WeatherJsonProcessor {
 				try {
 					alert = data.getJSONObject(alertCounter);
 				} catch (JSONException e1) {
-					Log.d(SmartDeviceLinkApplication.TAG, "No JSON available for alert " + alertCounter);
+					Log.d(SdlApplication.TAG, "No JSON available for alert " + alertCounter);
 				}
 
 				WeatherAlert currentAlert = new WeatherAlert();
@@ -261,7 +261,7 @@ public class ForecastIoWeatherJsonProcessor implements WeatherJsonProcessor {
 					try {
 						time = alert.getLong(EXPIRES);
 					} catch (JSONException e) {
-						Log.v(SmartDeviceLinkApplication.TAG, "No EXPIRES available for alert " + alertCounter);
+						Log.v(SdlApplication.TAG, "No EXPIRES available for alert " + alertCounter);
 					}
 					if (time != 0) {
 						Calendar expiresDate = Calendar.getInstance();
@@ -271,12 +271,12 @@ public class ForecastIoWeatherJsonProcessor implements WeatherJsonProcessor {
 					try {
 						currentAlert.message = alert.getString(TITLE);
 					} catch (JSONException e) {
-						Log.v(SmartDeviceLinkApplication.TAG, "No TITLE available for alert " + alertCounter);
+						Log.v(SdlApplication.TAG, "No TITLE available for alert " + alertCounter);
 					}
 					try {
 						currentAlert.description = alert.getString(DESCRIPTION);
 					} catch (JSONException e) {
-						Log.v(SmartDeviceLinkApplication.TAG, "No DESCRIPTION available for alert " + alertCounter);
+						Log.v(SdlApplication.TAG, "No DESCRIPTION available for alert " + alertCounter);
 					}
 
 					alertVector.add(currentAlert);

@@ -21,7 +21,7 @@ import android.util.Log;
 
 import com.sdl.mobileweather.artifact.GPSLocation;
 import com.sdl.mobileweather.artifact.WeatherLocation;
-import com.sdl.mobileweather.smartdevicelink.SmartDeviceLinkApplication;
+import com.sdl.mobileweather.smartdevicelink.SdlApplication;
 import com.sdl.mobileweather.weather.WeatherDataManager;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -50,13 +50,13 @@ public class WeatherLocationServices implements
     
     private Geocoder mGeocoder; 
     private boolean mUpdatesRequested;
-    private SmartDeviceLinkApplication mApplicationContext;
+    private SdlApplication mApplicationContext;
     private WeatherDataManager mDataManager;
     protected long mLastLocationTime = 0;
 	
 
     public WeatherLocationServices() {
-    	mApplicationContext = SmartDeviceLinkApplication.getInstance();
+    	mApplicationContext = SdlApplication.getInstance();
     	// Create the LocationRequest object
         mLocationRequest = LocationRequest.create();
         mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
@@ -89,14 +89,14 @@ public class WeatherLocationServices implements
 			            }
 					}
 				} else {
-					Log.e(SmartDeviceLinkApplication.TAG, "onLocationChanged: loc == null");
+					Log.e(SdlApplication.TAG, "onLocationChanged: loc == null");
 					reportLocationAvail(false);
 				}
 			} finally {
 				wakeLock.release();
 			}
 		} else {
-			Log.e(SmartDeviceLinkApplication.TAG, "onLocationChanged: location == null");
+			Log.e(SdlApplication.TAG, "onLocationChanged: location == null");
 			reportLocationAvail(false);
 			
 		}
@@ -154,7 +154,7 @@ public class WeatherLocationServices implements
         if (connectionResult.hasResolution()) {
             try {
                 // Start an Activity that tries to resolve the error
-                connectionResult.startResolutionForResult(SmartDeviceLinkApplication.getCurrentActivity(), CONNECTION_FAILURE_RESOLUTION_REQUEST);
+                connectionResult.startResolutionForResult(SdlApplication.getCurrentActivity(), CONNECTION_FAILURE_RESOLUTION_REQUEST);
                 /*
                 * Thrown if Google Play services canceled the original
                 * PendingIntent
@@ -216,7 +216,7 @@ public class WeatherLocationServices implements
 				LocalBroadcastManager.getInstance(mApplicationContext).sendBroadcast(intent);
 				reportLocationAvail(true);
 			} else if(loc == null){
-				Log.e(SmartDeviceLinkApplication.TAG, "getLastKnownLocation: loc == null");
+				Log.e(SdlApplication.TAG, "getLastKnownLocation: loc == null");
 				reportLocationAvail(false);
 			}
 		}
@@ -256,12 +256,12 @@ public class WeatherLocationServices implements
             addresses = mGeocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
             reportNetworkAvail(true);
         } catch (IOException e1) {
-        	Log.e(SmartDeviceLinkApplication.TAG, "IO Exception in getFromLocation()");
+        	Log.e(SdlApplication.TAG, "IO Exception in getFromLocation()");
         	reportNetworkAvail(false);
         	e1.printStackTrace();
         	return null;
         } catch (IllegalArgumentException e2) {
-        	Log.e(SmartDeviceLinkApplication.TAG, "Illegal Argument Exception in getFromLocation()");
+        	Log.e(SdlApplication.TAG, "Illegal Argument Exception in getFromLocation()");
         	reportLocationAvail(false);
         	e2.printStackTrace();
         	return null;
@@ -294,7 +294,7 @@ public class WeatherLocationServices implements
         // Get the error dialog from Google Play services
         Dialog errorDialog = GooglePlayServicesUtil.getErrorDialog(
             errorCode,
-            SmartDeviceLinkApplication.getCurrentActivity(),
+            SdlApplication.getCurrentActivity(),
             CONNECTION_FAILURE_RESOLUTION_REQUEST);
 
         // If Google Play services can provide an error dialog
@@ -304,7 +304,7 @@ public class WeatherLocationServices implements
     }
     
     protected synchronized void buildGoogleApiClient() {
-    	Log.i(SmartDeviceLinkApplication.TAG, "Building GoogleApiClient");
+    	Log.i(SdlApplication.TAG, "Building GoogleApiClient");
         mGoogleApiClient = new GoogleApiClient.Builder(mApplicationContext)
             .addConnectionCallbacks(this)
             .addOnConnectionFailedListener(this)

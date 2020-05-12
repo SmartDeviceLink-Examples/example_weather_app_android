@@ -14,7 +14,7 @@ import com.sdl.mobileweather.artifact.WeatherLocation;
 import com.sdl.mobileweather.connection.HttpConnection;
 import com.sdl.mobileweather.connection.HttpConnection.RequestMethod;
 import com.sdl.mobileweather.processor.JsonProcessor;
-import com.sdl.mobileweather.smartdevicelink.SmartDeviceLinkApplication;
+import com.sdl.mobileweather.smartdevicelink.SdlApplication;
 import com.sdl.mobileweather.weather.Forecast;
 import com.sdl.mobileweather.weather.WeatherAlert;
 import com.sdl.mobileweather.weather.WeatherConditions;
@@ -37,7 +37,7 @@ public class ForecastIoService extends WeatherService {
 		try {
 			everythingURL = new URL(BASE_URL + API_KEY +"/" + currentLocation.gpsLocation.latitude + "," + 
 					currentLocation.gpsLocation.longitude + "?" + "lang=" + (Locale.getDefault()).getLanguage());			
-			Log.d(SmartDeviceLinkApplication.TAG, currentLocation.gpsLocation.latitude + "," + currentLocation.gpsLocation.longitude);
+			Log.d(SdlApplication.TAG, currentLocation.gpsLocation.latitude + "," + currentLocation.gpsLocation.longitude);
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		}

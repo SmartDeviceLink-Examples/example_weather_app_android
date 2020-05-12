@@ -9,7 +9,7 @@ import android.content.res.XmlResourceParser;
 import android.util.Log;
 
 import com.sdl.mobileweather.R;
-import com.sdl.mobileweather.smartdevicelink.SmartDeviceLinkApplication;
+import com.sdl.mobileweather.smartdevicelink.SdlApplication;
 
 public class AbbreviationDictionary {
 	
@@ -40,11 +40,11 @@ public class AbbreviationDictionary {
 				while (eventType != XmlPullParser.END_DOCUMENT) {
 					if (eventType == XmlPullParser.START_DOCUMENT) {
 						
-						Log.i(SmartDeviceLinkApplication.TAG,
+						Log.i(SdlApplication.TAG,
 								"START_DOCUMENT: Loading abbreviation XML file");
 					} else if (eventType == XmlPullParser.START_TAG) {
 						if (parser.getName().equals("entry")) {
-							Log.d(SmartDeviceLinkApplication.TAG, "START_TAG");
+							Log.d(SdlApplication.TAG, "START_TAG");
 							key = parser.getAttributeValue(null, "key");
 							if (key == null) {
 								parser.close();
@@ -53,14 +53,14 @@ public class AbbreviationDictionary {
 						}
 					} else if (eventType == XmlPullParser.TEXT) {
 						if (key != null) {
-							Log.d(SmartDeviceLinkApplication.TAG, "TEXT");
+							Log.d(SdlApplication.TAG, "TEXT");
 							value = parser.getText();
 						}
 
 					} else if (eventType == XmlPullParser.END_TAG) {
 						if (parser.getName().equals("entry")) {
 							mAbrvDictionary.put(key, value);
-							Log.v(SmartDeviceLinkApplication.TAG,
+							Log.v(SdlApplication.TAG,
 									String.format("END_TAG: %s, %s", key, value));
 							key = null;
 							value = null;
@@ -70,7 +70,7 @@ public class AbbreviationDictionary {
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
-				Log.d(SmartDeviceLinkApplication.TAG,
+				Log.d(SdlApplication.TAG,
 						"Loading exception: mAbrvDictionary=null");
 				mAbrvDictionary = null;
 				return false;

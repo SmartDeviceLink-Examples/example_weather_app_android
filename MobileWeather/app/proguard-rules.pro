@@ -12,6 +12,9 @@
 #   public *;
 #}
 
+-keep class com.smartdevicelink.** { *; }
+-keep class com.livio.** { *; }
+
 # Uncomment this to preserve the line number information for
 # debugging stack traces.
 #-keepattributes SourceFile,LineNumberTable
