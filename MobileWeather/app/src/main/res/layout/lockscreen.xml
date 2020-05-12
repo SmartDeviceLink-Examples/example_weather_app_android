@@ -14,8 +14,10 @@
         android:layout_height="wrap_content"
         android:layout_gravity="top|center_horizontal|center_vertical|clip_horizontal"
         android:layout_weight="1"
+        android:contentDescription="@+strings/title_activity_main"
         android:paddingTop="10dp"
-        android:contentDescription="@+strings/title_activity_main" />
+        android:src="@drawable/icon"
+        tools:src="@drawable/icon" />
 
     <TextView
         android:id="@+id/locationTextView"
@@ -40,4 +42,19 @@
         android:paddingBottom="10dp"
         android:contentDescription="@+strings/ford"
         android:src="@drawable/ford_oval" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="MobileWeather" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="LOCKED FOR YOUR SAFETY" />
+
 </LinearLayout>
