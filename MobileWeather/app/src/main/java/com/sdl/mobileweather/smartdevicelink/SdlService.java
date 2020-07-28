@@ -472,7 +472,7 @@ public class SdlService extends Service {
         lbManager.registerReceiver(mAlertsReceiver, new IntentFilter("com.sdl.mobileweather.Alerts"));
         lbManager.registerReceiver(mForecastReceiver, new IntentFilter("com.sdl.mobileweather.Forecast"));
         lbManager.registerReceiver(mHourlyForecastReceiver, new IntentFilter("com.sdl.mobileweather.HourlyForecast"));
-        lbManager.registerReceiver(mErrorReceiver, new IntentFilter("com.ford.mobileweather.ErrorUpdate"));
+        lbManager.registerReceiver(mErrorReceiver, new IntentFilter("com.sdl.mobileweather.ErrorUpdate"));
 
         SoftButtonState mShowConditionsState = new SoftButtonState("mShowConditionsState", getResources().getString(R.string.sb1), null);
         mShowConditions = new SoftButtonObject("mShowConditions", Collections.singletonList(mShowConditionsState), mShowConditionsState.getName(), new SoftButtonObject.OnEventListener() {
@@ -816,6 +816,11 @@ public class SdlService extends Service {
 
                 @Override
                 public LifecycleConfigurationUpdate managerShouldUpdateLifecycle(Language language) {
+                    return null;
+                }
+
+                @Override
+                public LifecycleConfigurationUpdate managerShouldUpdateLifecycle(Language language, Language hmiLanguage) {
                     return null;
                 }
             };
