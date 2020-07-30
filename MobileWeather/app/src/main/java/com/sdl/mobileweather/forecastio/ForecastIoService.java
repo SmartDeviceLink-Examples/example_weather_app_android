@@ -98,6 +98,7 @@ public class ForecastIoService extends WeatherService {
 						Intent intent = new Intent("com.sdl.mobileweather.Alerts");
 						lbManager.sendBroadcast(intent);						
 					}
+					
 					reportApiAvail(true);
 					
 				} else if (statusCode == -2){
