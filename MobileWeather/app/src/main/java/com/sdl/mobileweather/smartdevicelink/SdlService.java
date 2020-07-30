@@ -449,13 +449,15 @@ public class SdlService extends Service {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (mDataManager != null) {
-                if (mDataManager.isInErrorState()) {
-                    writeDisplay(false);
+            if(sdlManager != null && (sdlManager.getState() == BaseSubManager.READY || sdlManager.getState() == BaseSubManager.LIMITED)) {
+                if (mDataManager != null) {
+                    if (mDataManager.isInErrorState()) {
+                        writeDisplay(false);
 
-                } else {
-                    resetFirstErrorFlags();
-                    writeDisplay(false);
+                    } else {
+                        resetFirstErrorFlags();
+                        writeDisplay(false);
+                    }
                 }
             }
         }
