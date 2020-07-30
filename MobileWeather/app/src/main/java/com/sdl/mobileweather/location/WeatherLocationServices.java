@@ -80,7 +80,6 @@ public class WeatherLocationServices implements
 				WeatherLocation loc = processLocation(location);
 				
 				if (loc != null) {
-					mDataManager.setLocationAvailable(true);
 					if (mDataManager != null) {
 						mDataManager.setCurrentLocation(loc);
 		        		reportLocationAvail(true);
