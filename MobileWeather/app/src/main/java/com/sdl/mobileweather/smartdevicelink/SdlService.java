@@ -13,9 +13,9 @@ import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.content.LocalBroadcastManager;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.sdl.mobileweather.BuildConfig;
@@ -30,7 +30,6 @@ import com.sdl.mobileweather.weather.UnitConverter;
 import com.sdl.mobileweather.weather.WeatherAlert;
 import com.sdl.mobileweather.weather.WeatherConditions;
 import com.sdl.mobileweather.weather.WeatherDataManager;
-import com.smartdevicelink.managers.BaseSubManager;
 import com.smartdevicelink.managers.CompletionListener;
 import com.smartdevicelink.managers.SdlManager;
 import com.smartdevicelink.managers.SdlManagerListener;
@@ -47,17 +46,12 @@ import com.smartdevicelink.managers.screen.menu.MenuSelectionListener;
 import com.smartdevicelink.protocol.enums.FunctionID;
 import com.smartdevicelink.proxy.RPCNotification;
 import com.smartdevicelink.proxy.RPCResponse;
-import com.smartdevicelink.proxy.TTSChunkFactory;
 import com.smartdevicelink.proxy.rpc.Alert;
-import com.smartdevicelink.proxy.rpc.ChangeRegistration;
 import com.smartdevicelink.proxy.rpc.DeviceStatus;
-import com.smartdevicelink.proxy.rpc.DisplayCapabilities;
 import com.smartdevicelink.proxy.rpc.OnButtonEvent;
 import com.smartdevicelink.proxy.rpc.OnButtonPress;
 import com.smartdevicelink.proxy.rpc.OnHMIStatus;
-import com.smartdevicelink.proxy.rpc.OnLanguageChange;
 import com.smartdevicelink.proxy.rpc.OnVehicleData;
-import com.smartdevicelink.proxy.rpc.SetDisplayLayout;
 import com.smartdevicelink.proxy.rpc.SetGlobalProperties;
 import com.smartdevicelink.proxy.rpc.Speak;
 import com.smartdevicelink.proxy.rpc.SubscribeButton;
@@ -69,11 +63,9 @@ import com.smartdevicelink.proxy.rpc.enums.FileType;
 import com.smartdevicelink.proxy.rpc.enums.HMILevel;
 import com.smartdevicelink.proxy.rpc.enums.InteractionMode;
 import com.smartdevicelink.proxy.rpc.enums.Language;
-import com.smartdevicelink.proxy.rpc.enums.Result;
+import com.smartdevicelink.proxy.rpc.enums.PredefinedWindows;
 import com.smartdevicelink.proxy.rpc.enums.SpeechCapabilities;
-import com.smartdevicelink.proxy.rpc.enums.SystemCapabilityType;
 import com.smartdevicelink.proxy.rpc.enums.TextAlignment;
-import com.smartdevicelink.proxy.rpc.enums.TextFieldName;
 import com.smartdevicelink.proxy.rpc.enums.TriggerSource;
 import com.smartdevicelink.proxy.rpc.listeners.OnRPCNotificationListener;
 import com.smartdevicelink.proxy.rpc.listeners.OnRPCResponseListener;
@@ -87,11 +79,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Vector;
 
 import static com.smartdevicelink.trace.enums.Mod.proxy;
@@ -108,9 +98,11 @@ public class SdlService extends Service {
     private static final int TIMED_SHOW_DELAY = 8000;
     private static final String APP_ICON_NAME = "icon";
     private static final String APP_ICON = APP_ICON_NAME + ".png";
+    private static final String APP_NAME = "MobileWeather";
+    private static final String APP_NAME_ES = "Clima móvil";
+    private static final String APP_NAME_FR = "Météo mobile";
+
     // Service shutdown timing constants
-    private static final int CONNECTION_TIMEOUT = 120000;
-    private static final int STOP_SERVICE_DELAY = 5000;
     private int conditionsID = 0;
     // variable used to increment correlation ID for every request sent to SDL
     public int autoIncCorrId = 0;
@@ -121,17 +113,12 @@ public class SdlService extends Service {
     // variable to create and call functions of the SyncProxy
     private boolean mFirstHmiNone = true;
     private DisplayType mDisplayType = null; // Keeps track of the HMI display type
-    private boolean mGraphicsSupported = false; // Keeps track of whether graphics are supported on the display
     private boolean mDisplayLayoutSupported = false;
     private int mNumberOfTextFields = 1;
     private int mLengthOfTextFields = 40;
     private ArrayList<TextField> mTextFields = null; // Keeps track of the text fields supported
     private Language mCurrentSdlLanguage = null; // Stores the current language
     private Language mCurrentHmiLanguage = null; // Stores the current language of the display
-    private static Language mRegisteredAppSdlLanguage = Language.EN_US; // Stores the language used at AppInterface registering
-    private static Language mRegisteredAppHmiLanguage = Language.EN_US; // Stores the language of the display used at AppInterface registering
-    private static Language mDesiredAppSdlLanguage = Language.EN_US; // Stores the language to be used for next AppInterface registering e.g. after onOnLanguageChange occurred
-    private static Language mDesiredAppHmiLanguage = Language.EN_US; // Stores the language of the display to be used for next AppInterface registering e.g. after onOnLanguageChange occurred
     private DeviceStatus mDeviceStatus = null; // Stores the current device (phone) status
     private InfoType mActiveInfoType = InfoType.NONE; // Stores the current type of information being displayed
     private WeatherLocation mCurrentLocation = null; // Stores the current location for weather
@@ -179,6 +166,8 @@ public class SdlService extends Service {
     private LocalizationUtil mLocalizationUtil = null;
     //choice set variables
     private List<ChoiceCell> choiceCellList = null;
+    private List<ChoiceCell> dailyCellList = null;
+    private List<ChoiceCell> hourlyCellList = null;
     private List<ChoiceCell> changeUnitCellList = null;
     private List<MenuCell> menuCells = null;
     private MenuCell mainCell1 = null;
@@ -192,51 +181,6 @@ public class SdlService extends Service {
     // The IP is of the machine that is running SDL Core
     private static final int TCP_PORT = 15815;
     private static final String DEV_MACHINE_IP_ADDRESS = "m.sdl.tools";
-
-    /**
-     * Runnable that stops this service if there hasn't been a connection to SDL
-     * within a reasonable amount of time since ACL_CONNECT.
-     */
-    private Runnable mCheckConnectionRunnable = new Runnable() {
-        @Override
-        public void run() {
-            Log.i(SdlApplication.TAG, "CheckConnectionRunnable");
-            Boolean stopService = true;
-            // If the proxy has connected to SDL, do NOT stop the service
-            if (sdlManager != null && (sdlManager.getState() == BaseSubManager.READY || sdlManager.getState() == BaseSubManager.LIMITED)) {
-                stopService = false;
-            }
-            if (stopService) {
-                Log.i(SdlApplication.TAG, "No connection - stopping SmartDeviceLink service");
-                mHandler.removeCallbacks(mCheckConnectionRunnable);
-                mHandler.removeCallbacks(mStopServiceRunnable);
-                SdlApplication app = SdlApplication.getInstance();
-                if (app != null) app.stopServices(true);
-                stopSelf();
-            }
-        }
-    };
-
-    /**
-     * Runnable that stops this service on ACL_DISCONNECT after a short time delay.
-     * This is a workaround until some synchronization issues are fixed within the proxy.
-     */
-    private Runnable mStopServiceRunnable = new Runnable() {
-        @Override
-        public void run() {
-            Log.i(SdlApplication.TAG, "StopServiceRunnable");
-            // As long as the proxy is null or not connected to SDL, stop the service
-            if (sdlManager == null || sdlManager.getState() == BaseSubManager.SHUTDOWN || sdlManager.getState() == BaseSubManager.ERROR) {
-                Log.i(SdlApplication.TAG, "StopServiceRunnable stopping service");
-                mHandler.removeCallbacks(mCheckConnectionRunnable);
-                mHandler.removeCallbacks(mStopServiceRunnable);
-                SdlApplication app = SdlApplication.getInstance();
-                if (app != null) app.stopServices(true);
-                stopSelf();
-            }
-        }
-    };
-
 
     public SdlManager getSdlManager() {
         return sdlManager;
@@ -259,90 +203,6 @@ public class SdlService extends Service {
         private String showString_field4;
         private String showString_mediaTrack;
     }
-
-    private class TimedShowRunnable implements Runnable {
-
-        protected Vector<String> mShowStrings;
-        protected List<SoftButtonObject> mSoftButtonObjects;
-        protected int mFieldIndex;
-        protected int mDelayTime;
-        protected int mFieldsLeft;
-
-        public TimedShowRunnable(Vector<String> showStrings, List<SoftButtonObject> softButtonObjects, int index, int delay) {
-            this.mShowStrings = showStrings;
-            this.mSoftButtonObjects = softButtonObjects;
-            this.mFieldIndex = index;
-            this.mDelayTime = delay;
-        }
-
-        private void performShow() {
-            String field1 = null;
-            String field2 = null;
-            String field3 = null;
-            String field4 = null;
-
-            this.mFieldsLeft = this.mShowStrings.size() - this.mFieldIndex;
-            if (this.mFieldsLeft > 0) {
-                if (mNumberOfTextFields >= 1) {
-                    if (this.mFieldsLeft > 0) {
-                        field1 = this.mShowStrings.get(this.mFieldIndex);
-                        this.mFieldIndex++;
-                        this.mFieldsLeft = this.mShowStrings.size() - this.mFieldIndex;
-                    } else {
-                        field1 = "";
-                    }
-                }
-
-                if (mNumberOfTextFields >= 2) {
-                    if (this.mFieldsLeft > 0) {
-                        field2 = this.mShowStrings.get(this.mFieldIndex);
-                        this.mFieldIndex++;
-                        this.mFieldsLeft = this.mShowStrings.size() - this.mFieldIndex;
-                    } else {
-                        field2 = "";
-                    }
-                }
-                if (mNumberOfTextFields >= 3) {
-                    if (this.mFieldsLeft > 0) {
-                        field3 = this.mShowStrings.get(this.mFieldIndex);
-                        this.mFieldIndex++;
-                        this.mFieldsLeft = this.mShowStrings.size() - this.mFieldIndex;
-                    } else {
-                        field3 = "";
-                    }
-                }
-                if (mNumberOfTextFields >= 4) {
-                    if (this.mFieldsLeft > 0) {
-                        field4 = this.mShowStrings.get(this.mFieldIndex);
-                        this.mFieldIndex++;
-                        this.mFieldsLeft = this.mShowStrings.size() - this.mFieldIndex;
-                    } else {
-                        field4 = "";
-                    }
-                }
-
-                sdlManager.getScreenManager().beginTransaction();
-                sdlManager.getScreenManager().setSoftButtonObjects(mSoftButtonObjects);
-                sdlManager.getScreenManager().setTextField1(field1);
-                sdlManager.getScreenManager().setTextField2(field2);
-                sdlManager.getScreenManager().setTextField3(field3);
-                sdlManager.getScreenManager().setTextField4(field4);
-                sdlManager.getScreenManager().setTextAlignment(TextAlignment.LEFT_ALIGNED);
-                sdlManager.getScreenManager().setPrimaryGraphic(null);
-                sdlManager.getScreenManager().commit(null);
-            }
-        }
-
-        @Override
-        public void run() {
-            performShow();
-            if (this.mFieldsLeft > 0) {
-                mTimedShowHandler.postDelayed(this, this.mDelayTime);
-            }
-        }
-    }
-
-    private TimedShowRunnable mTimedShowRunnable;
 
     /**
      * Receiver for changes in location from the app UI.
@@ -463,9 +323,9 @@ public class SdlService extends Service {
 
     @Override
     public void onCreate() {
+        Log.d(TAG, "onCreate");
         super.onCreate();
-        instance = this;
-        mHandler = new Handler();
+
         LocalBroadcastManager lbManager = LocalBroadcastManager.getInstance(this);
         lbManager.registerReceiver(mChangeLocationReceiver, new IntentFilter("com.sdl.mobileweather.Location"));
         lbManager.registerReceiver(mWeatherConditionsReceiver, new IntentFilter("com.sdl.mobileweather.WeatherConditions"));
@@ -636,6 +496,7 @@ public class SdlService extends Service {
             public void onPress(SoftButtonObject softButtonObject, OnButtonPress onButtonPress) {
                 mActiveInfoType = InfoType.WELCOME_SCREEN;
                 forecast_item_counter = 0;
+                checkSoftButtonStates();
                 updateHmi(false);
             }
 
@@ -669,6 +530,24 @@ public class SdlService extends Service {
         }
     }
 
+    /**
+     * Checks and changes SoftButtons states when hourly and daily forecast are displayed
+     */
+    private void checkSoftButtonStates() {
+        if (forecast_item_counter == 0 && mShowPrevItem != null) {
+            mShowPrevItem.transitionToStateByName(mShowPrevItemState2Name);
+        } else if (mShowPrevItem != null) {
+            mShowPrevItem.transitionToStateByName(mShowPrevItemState1Name);
+        }
+        if ((((mActiveInfoType == InfoType.DAILY_FORECAST) && (forecast_item_counter == DAILY_FORECAST_DAYS - 1)) ||
+                ((mActiveInfoType == InfoType.HOURLY_FORECAST) && (forecast_item_counter == HOURLY_FORECAST_HOURS - 1))) && mShowNextItem != null) {
+            mShowNextItem.transitionToStateByName(mShowNextItemState2Name);
+        } else if (mShowNextItem != null) {
+            mShowNextItem.transitionToStateByName(mShowNextItemState1Name);
+        }
+    }
+
+
     @SuppressLint("NewApi")
     private void enterForeground() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -688,12 +567,7 @@ public class SdlService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        // Remove any previous stop service runnables that could be from a recent ACL Disconnect
-        mHandler.removeCallbacks(mStopServiceRunnable);
         startProxy();
-        // Queue the check connection runnable to stop the service if no connection is made
-        mHandler.removeCallbacks(mCheckConnectionRunnable);
-        mHandler.postDelayed(mCheckConnectionRunnable, CONNECTION_TIMEOUT);
         return START_STICKY;
     }
 
@@ -734,14 +608,6 @@ public class SdlService extends Service {
         return instance;
     }
 
-    /**
-     * Queue's a runnable that stops the service after a small delay,
-     * unless the proxy reconnects to SDL.
-     */
-    public void stopService() {
-        mHandler.removeCallbacks(mStopServiceRunnable);
-        mHandler.postDelayed(mStopServiceRunnable, STOP_SERVICE_DELAY);
-    }
 
     public void startProxy() {
         if (sdlManager == null) {
@@ -761,6 +627,35 @@ public class SdlService extends Service {
             SdlManagerListener listener = new SdlManagerListener() {
                 @Override
                 public void onStart() {
+                    sdlManager.addOnRPCNotificationListener(FunctionID.ON_HMI_STATUS, new OnRPCNotificationListener() {
+                        @Override
+                        public void onNotified(RPCNotification notification) {
+                            OnHMIStatus onHMIStatus = (OnHMIStatus)notification;
+                            if (onHMIStatus.getWindowID() != null && onHMIStatus.getWindowID() != PredefinedWindows.DEFAULT_WINDOW.getValue()) {
+                                return;
+                            }
+                            if (onHMIStatus.getHmiLevel() == HMILevel.HMI_FULL && onHMIStatus.getFirstRun()) {
+
+                                setGlobalProperties((getResources().getString(R.string.gp_help_prompt)), (getResources().getString(R.string.gp_timeout_prompt)), autoIncCorrId++);
+
+                                // Perform welcome
+                                showWelcomeMessage();
+
+                                // Perform welcome speak
+                                performWelcomeSpeak();
+
+                                // Create Menu Cells
+                                createMenuCells();
+
+                                // Create InteractionChoiceSet for changing units
+                                createChangeUnitsInteractionChoiceSet();
+
+                                // Subscribe buttons
+                                subscribeButtons();
+
+                            }
+                        }
+                    });
                     sdlManager.addOnRPCNotificationListener(FunctionID.ON_VEHICLE_DATA, new OnRPCNotificationListener() {
                         @Override
                         public void onNotified(RPCNotification notification) {
@@ -789,17 +684,6 @@ public class SdlService extends Service {
                             }
                         }
                     });
-
-                    sdlManager.addOnRPCNotificationListener(FunctionID.ON_LANGUAGE_CHANGE, new OnRPCNotificationListener() {
-                        @Override
-                        public void onNotified(RPCNotification notification) {
-                            OnLanguageChange onLanguageChange = (OnLanguageChange) notification;
-                            mDesiredAppSdlLanguage = onLanguageChange.getLanguage();
-                            mDesiredAppHmiLanguage = onLanguageChange.getHmiDisplayLanguage();
-                            Log.i(SdlApplication.TAG, "onOnLanguageChange: Language = " + mDesiredAppSdlLanguage);
-                            Log.i(SdlApplication.TAG, "onOnLanguageChange: HmiDisplayLanguage = " + mDesiredAppHmiLanguage);
-                        }
-                    });
                 }
 
                 @Override
@@ -815,8 +699,40 @@ public class SdlService extends Service {
                 }
 
                 @Override
-                public LifecycleConfigurationUpdate managerShouldUpdateLifecycle(Language language) {
-                    return null;
+                public LifecycleConfigurationUpdate managerShouldUpdateLifecycle(Language language, Language hmiLanguage) {
+                    boolean isNeedUpdate = false;
+                    String appName = APP_NAME;
+                    String ttsName = APP_NAME;
+                    switch (language) {
+                        case ES_MX:
+                            isNeedUpdate = true;
+                            ttsName = APP_NAME_ES;
+                            break;
+                        case FR_CA:
+                            isNeedUpdate = true;
+                            ttsName = APP_NAME_FR;
+                            break;
+                        default:
+                            break;
+                    }
+                    switch (hmiLanguage) {
+                        case ES_MX:
+                            isNeedUpdate = true;
+                            appName = APP_NAME_ES;
+                            break;
+                        case FR_CA:
+                            isNeedUpdate = true;
+                            appName = APP_NAME_FR;
+                            break;
+                        default:
+                            break;
+                    }
+                    if (isNeedUpdate) {
+                        Vector<TTSChunk> chunks = new Vector<>(Collections.singletonList(new TTSChunk(ttsName, SpeechCapabilities.TEXT)));
+                        return new LifecycleConfigurationUpdate(appName, null, chunks, null);
+                    } else {
+                        return null;
+                    }
                 }
             };
 
@@ -824,93 +740,12 @@ public class SdlService extends Service {
             SdlArtwork appIcon = new SdlArtwork(APP_ICON, FileType.GRAPHIC_PNG, R.drawable.icon, true);
 
             // The manager builder sets options for your session
-            SdlManager.Builder builder = new SdlManager.Builder(this, APP_ID, "MobileWeather", listener);
+            SdlManager.Builder builder = new SdlManager.Builder(this, APP_ID, APP_NAME, listener);
             builder.setTransportType(transport);
-            builder.setLanguage(mDesiredAppSdlLanguage);
             builder.setAppIcon(appIcon);
-
-            // Set listeners list
-            Map<FunctionID, OnRPCNotificationListener> onRPCNotificationListenerMap = new HashMap<>();
-            onRPCNotificationListenerMap.put(FunctionID.ON_HMI_STATUS, new OnRPCNotificationListener() {
-                @Override
-                public void onNotified(RPCNotification notification) {
-                    OnHMIStatus onHMIStatus = (OnHMIStatus) notification;
-
-                    currentHMILevel = onHMIStatus.getHmiLevel();
-
-                    switch (onHMIStatus.getSystemContext()) {
-                        case SYSCTXT_MAIN:
-                            break;
-                        case SYSCTXT_VRSESSION:
-                            break;
-                        case SYSCTXT_MENU:
-                            break;
-                        default:
-                            return;
-                    }
-
-                    switch (onHMIStatus.getAudioStreamingState()) {
-                        case AUDIBLE:
-                            // play audio if applicable
-                            break;
-                        case NOT_AUDIBLE:
-                            // pause/stop/mute audio if applicable
-                            break;
-                        default:
-                            return;
-                    }
-
-                    switch (currentHMILevel) {
-                        case HMI_FULL:
-                            Log.i(SdlApplication.TAG, "HMI_FULL");
-                            mLocalizationUtil.changeLocale(mLocalizationUtil.getAdjustedLocaleLanguage(), mLocalizationUtil.getAdjustedLocaleCountry(), getApplicationContext());
-                            if (onHMIStatus.getFirstRun()) {
-                                // Custom help and timeout messages
-                                setGlobalProperties((getResources().getString(R.string.gp_help_prompt)), (getResources().getString(R.string.gp_timeout_prompt)), autoIncCorrId++);
-
-                                // Perform welcome
-                                showWelcomeMessage();
-
-                                // Perform welcome speak
-                                performWelcomeSpeak();
-
-                                // Create Menu Cells
-                                createMenuCells();
-
-                                // Create InteractionChoiceSet for changing units
-                                createChangeUnitsInteractionChoiceSet();
-
-                                // Subscribe buttons
-                                subscribeButtons();
-                            }
-                            break;
-                        case HMI_LIMITED:
-                            Log.i(SdlApplication.TAG, "HMI_LIMITED");
-                            break;
-                        case HMI_BACKGROUND:
-                            Log.i(SdlApplication.TAG, "HMI_BACKGROUND");
-                            if (mFirstHmiNone) {
-                                getSdlSettings();
-                            }
-                            break;
-                        case HMI_NONE:
-                            Log.i(SdlApplication.TAG, "HMI_NONE");
-                            if (mFirstHmiNone) {
-                                getSdlSettings();
-                            } else {
-                                // write back the original locales of the app
-                                mLocalizationUtil.changeLocale(mLocalizationUtil.getLocaleLanguage(), mLocalizationUtil.getLocaleCountry(), getApplicationContext());
-                            }
-                            break;
-                    }
-                }
-            });
-            builder.setRPCNotificationListeners(onRPCNotificationListenerMap);
             sdlManager = builder.build();
             sdlManager.start();
 
-            mRegisteredAppSdlLanguage = mDesiredAppSdlLanguage;
-            mRegisteredAppHmiLanguage = mDesiredAppHmiLanguage;
         }
     }
 
@@ -941,10 +776,7 @@ public class SdlService extends Service {
         sdlManager.getScreenManager().setTextField3("");
         sdlManager.getScreenManager().setTextField4("");
         sdlManager.getScreenManager().setTextAlignment(TextAlignment.CENTERED);
-
-        if (mDisplayType != DisplayType.CID && mDisplayType != DisplayType.NGN) {
-            sdlManager.getScreenManager().setSoftButtonObjects(getSoftButtonsForMainScreens());
-        }
+        sdlManager.getScreenManager().setSoftButtonObjects(getSoftButtonsForMainScreens());
         sdlManager.getScreenManager().commit(new CompletionListener() {
             @Override
             public void onComplete(boolean success) {
@@ -958,7 +790,7 @@ public class SdlService extends Service {
      */
     private void performWelcomeSpeak() {
         mWelcomeCorrId = autoIncCorrId++;
-        Speak msg = new Speak(TTSChunkFactory.createSimpleTTSChunks((getResources().getString(R.string.welcome_speak))));
+        Speak msg = new Speak(Arrays.asList(new TTSChunk(getResources().getString(R.string.welcome_speak), SpeechCapabilities.TEXT)));
         msg.setCorrelationID(mWelcomeCorrId);
         msg.setOnRPCResponseListener(new OnRPCResponseListener() {
             @Override
@@ -982,7 +814,7 @@ public class SdlService extends Service {
     }
 
     /**
-     * @return List of Softbutton objects displayed on the welcomeScreen and currentConditons screen
+     * @return List of SoftButton objects displayed on the welcomeScreen and currentConditions screen
      */
     private List<SoftButtonObject> getSoftButtonsForMainScreens() {
         List<SoftButtonObject> softButtonObjects = new ArrayList<>();
@@ -992,115 +824,6 @@ public class SdlService extends Service {
         softButtonObjects.add(mShowHourlyForecast);
         softButtonObjects.add(mShowAlerts);
         return softButtonObjects;
-    }
-
-    private void getSdlSettings() {
-        mActiveInfoType = InfoType.NONE;
-        // Change registration to match the language of the head unit if needed
-        mCurrentHmiLanguage = sdlManager.getRegisterAppInterfaceResponse().getHmiDisplayLanguage();
-        mCurrentSdlLanguage = sdlManager.getRegisterAppInterfaceResponse().getLanguage();
-
-        if (mCurrentHmiLanguage != null && mCurrentSdlLanguage != null) {
-            if ((mCurrentHmiLanguage.compareTo(mRegisteredAppHmiLanguage) != 0) ||
-                    (mCurrentSdlLanguage.compareTo(mRegisteredAppSdlLanguage) != 0)) {
-                // determine to which locale the phone should be switched, register on Sync
-                mLocalizationUtil.determineLocale(mCurrentSdlLanguage);
-
-                ChangeRegistration msg = new ChangeRegistration(mCurrentSdlLanguage, mCurrentHmiLanguage);
-                msg.setCorrelationID(autoIncCorrId++);
-                msg.setOnRPCResponseListener(new OnRPCResponseListener() {
-                    @Override
-                    public void onResponse(int correlationId, RPCResponse response) {
-                        if ((response.getResultCode().equals(Result.SUCCESS)) && (response.getSuccess())) {
-                            //store the registered language if ChangeRegistration has been successful
-                            Log.i(SdlApplication.TAG, "ChangeRegistrationResponse: SUCCESS");
-                            mRegisteredAppSdlLanguage = mCurrentSdlLanguage;
-                            mRegisteredAppHmiLanguage = mCurrentHmiLanguage;
-                        }
-                    }
-                });
-                sdlManager.sendRPC(msg);
-            }
-        }
-
-        String units = null;
-        if (mCurrentHmiLanguage != null) {
-            if (mCurrentHmiLanguage.compareTo(Language.EN_US) == 0 ||
-                    mCurrentHmiLanguage.compareTo(Language.EN_GB) == 0) {
-                units = setUnitsImp();
-            } else {
-                units = setUnitsMetric();
-            }
-        }
-        Intent intent = new Intent("com.ford.mobileweather.Units");
-        if (mDataManager != null) {
-            mDataManager.setUnits(units);
-            LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-        }
-
-        // Get the display capabilities
-        DisplayCapabilities displayCapabilities = (DisplayCapabilities) sdlManager.getSystemCapabilityManager().getCapability(SystemCapabilityType.DISPLAY);
-        if (displayCapabilities != null) {
-            mDisplayType = displayCapabilities.getDisplayType();
-
-            Boolean gSupport = displayCapabilities.getGraphicSupported();
-            // Gen 1.0 will return NULL instead of not supported.
-            if (gSupport != null) {
-                mGraphicsSupported = gSupport.booleanValue();
-            } else {
-                mGraphicsSupported = false;
-            }
-
-            if (displayCapabilities.getTextFields() != null)
-                mTextFields = new ArrayList<TextField>(displayCapabilities.getTextFields());
-
-            ArrayList<String> templates = null;
-            if (displayCapabilities.getTemplatesAvailable() != null)
-                templates = new ArrayList<String>(displayCapabilities.getTemplatesAvailable());
-
-
-            mDisplayLayoutSupported = false;
-            if (templates != null && templates.contains("NON-MEDIA")) {
-                mDisplayLayoutSupported = true;
-            }
-
-            if (mDisplayType == DisplayType.CID) {
-                mNumberOfTextFields = 2;
-            } else if (mDisplayType == DisplayType.GEN3_8_INCH) {
-                mNumberOfTextFields = 3;
-            } else if (mDisplayType == DisplayType.MFD3 ||
-                    mDisplayType == DisplayType.MFD4 ||
-                    mDisplayType == DisplayType.MFD5) {
-                mNumberOfTextFields = 2;
-            } else if (mDisplayType == DisplayType.NGN) {
-                mNumberOfTextFields = 1;
-            } else {
-                mNumberOfTextFields = 1;
-            }
-
-            if (mTextFields != null && mTextFields.size() > 0) {
-                for (TextField field : mTextFields) {
-                    if (field.getName() == TextFieldName.mainField1) {
-                        if (mDisplayType == DisplayType.GEN3_8_INCH) {
-                            mLengthOfTextFields = 42;
-                        } else {
-                            mLengthOfTextFields = field.getWidth();
-                        }
-                        Log.i(SdlApplication.TAG, String.format(Locale.getDefault(), "MainField Length: %d", mLengthOfTextFields));
-                    }
-                }
-            }
-        }
-
-        if (mDisplayLayoutSupported) {
-            SetDisplayLayout layoutRequest = new SetDisplayLayout();
-            layoutRequest.setDisplayLayout("NON-MEDIA");
-            layoutRequest.setCorrelationID(autoIncCorrId++);
-            sdlManager.sendRPC(layoutRequest);
-        }
-
-
-        mFirstHmiNone = false;
     }
 
     private String setUnitsImp() {
@@ -1138,6 +861,11 @@ public class SdlService extends Service {
             @Override
             public void onTriggered(TriggerSource trigger) {
                 mActiveInfoType = InfoType.WEATHER_CONDITIONS;
+                // If softButtons for Daily or hourly forecast were already set on the screen, we need to reset their states, so when we click on them, they will be in the correct state
+                if(sdlManager.getScreenManager().getSoftButtonObjectByName(mShowPrevItem.getName()) != null) {
+                    mShowPrevItem.setCurrentStateName(mShowPrevItemState2Name);
+                    mShowNextItem.setCurrentStateName(mShowNextItemState1Name);
+                }
                 updateHmi(true);
             }
         });
@@ -1225,7 +953,6 @@ public class SdlService extends Service {
      * Display the current weather conditions.
      */
     private void showWeatherConditions(boolean includeSpeak) {
-        mTimedShowHandler.removeCallbacks(mTimedShowRunnable);
         if (mDataManager.isInErrorState()) {
             showWeatherError();
         } else if (mWeatherConditions != null) {
@@ -1259,7 +986,7 @@ public class SdlService extends Service {
                 windSpeed = UnitConverter.convertSpeedToImperial(windSpeed);
                 precipitation = UnitConverter.convertLengthToImperial(precipitation);
             }
-            if (mGraphicsSupported && mWeatherConditions.conditionIcon != null) {
+            if (mWeatherConditions.conditionIcon != null) {
                 String imageName = ImageProcessor.getFileFromURL(mWeatherConditions.conditionIcon);
                 mappedName = ImageProcessor.getMappedConditionsImageName(imageName, false);
 
@@ -1300,10 +1027,8 @@ public class SdlService extends Service {
             sdlManager.getScreenManager().setMediaTrackTextField(mediatrack);
             sdlManager.getScreenManager().setTextAlignment(TextAlignment.LEFT_ALIGNED);
             sdlManager.getScreenManager().setPrimaryGraphic(new SdlArtwork(mConditionIconFileName, FileType.GRAPHIC_PNG, conditionsID, true));
+            sdlManager.getScreenManager().setSoftButtonObjects(getSoftButtonsForMainScreens());
 
-            if (mDisplayType != DisplayType.CID && mDisplayType != DisplayType.NGN) {
-                sdlManager.getScreenManager().setSoftButtonObjects(getSoftButtonsForMainScreens());
-            }
             sdlManager.getScreenManager().commit(new CompletionListener() {
                 @Override
                 public void onComplete(boolean success) {
@@ -1416,25 +1141,20 @@ public class SdlService extends Service {
         String field3 = "";
         String field4 = "";
         String mediatrack = "";
+        List<SoftButtonObject> softButtonObjects = new ArrayList<>();
 
-        if (forecast_item_counter == 0) {
-            mShowPrevItem.transitionToStateByName(mShowPrevItemState2Name);
+        if(sdlManager.getScreenManager().getSoftButtonObjectByName(mShowNextItem.getName()) != null) {
+            checkSoftButtonStates();
         } else {
-            mShowPrevItem.transitionToStateByName(mShowPrevItemState1Name);
-        }
-        if (((mActiveInfoType == InfoType.DAILY_FORECAST) && (forecast_item_counter == DAILY_FORECAST_DAYS - 1)) ||
-                ((mActiveInfoType == InfoType.HOURLY_FORECAST) && (forecast_item_counter == HOURLY_FORECAST_HOURS - 1))) {
-            mShowNextItem.transitionToStateByName(mShowNextItemState2Name);
-        } else {
-            mShowNextItem.transitionToStateByName(mShowNextItemState1Name);
+            softButtonObjects.add(mShowPrevItem);
+            softButtonObjects.add(mShowListItems);
+            softButtonObjects.add(mShowNextItem);
+            softButtonObjects.add(mShowBack);
         }
 
         sdlManager.getScreenManager().beginTransaction();
-        List<SoftButtonObject> softButtonObjects = new ArrayList<>();
-        softButtonObjects.add(mShowPrevItem);
-        softButtonObjects.add(mShowListItems);
-        softButtonObjects.add(mShowNextItem);
-        softButtonObjects.add(mShowBack);
+
+
 
 
         if (forecast_items != null) {
@@ -1451,7 +1171,7 @@ public class SdlService extends Service {
 
         String mappedName = null;
         conditionsID = 0;
-        if (mGraphicsSupported && mWeatherConditions.conditionIcon != null && forecast_items != null) {
+        if (mWeatherConditions.conditionIcon != null && forecast_items != null) {
             String imageName = ImageProcessor.getFileFromURL(forecast_items[forecast_item_counter].conditionIcon);
             mappedName = ImageProcessor.getMappedConditionsImageName(imageName, false);
             if (mappedName != null) {
@@ -1462,11 +1182,9 @@ public class SdlService extends Service {
 
         sdlManager.getScreenManager().setTextAlignment(TextAlignment.LEFT_ALIGNED);
         sdlManager.getScreenManager().setPrimaryGraphic(new SdlArtwork(mConditionIconFileName, FileType.GRAPHIC_PNG, conditionsID, true));
-
-        if (mDisplayType != DisplayType.CID && mDisplayType != DisplayType.NGN) {
+        if(softButtonObjects.size() > 0){
             sdlManager.getScreenManager().setSoftButtonObjects(softButtonObjects);
         }
-
         sdlManager.getScreenManager().commit(new CompletionListener() {
             @Override
             public void onComplete(boolean success) {
@@ -1490,7 +1208,6 @@ public class SdlService extends Service {
     }
 
     private void showForecast(boolean includeSpeak, int numberOfForecasts) {
-        mTimedShowHandler.removeCallbacks(mTimedShowRunnable);
         Forecast[] forecast;
 
         if (mActiveInfoType == InfoType.HOURLY_FORECAST) {
@@ -1694,7 +1411,7 @@ public class SdlService extends Service {
     private SdlArtwork getArtWork(URL icon_url) {
         String mappedName = null;
         int conditionID = 0;
-        if (mGraphicsSupported && mWeatherConditions.conditionIcon != null) {
+        if (mWeatherConditions.conditionIcon != null) {
             String imageName = ImageProcessor.getFileFromURL(icon_url);
             mappedName = ImageProcessor.getMappedConditionsImageName(imageName, false);
 
@@ -1762,8 +1479,6 @@ public class SdlService extends Service {
     }
 
     private void showAlerts(boolean includeSpeak) {
-        mTimedShowHandler.removeCallbacks(mTimedShowRunnable);
-
         if (mDataManager.isInErrorState()) {
             showWeatherError();
         } else if (mAlerts != null) {
@@ -1803,9 +1518,6 @@ public class SdlService extends Service {
             softButtonObjects.add(mShowDailyForecast);
             softButtonObjects.add(mShowHourlyForecast);
             softButtonObjects.add(mShowBack);
-
-            mTimedShowRunnable = new TimedShowRunnable(showStrings, softButtonObjects, 0, TIMED_SHOW_DELAY);
-            mTimedShowHandler.post(mTimedShowRunnable);
 
             if (includeSpeak) {
                 Vector<TTSChunk> chunks = new Vector<TTSChunk>();
@@ -1949,7 +1661,7 @@ public class SdlService extends Service {
     }
 
     public void speak(@NonNull String ttsText, Integer correlationID) {
-        Speak msg = new Speak(TTSChunkFactory.createSimpleTTSChunks(ttsText));
+        Speak msg = new Speak(Arrays.asList(new TTSChunk(ttsText, SpeechCapabilities.TEXT)));
         msg.setCorrelationID(correlationID);
 
         sdlManager.sendRPC(msg); //TODO here
@@ -1958,8 +1670,8 @@ public class SdlService extends Service {
     public void setGlobalProperties(String helpPrompt, String timeoutPrompt, Integer correlationID) {
         SetGlobalProperties req = new SetGlobalProperties();
         req.setCorrelationID(correlationID);
-        req.setHelpPrompt(TTSChunkFactory.createSimpleTTSChunks(helpPrompt));
-        req.setTimeoutPrompt(TTSChunkFactory.createSimpleTTSChunks(timeoutPrompt));
+        req.setHelpPrompt(Arrays.asList(new TTSChunk(helpPrompt, SpeechCapabilities.TEXT)));
+        req.setTimeoutPrompt(Arrays.asList(new TTSChunk(timeoutPrompt, SpeechCapabilities.TEXT)));
         sdlManager.sendRPC(req);
     }
 }
