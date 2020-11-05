@@ -4,7 +4,7 @@ import com.sdl.mobileweather.smartdevicelink.SdlApplication;
 
 import android.content.Context;
 import android.content.Intent;
-import android.support.v4.content.WakefulBroadcastReceiver;
+import androidx.legacy.content.WakefulBroadcastReceiver;
 import android.util.Log;
 
 public class WeatherUpdateWakefulReceiver extends WakefulBroadcastReceiver {
