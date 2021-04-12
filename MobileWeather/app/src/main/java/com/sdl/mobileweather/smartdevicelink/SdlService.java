@@ -30,12 +30,15 @@ import com.sdl.mobileweather.weather.UnitConverter;
 import com.sdl.mobileweather.weather.WeatherAlert;
 import com.sdl.mobileweather.weather.WeatherConditions;
 import com.sdl.mobileweather.weather.WeatherDataManager;
+import com.smartdevicelink.managers.AlertCompletionListener;
 import com.smartdevicelink.managers.BaseSubManager;
 import com.smartdevicelink.managers.CompletionListener;
 import com.smartdevicelink.managers.SdlManager;
 import com.smartdevicelink.managers.SdlManagerListener;
 import com.smartdevicelink.managers.file.filetypes.SdlArtwork;
 import com.smartdevicelink.managers.lifecycle.LifecycleConfigurationUpdate;
+import com.smartdevicelink.managers.screen.AlertAudioData;
+import com.smartdevicelink.managers.screen.AlertView;
 import com.smartdevicelink.managers.screen.SoftButtonObject;
 import com.smartdevicelink.managers.screen.SoftButtonState;
 import com.smartdevicelink.managers.screen.choiceset.ChoiceCell;
@@ -46,8 +49,6 @@ import com.smartdevicelink.managers.screen.menu.MenuCell;
 import com.smartdevicelink.managers.screen.menu.MenuSelectionListener;
 import com.smartdevicelink.protocol.enums.FunctionID;
 import com.smartdevicelink.proxy.RPCNotification;
-import com.smartdevicelink.proxy.RPCResponse;
-import com.smartdevicelink.proxy.rpc.Alert;
 import com.smartdevicelink.proxy.rpc.DeviceStatus;
 import com.smartdevicelink.proxy.rpc.OnButtonEvent;
 import com.smartdevicelink.proxy.rpc.OnButtonPress;
@@ -69,11 +70,11 @@ import com.smartdevicelink.proxy.rpc.enums.SpeechCapabilities;
 import com.smartdevicelink.proxy.rpc.enums.TextAlignment;
 import com.smartdevicelink.proxy.rpc.enums.TriggerSource;
 import com.smartdevicelink.proxy.rpc.listeners.OnRPCNotificationListener;
-import com.smartdevicelink.proxy.rpc.listeners.OnRPCResponseListener;
 import com.smartdevicelink.transport.BaseTransportConfig;
 import com.smartdevicelink.transport.MultiplexTransportConfig;
 import com.smartdevicelink.transport.TCPTransportConfig;
 import com.smartdevicelink.util.DebugTool;
+import com.smartdevicelink.util.SystemInfo;
 
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -96,7 +97,6 @@ public class SdlService extends Service {
     private static final int STANDARD_FORECAST_DAYS = 3;
     private static final int DAILY_FORECAST_DAYS = 8; /* max. 8 days might be shown */
     private static final int HOURLY_FORECAST_HOURS = 12;
-    private static final int TIMED_SHOW_DELAY = 8000;
     private static final String APP_ICON_NAME = "icon";
     private static final String APP_ICON = APP_ICON_NAME + ".png";
     private static final String APP_NAME = "MobileWeather";
@@ -154,8 +154,6 @@ public class SdlService extends Service {
     private Handler mHandler = null;
     private HMILevel currentHMILevel = HMILevel.HMI_NONE;
     private LinkedList<WeatherAlert> mAlertQueue = new LinkedList<WeatherAlert>();
-    private int mLastAlertId;
-    private int mWelcomeCorrId;
     private boolean mLocationRdy = false;
     private boolean mConditionsRdy = false;
     private boolean mWelcomeComplete = false;
@@ -428,7 +426,7 @@ public class SdlService extends Service {
                     forecast_item_counter = mtemp_counter;
                     writeDisplay(true);
                 } else {
-                    speak("You have reached the beginning of the forecast list", autoIncCorrId++);
+                    speak("You have reached the beginning of the forecast list");
                 }
             }
 
@@ -450,7 +448,7 @@ public class SdlService extends Service {
                     writeDisplay(true);
                 }
                 if (mtemp_counter >= forecast_items.length) {
-                    speak("You have reached the end of the forecast list", autoIncCorrId++);
+                    speak("You have reached the end of the forecast list");
                 }
             }
 
@@ -737,6 +735,11 @@ public class SdlService extends Service {
                         return null;
                     }
                 }
+
+                @Override
+                public boolean onSystemInfoReceived(SystemInfo systemInfo) {
+                    return true;
+                }
             };
 
             // Create App Icon, this is set in the SdlManager builder
@@ -789,31 +792,21 @@ public class SdlService extends Service {
     }
 
     /**
-     *  Speaks "Welcome to MobileWeather" on first run
+     * Speaks "Welcome to MobileWeather" on first run
      */
     private void performWelcomeSpeak() {
-        mWelcomeCorrId = autoIncCorrId++;
-        Speak msg = new Speak(Arrays.asList(new TTSChunk(getResources().getString(R.string.welcome_speak), SpeechCapabilities.TEXT)));
-        msg.setCorrelationID(mWelcomeCorrId);
-        msg.setOnRPCResponseListener(new OnRPCResponseListener() {
-            @Override
-            public void onResponse(int correlationId, RPCResponse response) {
-                if (response.getCorrelationID() == mWelcomeCorrId) {
-                    if (mActiveInfoType == InfoType.NONE && mConditionsRdy && mLocationRdy) {
-                        if (mAlerts != null) {
-                            if (checkNewAlerts()) {
-                                performWeatherAlert(mAlertQueue.pop());
-                            } else {
-                                mActiveInfoType = InfoType.WEATHER_CONDITIONS;
-                            }
-                        } else {
-                            mActiveInfoType = InfoType.WEATHER_CONDITIONS;
-                        }
-                    }
+        speak(getResources().getString(R.string.welcome_speak));
+        if (mActiveInfoType == InfoType.NONE && mConditionsRdy && mLocationRdy) {
+            if (mAlerts != null) {
+                if (checkNewAlerts()) {
+                    performWeatherAlert(mAlertQueue.pop());
+                } else {
+                    mActiveInfoType = InfoType.WEATHER_CONDITIONS;
                 }
+            } else {
+                mActiveInfoType = InfoType.WEATHER_CONDITIONS;
             }
-        });
-        sdlManager.sendRPC(msg);
+        }
     }
 
     /**
@@ -860,7 +853,7 @@ public class SdlService extends Service {
 
         vrCommands = new Vector<>(Arrays.asList(getResources().getString(R.string.vr_current), getResources().getString(R.string.vr_current_cond)));
 
-        mainCell1 = new MenuCell(getResources().getString(R.string.cmd_current_cond), null, vrCommands, new MenuSelectionListener() {
+        mainCell1 = new MenuCell(getResources().getString(R.string.cmd_current_cond), null, null, null,  null, vrCommands, new MenuSelectionListener() {
             @Override
             public void onTriggered(TriggerSource trigger) {
                 mActiveInfoType = InfoType.WEATHER_CONDITIONS;
@@ -876,7 +869,7 @@ public class SdlService extends Service {
         vrCommands = new Vector<>(Arrays.asList(getResources().getString(R.string.vr_daily),
                 getResources().getString(R.string.vr_daily_forecast)));
 
-        mainCell2 = new MenuCell(getResources().getString(R.string.cmd_daily_forecast), null, vrCommands, new MenuSelectionListener() {
+        mainCell2 = new MenuCell(getResources().getString(R.string.cmd_daily_forecast), null, null, null, null, vrCommands, new MenuSelectionListener() {
             @Override
             public void onTriggered(TriggerSource trigger) {
                 mActiveInfoType = InfoType.DAILY_FORECAST;
@@ -887,7 +880,7 @@ public class SdlService extends Service {
         vrCommands = new Vector<>(Arrays.asList(getResources().getString(R.string.vr_hourly),
                 getResources().getString(R.string.vr_hourly_forecast)));
 
-        mainCell3 = new MenuCell(getResources().getString(R.string.cmd_hourly_forecast), null, vrCommands, new MenuSelectionListener() {
+        mainCell3 = new MenuCell(getResources().getString(R.string.cmd_hourly_forecast), null, null, null, null, vrCommands, new MenuSelectionListener() {
             @Override
             public void onTriggered(TriggerSource trigger) {
                 mActiveInfoType = InfoType.HOURLY_FORECAST;
@@ -898,7 +891,7 @@ public class SdlService extends Service {
         vrCommands = new Vector<>(Arrays.asList(getResources().getString(R.string.vr_change_units),
                 getResources().getString(R.string.vr_units)));
 
-        mainCell4 = new MenuCell(getResources().getString(R.string.cmd_change_units), null, vrCommands, new MenuSelectionListener() {
+        mainCell4 = new MenuCell(getResources().getString(R.string.cmd_change_units), null, null, null, null, vrCommands, new MenuSelectionListener() {
             @Override
             public void onTriggered(TriggerSource trigger) {
                 ChoiceSet changeUnitChoiceSet = new ChoiceSet("Units:", changeUnitCellList, new ChoiceSetSelectionListener() {
@@ -922,10 +915,9 @@ public class SdlService extends Service {
             }
         });
         vrCommands = new Vector<>(Arrays.asList(getResources().getString(R.string.vr_alerts)));
-        mainCell5 = new MenuCell(getResources().getString(R.string.cmd_alerts), null, vrCommands, new MenuSelectionListener() {
+        mainCell5 = new MenuCell(getResources().getString(R.string.cmd_alerts), null, null, null, null, vrCommands, new MenuSelectionListener() {
             @Override
             public void onTriggered(TriggerSource trigger) {
-                Log.i("Julian", "onTriggered: Alerts");
                 mActiveInfoType = InfoType.ALERTS;
                 updateHmi(true);
             }
@@ -1041,8 +1033,6 @@ public class SdlService extends Service {
             });
             if (includeSpeak) {
                 String speakString;
-                Vector<TTSChunk> chunks = new Vector<TTSChunk>();
-                TTSChunk chunk = new TTSChunk();
                 if (temperature <= -1) {
                     speakString = String.format(Locale.getDefault(),
                             getResources().getString(R.string.weather_conditions_neg_temp_speak),
@@ -1052,13 +1042,7 @@ public class SdlService extends Service {
                             getResources().getString(R.string.weather_conditions_speak),
                             title, temperature, humidity, windSpeed, speedUnitsFull);
                 }
-                chunk.setText(speakString);
-                chunk.setType(SpeechCapabilities.TEXT);
-                chunks.add(chunk);
-                Speak speakRequest = new Speak();
-                speakRequest.setTtsChunks(chunks);
-                speakRequest.setCorrelationID(autoIncCorrId++);
-                sdlManager.sendRPC(speakRequest);
+                speak(speakString);
             }
         } else {
             showNoConditionsAvail();
@@ -1087,7 +1071,7 @@ public class SdlService extends Service {
             }
         });
         if (mFirstUnknownError) {
-            speak(getResources().getString(R.string.conditions_speak), autoIncCorrId++);
+            speak(getResources().getString(R.string.conditions_speak));
             mFirstUnknownError = false;
         }
     }
@@ -1135,7 +1119,7 @@ public class SdlService extends Service {
 
             }
         });
-        speak(errorTTSStr, autoIncCorrId++);
+        speak(errorTTSStr);
     }
 
     private void writeDisplay(boolean includeSpeak) {
@@ -1551,7 +1535,7 @@ public class SdlService extends Service {
             });
 
             if (includeSpeak) {
-                speak(getResources().getString(R.string.weather_alerts_speak), autoIncCorrId++);
+                speak(getResources().getString(R.string.weather_alerts_speak));
             }
         }
     }
@@ -1564,33 +1548,25 @@ public class SdlService extends Service {
                 alert.message, timeString.replace(':', ' ').replace("00", ""));
         Log.d(SdlApplication.TAG, "performWeatherAlert: speak string - " + speakString);
 
-        Vector<TTSChunk> chunks = new Vector<TTSChunk>();
-        TTSChunk chunk = new TTSChunk();
-        chunk.setText(speakString);
-        chunk.setType(SpeechCapabilities.TEXT);
-        chunks.add(chunk);
+        AlertAudioData alertAudioData = new AlertAudioData(speakString);
 
-        Alert alertRequest = new Alert();
-        alertRequest.setTtsChunks(chunks);
-        alertRequest.setAlertText1(alert.message);
-        alertRequest.setDuration(7000);
-        int coId = autoIncCorrId++;
-        mLastAlertId = coId;
-        alertRequest.setCorrelationID(coId);
-        alertRequest.setOnRPCResponseListener(new OnRPCResponseListener() {
+        AlertView.Builder builder = new AlertView.Builder();
+        builder.setText(alert.message);
+        builder.setTimeout(7);
+        builder.setAudio(alertAudioData);
+        AlertView alertView = builder.build();
+
+        sdlManager.getScreenManager().presentAlert(alertView, new AlertCompletionListener() {
             @Override
-            public void onResponse(int correlationId, RPCResponse response) {
-                if (response.getCorrelationID() == mLastAlertId) {
-                    if (mAlertQueue.size() > 0) {
-                        performWeatherAlert(mAlertQueue.pop());
-                    } else if (mActiveInfoType == InfoType.NONE && mConditionsRdy && mLocationRdy) {
-                        mWelcomeComplete = true;
-                        mActiveInfoType = InfoType.WEATHER_CONDITIONS;
-                    }
+            public void onComplete(boolean success, Integer tryAgainTime) {
+                if (mAlertQueue.size() > 0) {
+                    performWeatherAlert(mAlertQueue.pop());
+                } else if (mActiveInfoType == InfoType.NONE && mConditionsRdy && mLocationRdy) {
+                    mWelcomeComplete = true;
+                    mActiveInfoType = InfoType.WEATHER_CONDITIONS;
                 }
             }
         });
-        sdlManager.sendRPC(alertRequest);
     }
 
     private void showHourlyForecast(boolean includeSpeak) {
@@ -1663,11 +1639,9 @@ public class SdlService extends Service {
         return haveNewAlerts;
     }
 
-    public void speak(@NonNull String ttsText, Integer correlationID) {
+    public void speak(@NonNull String ttsText) {
         Speak msg = new Speak(Arrays.asList(new TTSChunk(ttsText, SpeechCapabilities.TEXT)));
-        msg.setCorrelationID(correlationID);
-
-        sdlManager.sendRPC(msg); //TODO here
+        sdlManager.sendRPC(msg);
     }
 
     public void setGlobalProperties(String helpPrompt, String timeoutPrompt, Integer correlationID) {
