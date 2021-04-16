@@ -8,6 +8,7 @@
 /.idea/jarRepositories.xml
 /.idea/gradle.xml 
 /.idea/compiler.xml 
+/.idea/vsc.xml
 .DS_Store
 /build
 /captures
