@@ -6,6 +6,7 @@ import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.sdl.mobileweather.artifact.GPSLocation;
 import com.sdl.mobileweather.artifact.WeatherLocation;
 import com.sdl.mobileweather.connection.HttpConnection;
 import com.sdl.mobileweather.processor.JsonProcessor;
@@ -61,7 +62,8 @@ public class OpenWeatherMapService extends WeatherService {
 	 * This is 0 because it's the first index and only one URL is used for weather data at a time
 	 */
 	private static final int ONLY_URL_INDEX = 0;
-	private static final int HTTP_OK = 200;
+	public static final int REQUEST_SUCCESS = -1;
+	public static final int REQUEST_FAILURE = -2;
 
 
 	public OpenWeatherMapService() {
@@ -87,7 +89,7 @@ public class OpenWeatherMapService extends WeatherService {
 				Log.d("MobileWeather", "updateWeatherData - getting json");
 				httpResult = httpRequest.sendRequest(urls[ONLY_URL_INDEX], HttpConnection.RequestMethod.GET, null, "application/json");
 				int statusCode = httpRequest.getStatusCode(httpResult);
-				if (statusCode == HTTP_OK) {
+				if (statusCode == REQUEST_SUCCESS) {
 					Log.d("MobileWeather", "updateWeatherData - parsing conditions json");
 					JSONObject jsonRoot = jsonProcessor.getJsonFromString(httpResult);
 					if (jsonRoot != null) {
@@ -119,16 +121,18 @@ public class OpenWeatherMapService extends WeatherService {
 
 						alerts = mWeatherProcessor.getAlerts(jsonRoot);
 						mDataManager.setAlerts(alerts);
-						Log.d("MobileWeather", "updateWeatherData - new Alerts");
-						Intent intent = new Intent("com.sdl.mobileweather.Alerts");
-						lbManager.sendBroadcast(intent);
+						if (alerts != null) {
+							Log.d("MobileWeather", "updateWeatherData - new Alerts");
+							Intent intent = new Intent("com.sdl.mobileweather.Alerts");
+							lbManager.sendBroadcast(intent);
+						}
 					}
 
 					reportApiAvail(true);
 
-				} else if (statusCode == -2){
+				} else if (statusCode == REQUEST_FAILURE){
 					reportConnectionAvail(false);
-				}else{
+				} else {
 					reportApiAvail(false);
 				}
 			}
@@ -170,5 +174,18 @@ public class OpenWeatherMapService extends WeatherService {
 
 		Uri everythingUri = builder.build();
 		return new URL(everythingUri.toString());
+	}
+
+	public int getRequestStatus() {
+		String httpResult = null;
+		HttpConnection httpRequest = new HttpConnection();
+		WeatherLocation location = new WeatherLocation();
+		location.gpsLocation = new GPSLocation();
+		location.gpsLocation.latitude = "0.0";
+		location.gpsLocation.longitude = "0.0";
+
+		URL[] urls = getURLs(location);
+		httpResult = httpRequest.sendRequest(urls[ONLY_URL_INDEX], HttpConnection.RequestMethod.GET, null, "application/json");
+		return httpRequest.getStatusCode(httpResult);
 	}
 }
