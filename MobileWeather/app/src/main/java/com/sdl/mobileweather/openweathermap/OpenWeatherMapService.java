@@ -54,6 +54,8 @@ public class OpenWeatherMapService extends WeatherService {
 	private static final String ONE_CALL_API_CALL_TYPE = "onecall";
 	private static final String LATITUDE_PARAMETER = "lat";
 	private static final String LONGITUDE_PARAMETER = "lon";
+	private static final String UNITS_PARAMETER = "units";
+	private static final String METRIC = "metric";
 	/**
 	 * This parameter is used to specify the API key for the API call
 	 */
@@ -64,6 +66,7 @@ public class OpenWeatherMapService extends WeatherService {
 	private static final int ONLY_URL_INDEX = 0;
 	public static final int REQUEST_SUCCESS = -1;
 	public static final int REQUEST_FAILURE = -2;
+	public static final String TAG = "MobileWeather";
 
 
 	public OpenWeatherMapService() {
@@ -81,37 +84,38 @@ public class OpenWeatherMapService extends WeatherService {
 		WeatherAlert[] alerts = null;
 		String httpResult = null;
 
-		Log.d("MobileWeather", "updateWeatherData");
+		Log.d(TAG, "updateWeatherData");
 		if (urls.length == 1 && mDataManager != null && mWeatherProcessor != null) {
 			LocalBroadcastManager lbManager = LocalBroadcastManager.getInstance(this);
-			Log.d("MobileWeather", "updateWeatherData - valid urls");
+			Log.d(TAG, "updateWeatherData - valid urls");
 			if (urls[ONLY_URL_INDEX] != null) {
-				Log.d("MobileWeather", "updateWeatherData - getting json");
+				Log.d(TAG, urls[ONLY_URL_INDEX].toString());
+				Log.d(TAG, "updateWeatherData - getting json");
 				httpResult = httpRequest.sendRequest(urls[ONLY_URL_INDEX], HttpConnection.RequestMethod.GET, null, "application/json");
 				int statusCode = httpRequest.getStatusCode(httpResult);
 				if (statusCode == REQUEST_SUCCESS) {
-					Log.d("MobileWeather", "updateWeatherData - parsing conditions json");
+					Log.d(TAG, "updateWeatherData - parsing conditions json");
 					JSONObject jsonRoot = jsonProcessor.getJsonFromString(httpResult);
 					if (jsonRoot != null) {
-						Log.d("MobileWeather", "updateWeatherData - parsing conditions");
+						Log.d(TAG, "updateWeatherData - parsing conditions");
 						conditions = mWeatherProcessor.getWeatherConditions(jsonRoot);
 						mDataManager.setWeatherConditions(conditions);
 						if (conditions != null) {
-							Log.d("MobileWeather", "updateWeatherData - new conditions");
+							Log.d(TAG, "updateWeatherData - new conditions");
 							Intent intent = new Intent("com.sdl.mobileweather.WeatherConditions");
 							lbManager.sendBroadcast(intent);
 						}
 
-						Log.d("MobileWeather", "updateWeatherData - parsing forecast");
+						Log.d(TAG, "updateWeatherData - parsing forecast");
 						forecast = mWeatherProcessor.getForecast(jsonRoot);
 						mDataManager.setForecast(forecast);
 						if (forecast != null) {
-							Log.d("MobileWeather", "updateWeatherData - new forecast");
+							Log.d(TAG, "updateWeatherData - new forecast");
 							Intent intent = new Intent("com.sdl.mobileweather.Forecast");
 							lbManager.sendBroadcast(intent);
 						}
 
-						Log.d("MobileWeather", "updateWeatherData - parsing hourly forecast");
+						Log.d(TAG, "updateWeatherData - parsing hourly forecast");
 						hourlyForecast = mWeatherProcessor.getHourlyForecast(jsonRoot);
 						mDataManager.setHourlyForecast(hourlyForecast);
 						if (hourlyForecast != null) {
@@ -122,7 +126,7 @@ public class OpenWeatherMapService extends WeatherService {
 						alerts = mWeatherProcessor.getAlerts(jsonRoot);
 						mDataManager.setAlerts(alerts);
 						if (alerts != null) {
-							Log.d("MobileWeather", "updateWeatherData - new Alerts");
+							Log.d(TAG, "updateWeatherData - new Alerts");
 							Intent intent = new Intent("com.sdl.mobileweather.Alerts");
 							lbManager.sendBroadcast(intent);
 						}
@@ -170,6 +174,7 @@ public class OpenWeatherMapService extends WeatherService {
 				.appendPath(ONE_CALL_API_CALL_TYPE)
 				.appendQueryParameter(LATITUDE_PARAMETER, currentLocation.gpsLocation.latitude)
 				.appendQueryParameter(LONGITUDE_PARAMETER, currentLocation.gpsLocation.longitude)
+				.appendQueryParameter(UNITS_PARAMETER, METRIC)
 				.appendQueryParameter(APP_ID_PARAMETER, API_KEY);
 
 		Uri everythingUri = builder.build();

@@ -1,11 +1,16 @@
 package com.sdl.mobileweather.processor;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import android.app.Activity;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -13,7 +18,10 @@ import android.widget.ImageView;
 
 import com.sdl.mobileweather.smartdevicelink.SdlApplication;
 
+import javax.net.ssl.HttpsURLConnection;
+
 public class ImageProcessor {
+	private static final ExecutorService executorService = Executors.newCachedThreadPool();
 
 	private static final Map<String, String> mConditionsImageMap = 
 		    Collections.unmodifiableMap(new HashMap<String, String>() {
@@ -100,19 +108,41 @@ public class ImageProcessor {
 		}
 	}
 	
-	public static void setConditionsImage(ImageView imageView, URL conditionsImageURL, boolean small) {
-		String conditionsImageName = getFileFromURL(conditionsImageURL);
+	public static void setConditionsImage(final ImageView imageView, final URL conditionsImageURL, final Activity activity/*, boolean small*/) {
+
+		/*String conditionsImageName = getFileFromURL(conditionsImageURL);
 		String mappedName = getMappedConditionsImageName(conditionsImageName, small);
 		if (mappedName != null) {
 			Bitmap mappedImage = getBitmapFromResources(mappedName);
 			imageView.setImageBitmap(mappedImage);
 		}
 		else {
-			// TODO
-			/*final DownloadTask downloadTask = new DownloadTask(context);
-			downloadTask.execute(conditionsImageURL.toString());
-			//imageView.setImageBitmap(bm);*/
-		}
+			TODO
+			final SetImageFromURLTask downloadTask = new SetImageFromURLTask(conditionsImageURL, imageView);
+
+		}*/
+
+		executorService.execute(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					HttpsURLConnection connection = (HttpsURLConnection) conditionsImageURL.openConnection();
+					connection.setDoInput(true);
+					connection.connect();
+					InputStream inputStream = connection.getInputStream();
+					final Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+
+					activity.runOnUiThread(new Runnable() {
+						@Override
+						public void run() {
+							imageView.setImageBitmap(bitmap);
+						}
+					});
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		});
 	}
 	
 	public static byte[] getConditionsImageBytes(URL conditionsImageURL) {

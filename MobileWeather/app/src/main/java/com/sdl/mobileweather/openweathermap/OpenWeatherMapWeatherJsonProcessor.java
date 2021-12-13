@@ -1,8 +1,7 @@
 package com.sdl.mobileweather.openweathermap;
 
-import static net.hockeyapp.android.Constants.BASE_URL;
-
 import android.net.Uri;
+import android.util.Log;
 
 import com.sdl.mobileweather.weather.Forecast;
 import com.sdl.mobileweather.weather.WeatherAlert;
@@ -16,11 +15,11 @@ import org.json.JSONObject;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Calendar;
-import java.util.Vector;
 
 //TODO - Convert WUnderground specific code to OpenWeatherMap specific code
 public class OpenWeatherMapWeatherJsonProcessor implements WeatherJsonProcessor {
 	private static class Constants {
+		public static final String TAG = "MobileWeather";
 		private static final String CURRENT = "current";
 		private static final String ICON_URL = "icon_url";
 		private static final String WEATHER = "weather";
@@ -34,10 +33,11 @@ public class OpenWeatherMapWeatherJsonProcessor implements WeatherJsonProcessor 
 		private static final String RAIN = "rain";
 		private static final String SNOW = "snow";
 		private static final String TIME_1_HR = "1h";
-		private static final String FORECAST = "forecast";
+		private static final String DAILY_FORECAST = "daily";
+		private static final String HOURLY_FORECAST = "hourly";
 		private static final String FORECASTDAY = "forecastday";
 		private static final String SIMPLEFORECAST = "simpleforecast";
-		private static final String DATE = "date";
+		private static final String DATE = "dt";
 		private static final String EPOCH = "epoch";
 		private static final String HIGH = "high";
 		private static final String CELSIUS = "celsius";
@@ -64,201 +64,265 @@ public class OpenWeatherMapWeatherJsonProcessor implements WeatherJsonProcessor 
 		private static final String DESCRIPTION = "description";
 		private static final String START_TIME = "start";
 		private static final String END_TIME = "end";
+		private static final String PRECIPITATION_CHANCE = "pop";
+		private static final float METERS_PER_SEC_TO_KPH = 3.6F;
+		private static final String MIN = "min";
+		private static final String MAX = "max";
+		private static final String DAY = "day";
+		private static final String FEELS_LIKE = "feels_like";
 	}
 
-
-	@Override
-	public Forecast[] getForecast(JSONObject jsonRoot) {
-		Vector<Forecast> forecastVector = new Vector<Forecast>();
-		JSONArray forecastDays = null;
-		JSONObject simpleForecast = null;
-		JSONObject forecastObj = null;
+	private JSONArray getForecastArray(JSONObject jsonRoot) {
+		JSONArray forecastObj = null;
 
 		try {
-			forecastObj = jsonRoot.getJSONObject(Constants.FORECAST);
+			forecastObj = jsonRoot.getJSONArray(Constants.DAILY_FORECAST);
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		if (forecastObj != null) {
-			try {
-				simpleForecast = forecastObj.getJSONObject(Constants.SIMPLEFORECAST);
-			} catch (JSONException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			if (simpleForecast != null) {
-				try {
-					forecastDays = simpleForecast.getJSONArray(Constants.FORECASTDAY);
-				} catch (JSONException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				if (forecastDays != null) {
-					int numberOfDays = forecastDays.length();
-					for (int dayCounter = 0; dayCounter < numberOfDays; dayCounter++) {
-						JSONObject day = null;
-						try {
-							day = forecastDays.getJSONObject(dayCounter);
-						} catch (JSONException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						}
 
-						Forecast currentForecast = new Forecast();
-						if (day != null && currentForecast != null) {
-							JSONObject date = null;
-							try {
-								date = day.getJSONObject(Constants.DATE);
-							} catch (JSONException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-							if (date != null) {
-								String epoch = null;
-								try {
-									epoch = date.getString(Constants.EPOCH);
-								} catch (JSONException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
-								}
-								if (epoch != null) {
-									long epochLong = Long.parseLong(epoch, 10);
-									Calendar forecastDate = Calendar.getInstance();
-									forecastDate.setTimeInMillis(epochLong);
-									currentForecast.date = forecastDate;
-								}										
-							}
-						
-							JSONObject high = null;
-							try {
-								high = day.getJSONObject(Constants.HIGH);
-							} catch (JSONException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-							if (high != null) {
-								try {
-									currentForecast.highTemperature = Float.valueOf(high.getInt(Constants.CELSIUS));
-								} catch (JSONException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
-								}										
-							}
+		return forecastObj;
+	}
 
-							JSONObject low = null;
-							try {
-								low = day.getJSONObject(Constants.LOW);
-							} catch (JSONException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-							if (low != null) {
-								try {
-									currentForecast.lowTemperature = Float.valueOf(low.getInt(Constants.CELSIUS));
-								} catch (JSONException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
-								}										
-							}
-							
-							try {
-								currentForecast.precipitationChance = Integer.valueOf(day.getInt(Constants.POP));
-							} catch (JSONException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}										
+	private JSONArray getHourForecastArray(JSONObject jsonRoot) {
+		JSONArray forecastObj = null;
 
-							try {
-								currentForecast.conditionTitle = day.getString(Constants.CONDITIONS);
-							} catch (JSONException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-							
-							try {
-								currentForecast.conditionIcon = new URL(day.getString(Constants.ICON_URL));
-							} catch (MalformedURLException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							} catch (JSONException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-
-							JSONObject qpf = null;
-							try {
-								qpf = day.getJSONObject(Constants.QPF_ALLDAY);
-							} catch (JSONException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-							if (qpf != null) {
-								try {
-									currentForecast.precipitation = Float.valueOf((float) qpf.getDouble(Constants.MM));
-								} catch (JSONException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
-								}										
-							}
-							
-							JSONObject snow = null;
-							try {
-								snow = day.getJSONObject(Constants.SNOW_ALLDAY);
-							} catch (JSONException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-							if (snow != null) {
-								try {
-									currentForecast.snow = Float.valueOf((float) snow.getDouble(Constants.CM));
-								} catch (JSONException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
-								}										
-							}
-							
-							try {
-								currentForecast.humidity = Float.valueOf((float) day.getDouble(Constants.AVEHUMIDITY));
-							} catch (JSONException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}										
-							
-							JSONObject wind = null;
-							try {
-								wind = day.getJSONObject(Constants.AVEWIND);
-							} catch (JSONException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-							if (wind != null) {
-								try {
-									currentForecast.windSpeed = Float.valueOf((float) wind.getDouble(Constants.KPH));
-								} catch (JSONException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
-								}										
-							}
-						}
-						forecastVector.add(currentForecast);
-					}
-				}
-			}
+		try {
+			forecastObj = jsonRoot.getJSONArray(Constants.HOURLY_FORECAST);
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		if (forecastVector.size() > 0) {
-			Forecast[] forecastArray = forecastVector.toArray(new Forecast[forecastVector.size()]);
-			return forecastArray;
+
+		return forecastObj;
+	}
+
+	private void tryToSetForecastDate(Forecast forecast, JSONObject forecastObj) {
+		try {
+			Calendar date = Calendar.getInstance();
+			date.setTimeInMillis(forecastObj.getLong(Constants.DATE));
+			forecast.date = date;
 		}
-		else {
-			return null;
+		catch (JSONException e) {
+			e.printStackTrace();
 		}
 	}
-	
+	private void tryToSetForecastHumidity(Forecast forecast, JSONObject forecastObj) {
+		try {
+			forecast.humidity = Float.valueOf(forecastObj.getString(Constants.HUMIDITY));
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+	private void tryToSetDayForecastPrecipitation(Forecast forecast, JSONObject forecastObj) {
+		forecast.precipitation = 0.0F;
+		try {
+			forecast.precipitation += (float) forecastObj.getDouble(Constants.RAIN);
+		}
+		catch (JSONException e) {
+			e.printStackTrace();
+		}
+		try {
+			forecast.precipitation += (float) forecastObj.getDouble(Constants.SNOW);
+		}
+		catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+	private void tryToSetHourForecastPrecipitation(Forecast forecast, JSONObject forecastObj) {
+		forecast.precipitation = 0.0F;
+		try {
+			forecast.precipitation += (float) forecastObj.getJSONObject(Constants.RAIN).getDouble(Constants.TIME_1_HR);
+			//forecast.precipitation += (float) forecastObj.getDouble(Constants.RAIN);
+		}
+		catch (JSONException e) {
+			e.printStackTrace();
+		}
+		try {
+			forecast.precipitation += (float) forecastObj.getJSONObject(Constants.SNOW).getDouble(Constants.TIME_1_HR);
+			//forecast.precipitation += (float) forecastObj.getDouble(Constants.SNOW);
+		}
+		catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+	private void tryToSetDayForecastSnow(Forecast forecast, JSONObject forecastObj) {
+		try {
+			forecast.precipitation = (float) forecastObj.getDouble(Constants.SNOW);
+		}
+		catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+	private void tryToSetHourForecastSnow(Forecast forecast, JSONObject forecastObj) {
+		try {
+			forecast.precipitation = (float) forecastObj.getJSONObject(Constants.SNOW).getDouble(Constants.TIME_1_HR);
+		}
+		catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+	private void tryToSetForecastPrecipitationChance(Forecast forecast, JSONObject forecastObj) {
+		try {
+			//The API returns the probability as a float between 0 and 1, therefore it must be mapped to an integer between 0 and 100
+			forecast.precipitationChance = (int)(forecastObj.getDouble(Constants.PRECIPITATION_CHANCE) * 100.0);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+	private void tryToSetForecastWindSpeed(Forecast forecast, JSONObject forecastObj) {
+		try {
+			forecast.windSpeed = (float) forecastObj.getDouble(Constants.WIND_SPEED) * Constants.METERS_PER_SEC_TO_KPH;
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	private void tryToSetForecastHighTemperature(Forecast forecast, JSONObject forecastObj) {
+		try {
+			forecast.highTemperature = (float) forecastObj.getJSONObject(Constants.TEMP).getDouble(Constants.MAX);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+	private void tryToSetForecastLowTemperature(Forecast forecast, JSONObject forecastObj) {
+		try {
+			forecast.lowTemperature = (float) forecastObj.getJSONObject(Constants.TEMP).getDouble(Constants.MIN);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+	private void tryToSetForecastDayTemperature(Forecast forecast, JSONObject forecastObj) {
+		try {
+			forecast.temperature = (float) forecastObj.getJSONObject(Constants.TEMP).getDouble(Constants.DAY);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+	private void tryToSetForecastHourTemperature(Forecast forecast, JSONObject forecastObj) {
+		try {
+			forecast.temperature = (float) forecastObj.getDouble(Constants.TEMP);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+	private void tryToSetForecastIcon(Forecast forecast, JSONObject weather) {
+		try {
+			String iconId = weather.getString(Constants.ICON_PATH);
+
+			forecast.conditionIcon = getWeatherIconURL(iconId);
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	private void tryToSetForecastTitle(Forecast forecast, JSONObject weather) {
+		try {
+			forecast.conditionTitle = weather.getString(Constants.MAIN);
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	private Forecast getSingleDayForecast(JSONArray forecastArray, int index) {
+		Forecast singleDayForecast = null;
+		JSONObject forecast = null;
+
+		try {
+			forecast = forecastArray.getJSONObject(index);
+		}
+		catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		if (forecast != null) {
+			singleDayForecast = new Forecast();
+			tryToSetForecastDate(singleDayForecast, forecast);
+			tryToSetForecastHumidity(singleDayForecast, forecast);
+			tryToSetDayForecastPrecipitation(singleDayForecast, forecast);
+			tryToSetDayForecastSnow(singleDayForecast, forecast);
+			tryToSetForecastPrecipitationChance(singleDayForecast, forecast);
+			tryToSetForecastWindSpeed(singleDayForecast, forecast);
+			tryToSetForecastHighTemperature(singleDayForecast, forecast);
+			tryToSetForecastLowTemperature(singleDayForecast, forecast);
+			tryToSetForecastDayTemperature(singleDayForecast, forecast);
+			JSONObject weather = getWeather(forecast);
+			if (weather != null) {
+				tryToSetForecastIcon(singleDayForecast, weather);
+				tryToSetForecastTitle(singleDayForecast, weather);
+			}
+		}
+
+		return singleDayForecast;
+	}
+
+	@Override
+	public Forecast[] getForecast(JSONObject jsonRoot) {
+		Forecast[] forecasts = null;
+		JSONArray forecastArray = getForecastArray(jsonRoot);
+
+		if (forecastArray != null) {
+			int forecastLength = forecastArray.length();
+			forecasts = new Forecast[forecastLength];
+			for (int i = 0; i < forecastLength; i++) {
+				forecasts[i] = getSingleDayForecast(forecastArray, i);
+			}
+		}
+
+		return forecasts;
+	}
+
+	private Forecast getSingleHourForecast(JSONArray forecastArray, int index) {
+		Forecast singleHourForecast = null;
+		JSONObject forecast = null;
+
+		try {
+			forecast = forecastArray.getJSONObject(index);
+		}
+		catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		if (forecast != null) {
+			singleHourForecast = new Forecast();
+			tryToSetForecastDate(singleHourForecast, forecast);
+			tryToSetForecastHumidity(singleHourForecast, forecast);
+			tryToSetHourForecastPrecipitation(singleHourForecast, forecast);
+			tryToSetHourForecastSnow(singleHourForecast, forecast);
+			tryToSetForecastPrecipitationChance(singleHourForecast, forecast);
+			tryToSetForecastWindSpeed(singleHourForecast, forecast);
+			//tryToSetForecastHighTemperature(singleHourForecast, forecast);
+			//tryToSetForecastLowTemperature(singleHourForecast, forecast);
+			tryToSetForecastHourTemperature(singleHourForecast, forecast);
+			JSONObject weather = getWeather(forecast);
+			if (weather != null) {
+				tryToSetForecastIcon(singleHourForecast, weather);
+				tryToSetForecastTitle(singleHourForecast, weather);
+			}
+		}
+
+		return singleHourForecast;
+	}
+
 	@Override
 	public Forecast[] getHourlyForecast(JSONObject jsonRoot) {
-		// TODO Auto-generated method stub
-		return null;
+		Forecast[] forecasts = null;
+		JSONArray forecastArray = getHourForecastArray(jsonRoot);
+
+		if (forecastArray != null) {
+			int forecastLength = forecastArray.length();
+			forecasts = new Forecast[forecastLength];
+			for (int i = 0; i < forecastLength; i++) {
+				forecasts[i] = getSingleHourForecast(forecastArray, i);
+			}
+		}
+
+		return forecasts;
 	}
 
 	private JSONObject getCurrent(JSONObject conditions) {
@@ -286,14 +350,16 @@ public class OpenWeatherMapWeatherJsonProcessor implements WeatherJsonProcessor 
 
 		Uri.Builder builder = new Uri.Builder();
 		builder.scheme(Constants.URI_SCHEME)
-				.authority(BASE_URL)
+				.authority(Constants.BASE_URL)
 				.appendPath(Constants.IMAGE_PATH)
 				.appendPath(Constants.WN_PATH)
 				.appendPath(filename);
 
 		String uriString = builder.build().toString();
-
-		return new URL(uriString);
+		URL url = new URL(uriString);
+		String urlString = url.toString();
+		Log.d(Constants.TAG, urlString);
+		return url;
 	}
 	private void tryToSetConditionIconFromCurrent(WeatherConditions weatherConditions, JSONObject weather) {
 		try {
@@ -334,7 +400,7 @@ public class OpenWeatherMapWeatherJsonProcessor implements WeatherJsonProcessor 
 	}
 	private void tryToSetConditionWindSpeedFromCurrent(WeatherConditions weatherConditions, JSONObject current) {
 		try {
-			weatherConditions.windSpeed = (float) current.getDouble(Constants.WIND_SPEED);
+			weatherConditions.windSpeed = (float) current.getDouble(Constants.WIND_SPEED) * Constants.METERS_PER_SEC_TO_KPH;
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -342,7 +408,7 @@ public class OpenWeatherMapWeatherJsonProcessor implements WeatherJsonProcessor 
 	}
 	private void tryToSetConditionWindSpeedGustFromCurrent(WeatherConditions weatherConditions, JSONObject current) {
 		try {
-			weatherConditions.windSpeedGust = (float) current.getDouble(Constants.WIND_GUST);
+			weatherConditions.windSpeedGust = (float) current.getDouble(Constants.WIND_GUST) * Constants.METERS_PER_SEC_TO_KPH;
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -358,7 +424,7 @@ public class OpenWeatherMapWeatherJsonProcessor implements WeatherJsonProcessor 
 	}
 	private void tryToSetConditionFeelsLikeTempFromCurrent(WeatherConditions weatherConditions, JSONObject current) {
 		try {
-			weatherConditions.feelsLikeTemperature = (float) current.getDouble(Constants.HEAT_INDEX_C);
+			weatherConditions.feelsLikeTemperature = (float) current.getDouble(Constants.FEELS_LIKE);
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -472,9 +538,11 @@ public class OpenWeatherMapWeatherJsonProcessor implements WeatherJsonProcessor 
 			tryToSetAlertDescription(weatherAlert, alert);
 			tryToSetAlertDateIssued(weatherAlert, alert);
 			tryToSetAlertDateExpires(weatherAlert, alert);
-			//TODO - set alert type somehow
+			/*TODO - Set alert type somehow
+			 * This could be difficult because the current implementation uses enum types,
+			 * but the API provides more verbose strings
+			 */
 		}
-
 
 		return weatherAlert;
 	}

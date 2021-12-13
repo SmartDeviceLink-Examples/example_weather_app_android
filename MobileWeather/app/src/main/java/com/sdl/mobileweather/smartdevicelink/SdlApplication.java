@@ -10,10 +10,11 @@ import android.content.res.Configuration;
 import android.util.Log;
 
 import com.sdl.mobileweather.R;
-import com.sdl.mobileweather.forecastio.ForecastIoService;
+//import com.sdl.mobileweather.forecastio.ForecastIoService;
 import com.sdl.mobileweather.localization.LocalizationUtil;
 import com.sdl.mobileweather.location.PlayServicesConnectionChecker;
 import com.sdl.mobileweather.location.WeatherLocationServices;
+import com.sdl.mobileweather.openweathermap.OpenWeatherMapService;
 import com.sdl.mobileweather.weather.WeatherAlarmManager;
 import com.sdl.mobileweather.weather.WeatherDataManager;
 import com.sdl.mobileweather.weather.WeatherUpdateWakefulReceiver;
@@ -63,7 +64,8 @@ public class SdlApplication extends Application {
 		mDataManager.setUpdateInterval(5);
 		mDataManager.setUnits(getResources().getString(R.string.units_default));
 		mLocalizationUtil = new LocalizationUtil();
-		mWeatherAlarm = new WeatherAlarmManager(ForecastIoService.class);
+		//mWeatherAlarm = new WeatherAlarmManager(ForecastIoService.class);
+		mWeatherAlarm = new WeatherAlarmManager(OpenWeatherMapService.class);
 		mLocationServices = null;
 		if (PlayServicesConnectionChecker.servicesConnected()) {
 			mLocationServices = new WeatherLocationServices();
@@ -75,8 +77,9 @@ public class SdlApplication extends Application {
 		Log.d(TAG, "onConfigurationChanged received");
 		Context mAppContext =  SdlApplication.getInstance().getApplicationContext();
 		Intent mUpdateIntent = new Intent(mAppContext, WeatherUpdateWakefulReceiver.class);
-    	mUpdateIntent.putExtra("weather_update_service", ForecastIoService.class.getName());
-    	mAppContext.sendBroadcast(mUpdateIntent);
+    	//mUpdateIntent.putExtra("weather_update_service", ForecastIoService.class.getName());
+		mUpdateIntent.putExtra("weather_update_service", OpenWeatherMapService.class.getName());
+		mAppContext.sendBroadcast(mUpdateIntent);
     	if (mDataManager != null) {
     		mDataManager.setUnits(getResources().getString(R.string.units_default));	
     	}

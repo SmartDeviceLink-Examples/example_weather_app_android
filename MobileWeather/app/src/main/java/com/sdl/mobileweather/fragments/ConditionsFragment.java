@@ -148,7 +148,7 @@ public class ConditionsFragment extends BaseFragment {
 			mHumidityView.setText(humid);
 			
 			if (conditions.conditionIcon != null)
-				ImageProcessor.setConditionsImage(mConditionsIconView, conditions.conditionIcon, false);
+				ImageProcessor.setConditionsImage(mConditionsIconView, conditions.conditionIcon, getActivity()/*, false*/);
 		}
 	}
 }

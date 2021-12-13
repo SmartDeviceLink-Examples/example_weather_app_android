@@ -30,13 +30,15 @@ public class ForecastListAdapter extends ArrayAdapter<Forecast> {
 	private WeatherDataManager mDataManager;
 	private boolean[] mForecastType;
 	private LayoutInflater mInflater;
+	private Activity parentActivity;
 	
-	public ForecastListAdapter(Context context, Forecast[] forecast) {
+	public ForecastListAdapter(Context context, Forecast[] forecast, Activity parentActivity) {
 		super(context, R.layout.forecast_list_item, forecast);
 		this.mContext = context;
 		this.mForecast = forecast;
 		this.mDataManager = WeatherDataManager.getInstance();
 		this.mForecastType = new boolean[forecast.length];
+		this.parentActivity = parentActivity;
 		Arrays.fill(this.mForecastType, false);
 		mInflater = ((Activity) this.mContext).getLayoutInflater();
 	}
@@ -119,7 +121,7 @@ public class ForecastListAdapter extends ArrayAdapter<Forecast> {
 					lowTempTextView.setText(lowTemp);
 					highTempTextView.setText(highTemp);
 					if (conditionURL != null)
-						ImageProcessor.setConditionsImage(forecastImageView, conditionURL, true);
+						ImageProcessor.setConditionsImage(forecastImageView, conditionURL, parentActivity/*, true*/);
 				}
 				/*else {
 					forecastImageView.setImageBitmap(null);

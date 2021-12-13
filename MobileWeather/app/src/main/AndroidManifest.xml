@@ -50,7 +50,8 @@
 
         <service android:name="com.sdl.mobileweather.smartdevicelink.SdlService"/>
         <service android:name="com.sdl.mobileweather.wunderground.WUndergroundService"/>
-        <service android:name="com.sdl.mobileweather.forecastio.ForecastIoService"/>
+        <!-- <service android:name="com.sdl.mobileweather.forecastio.ForecastIoService"/> -->
+        <service android:name="com.sdl.mobileweather.openweathermap.OpenWeatherMapService"/>
 
         <service
             android:name="com.sdl.mobileweather.smartdevicelink.SdlRouterService"
