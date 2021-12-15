@@ -1,9 +1,12 @@
 package com.sdl.mobileweather.processor;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,9 +14,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.util.Log;
 import android.widget.ImageView;
 
 import com.sdl.mobileweather.smartdevicelink.SdlApplication;
@@ -21,7 +28,11 @@ import com.sdl.mobileweather.smartdevicelink.SdlApplication;
 import javax.net.ssl.HttpsURLConnection;
 
 public class ImageProcessor {
-	private static final ExecutorService executorService = Executors.newCachedThreadPool();
+	private static final ExecutorService executorService = Executors.newSingleThreadExecutor();
+	private static final String IMAGE_DIR = "imageDir";
+	private static final String PNG_EXTENSION = ".png";
+	private static final int BITMAP_QUALITY = 100;
+	private static final String TAG = "ImageProcessor";
 
 	private static final Map<String, String> mConditionsImageMap = 
 		    Collections.unmodifiableMap(new HashMap<String, String>() {
@@ -97,11 +108,39 @@ public class ImageProcessor {
 		int resId = resources.getIdentifier(imageName, "drawable", "com.sdl.mobileweather");
 		return BitmapFactory.decodeResource(resources, resId);
 	}
+
+	public static Uri getImageUriFromURL(String imageName, URL url, Context context) {
+		imageName = imageName.replaceAll("\\s", "");
+		Uri fileUri = null;
+		HttpsURLConnection connection;
+		try {
+			connection = (HttpsURLConnection) url.openConnection();
+			connection.setDoInput(true);
+			connection.connect();
+			InputStream inputStream = connection.getInputStream();
+			final Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+
+			ContextWrapper contextWrapper = new ContextWrapper(context.getApplicationContext());
+			File directory = contextWrapper.getDir(IMAGE_DIR, Context.MODE_PRIVATE);
+			File file = new File(directory, bitmap.hashCode() + PNG_EXTENSION);
+			if (!file.exists()) {
+				Log.d(TAG, imageName);
+				FileOutputStream outputStream = new FileOutputStream(file);
+				bitmap.compress(Bitmap.CompressFormat.PNG, BITMAP_QUALITY, outputStream);
+				outputStream.flush();
+				outputStream.close();
+			}
+			fileUri = Uri.fromFile(file);
+			Log.d(TAG, imageName);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return fileUri;
+	}
 	
 	public static String getFileFromURL(URL url) {
 		if (url != null) {
-			String urlPath = url.getFile();
-			return urlPath.substring(urlPath.lastIndexOf('/') + 1, urlPath.length());
+			return url.getFile();
 		}
 		else {
 			return null;
@@ -109,18 +148,6 @@ public class ImageProcessor {
 	}
 	
 	public static void setConditionsImage(final ImageView imageView, final URL conditionsImageURL, final Activity activity/*, boolean small*/) {
-
-		/*String conditionsImageName = getFileFromURL(conditionsImageURL);
-		String mappedName = getMappedConditionsImageName(conditionsImageName, small);
-		if (mappedName != null) {
-			Bitmap mappedImage = getBitmapFromResources(mappedName);
-			imageView.setImageBitmap(mappedImage);
-		}
-		else {
-			TODO
-			final SetImageFromURLTask downloadTask = new SetImageFromURLTask(conditionsImageURL, imageView);
-
-		}*/
 
 		executorService.execute(new Runnable() {
 			@Override
@@ -143,21 +170,6 @@ public class ImageProcessor {
 				}
 			}
 		});
-	}
-	
-	public static byte[] getConditionsImageBytes(URL conditionsImageURL) {
-		String conditionsImageName = getFileFromURL(conditionsImageURL);
-		String mappedName = getMappedConditionsImageName(conditionsImageName, false);
-		Bitmap bm = null;
-		if (mappedName != null) {			
-			bm = getBitmapFromResources(mappedName);
-		}
-		else {
-			// TODO
-		}
-		ByteArrayOutputStream stream = new ByteArrayOutputStream();
-		bm.compress(Bitmap.CompressFormat.PNG, 100, stream);
-		return stream.toByteArray();
 	}
 }
 
