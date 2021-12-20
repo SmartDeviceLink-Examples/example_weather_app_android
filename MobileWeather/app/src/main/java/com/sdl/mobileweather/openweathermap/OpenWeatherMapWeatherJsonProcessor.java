@@ -1,8 +1,5 @@
 package com.sdl.mobileweather.openweathermap;
 
-import android.net.Uri;
-import android.util.Log;
-
 import com.sdl.mobileweather.weather.Forecast;
 import com.sdl.mobileweather.weather.WeatherAlert;
 import com.sdl.mobileweather.weather.WeatherConditions;
@@ -12,8 +9,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Calendar;
 
 //TODO - Convert WUnderground specific code to OpenWeatherMap specific code
@@ -70,6 +65,8 @@ public class OpenWeatherMapWeatherJsonProcessor implements WeatherJsonProcessor 
 		private static final String MAX = "max";
 		private static final String DAY = "day";
 		private static final String FEELS_LIKE = "feels_like";
+
+		private static final String ICON_RESOURCE_TEMPLATE = "ic_%s";
 	}
 
 	private JSONArray getForecastArray(JSONObject jsonRoot) {
@@ -209,12 +206,7 @@ public class OpenWeatherMapWeatherJsonProcessor implements WeatherJsonProcessor 
 	}
 	private void tryToSetForecastIcon(Forecast forecast, JSONObject weather) {
 		try {
-			String iconId = weather.getString(Constants.ICON_PATH);
-
-			forecast.conditionIcon = getWeatherIconURL(iconId);
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			forecast.conditionId = weather.getString(Constants.ICON_PATH);
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -345,30 +337,9 @@ public class OpenWeatherMapWeatherJsonProcessor implements WeatherJsonProcessor 
 		}
 		return weather;
 	}
-	private URL getWeatherIconURL(String iconId) throws MalformedURLException {
-		String filename = String.format(Constants.ICON_FILE_FORMAT, iconId);
-
-		Uri.Builder builder = new Uri.Builder();
-		builder.scheme(Constants.URI_SCHEME)
-				.authority(Constants.BASE_URL)
-				.appendPath(Constants.IMAGE_PATH)
-				.appendPath(Constants.WN_PATH)
-				.appendPath(filename);
-
-		String uriString = builder.build().toString();
-		URL url = new URL(uriString);
-		String urlString = url.toString();
-		Log.d(Constants.TAG, urlString);
-		return url;
-	}
 	private void tryToSetConditionIconFromCurrent(WeatherConditions weatherConditions, JSONObject weather) {
 		try {
-			String iconId = weather.getString(Constants.ICON_PATH);
-
-			weatherConditions.conditionIcon = getWeatherIconURL(iconId);
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			weatherConditions.conditionId = weather.getString(Constants.ICON_PATH);
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

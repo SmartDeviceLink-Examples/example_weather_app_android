@@ -1,8 +1,15 @@
 package com.sdl.mobileweather.processor;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
+import android.content.Context;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.widget.ImageView;
+
+import com.sdl.mobileweather.BuildConfig;
+import com.sdl.mobileweather.smartdevicelink.SdlApplication;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -13,18 +20,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.ContextWrapper;
-import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
-import android.util.Log;
-import android.widget.ImageView;
-
-import com.sdl.mobileweather.smartdevicelink.SdlApplication;
-
 import javax.net.ssl.HttpsURLConnection;
 
 public class ImageProcessor {
@@ -33,6 +28,9 @@ public class ImageProcessor {
 	private static final String PNG_EXTENSION = ".png";
 	private static final int BITMAP_QUALITY = 100;
 	private static final String TAG = "ImageProcessor";
+	private static final String RESOURCE_SCHEME = "android.resource://";
+	private static final String DRAWABLE_FOLDER = "drawable";
+	private static final String ICON_RESOURCE_TEMPLATE = "ic_%s";
 
 	private static final Map<String, String> mConditionsImageMap = 
 		    Collections.unmodifiableMap(new HashMap<String, String>() {
@@ -96,46 +94,42 @@ public class ImageProcessor {
 			suffix = "_50";
 		}
 		if (mConditionsImageMap.containsKey(conditionsImage)) {
-			return mConditionsImageMap.get(conditionsImage) + suffix;
+			return mConditionsImageMap.get(conditionsImage);
 		}
 		else {
 			return null;
 		}
 	}
 	
-	public static Bitmap getBitmapFromResources(String imageName) {
+	public static Bitmap getBitmapFromResources(String conditionId) {
+		String imageName = String.format(ICON_RESOURCE_TEMPLATE, conditionId);
 		Resources resources = SdlApplication.getInstance().getResources();
 		int resId = resources.getIdentifier(imageName, "drawable", "com.sdl.mobileweather");
 		return BitmapFactory.decodeResource(resources, resId);
 	}
 
-	public static Uri getImageUriFromURL(String imageName, URL url, Context context) {
-		imageName = imageName.replaceAll("\\s", "");
-		Uri fileUri = null;
-		HttpsURLConnection connection;
+	public static byte[] getBytesFromURL(URL  url) {
+		byte[] bytes = null;
+		HttpsURLConnection connection = null;
 		try {
 			connection = (HttpsURLConnection) url.openConnection();
 			connection.setDoInput(true);
 			connection.connect();
 			InputStream inputStream = connection.getInputStream();
 			final Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+			int size = bitmap.getHeight() * bitmap.getRowBytes();
+			ByteBuffer buffer = ByteBuffer.allocate(size);
+			bitmap.copyPixelsToBuffer(buffer);
+			bytes = buffer.array();
 
-			ContextWrapper contextWrapper = new ContextWrapper(context.getApplicationContext());
-			File directory = contextWrapper.getDir(IMAGE_DIR, Context.MODE_PRIVATE);
-			File file = new File(directory, bitmap.hashCode() + PNG_EXTENSION);
-			if (!file.exists()) {
-				Log.d(TAG, imageName);
-				FileOutputStream outputStream = new FileOutputStream(file);
-				bitmap.compress(Bitmap.CompressFormat.PNG, BITMAP_QUALITY, outputStream);
-				outputStream.flush();
-				outputStream.close();
-			}
-			fileUri = Uri.fromFile(file);
-			Log.d(TAG, imageName);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return fileUri;
+		return bytes;
+	}
+
+	public static Uri getImageUriFromURL(String imageName, URL url, Context context) {
+		return Uri.parse(url.toString());
 	}
 	
 	public static String getFileFromURL(URL url) {
@@ -147,29 +141,17 @@ public class ImageProcessor {
 		}
 	}
 	
-	public static void setConditionsImage(final ImageView imageView, final URL conditionsImageURL, final Activity activity/*, boolean small*/) {
+	public static void setConditionsImage(ImageView imageView, String conditionId) {
 
-		executorService.execute(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					HttpsURLConnection connection = (HttpsURLConnection) conditionsImageURL.openConnection();
-					connection.setDoInput(true);
-					connection.connect();
-					InputStream inputStream = connection.getInputStream();
-					final Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+		Bitmap bitmap = getBitmapFromResources(conditionId);
 
-					activity.runOnUiThread(new Runnable() {
-						@Override
-						public void run() {
-							imageView.setImageBitmap(bitmap);
-						}
-					});
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		});
+		imageView.setImageBitmap(bitmap);
+	}
+
+	public static Uri getWeatherIconUri(String iconId) {
+
+		String iconFileString = String.format(ICON_RESOURCE_TEMPLATE, iconId);
+		return Uri.parse(RESOURCE_SCHEME + BuildConfig.APPLICATION_ID + "/" + DRAWABLE_FOLDER + "/" + iconFileString);
 	}
 }
 
