@@ -6,6 +6,8 @@
 
     <!-- Required for AppLink connection -->
     <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"
+      tools:targetApi="31"/>
     <!-- Required for weather data -->
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Required to check if WiFi is enabled -->
@@ -23,6 +25,8 @@
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
+    <uses-feature android:name="android.hardware.usb.accessory"/>
+
     <application
         android:name="com.sdl.mobileweather.smartdevicelink.SdlApplication"
         android:allowBackup="true"
@@ -35,7 +39,8 @@
             android:name="com.sdl.mobileweather.activity.MainActivity"
             android:configChanges="orientation"
             android:label="@string/title_activity_main"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -48,9 +53,24 @@
         <activity android:name="com.smartdevicelink.managers.lockscreen.SDLLockScreenActivity"
             android:launchMode="singleTop"/>
 
-        <service android:name="com.sdl.mobileweather.smartdevicelink.SdlService"/>
-        <service android:name="com.sdl.mobileweather.wunderground.WUndergroundService"/>
-        <!-- <service android:name="com.sdl.mobileweather.forecastio.ForecastIoService"/> -->
+        <activity android:name="com.smartdevicelink.transport.USBAccessoryAttachmentActivity"
+            android:launchMode="singleTop"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED" />
+            </intent-filter>
+
+            <meta-data
+              android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED"
+              android:resource="@xml/accessory_filter" />
+        </activity>
+
+        <service
+          android:name="com.sdl.mobileweather.smartdevicelink.SdlService"
+          android:enabled="true"
+          android:foregroundServiceType="connectedDevice"
+          />
+
         <service android:name="com.sdl.mobileweather.openweathermap.OpenWeatherMapService"/>
 
         <service
@@ -65,7 +85,8 @@
                 android:value="@integer/sdl_router_service_version_value" />
         </service>
 
-        <receiver android:name="com.sdl.mobileweather.smartdevicelink.SdlReceiver">
+        <receiver android:name="com.sdl.mobileweather.smartdevicelink.SdlReceiver"
+          android:exported="true">
             <intent-filter>
                 <action android:name="android.bluetooth.device.action.ACL_CONNECTED" />
                 <action android:name="sdl.router.startservice" />

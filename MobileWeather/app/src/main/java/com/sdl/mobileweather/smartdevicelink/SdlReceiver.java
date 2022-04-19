@@ -1,5 +1,6 @@
 package com.sdl.mobileweather.smartdevicelink;
 
+import android.app.PendingIntent;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.Intent;
@@ -8,6 +9,7 @@ import android.util.Log;
 
 import com.smartdevicelink.transport.SdlBroadcastReceiver;
 import com.smartdevicelink.transport.SdlRouterService;
+import com.smartdevicelink.transport.TransportConstants;
 
 public class SdlReceiver extends SdlBroadcastReceiver {
 
@@ -44,14 +46,25 @@ public class SdlReceiver extends SdlBroadcastReceiver {
         //Use the provided intent but set the class to the SdlService
         intent.setClass(context, SdlService.class);
 
-
-//      SdlService needs to be foregrounded in Android O and above
-//      This will prevent apps in the background from crashing when they try to start SdlService
-//      Because Android O doesn't allow background apps to start background services
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(intent);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (intent.getParcelableExtra(TransportConstants.PENDING_INTENT_EXTRA) != null) {
+                PendingIntent pendingIntent = (PendingIntent) intent.getParcelableExtra(TransportConstants.PENDING_INTENT_EXTRA);
+                try {
+                    //Here we are allowing the RouterService that is in the Foreground to start the SdlService on our behalf
+                    pendingIntent.send(context, 0, intent);
+                } catch (PendingIntent.CanceledException e) {
+                    e.printStackTrace();
+                }
+            }
         } else {
-            context.startService(intent);
+            // SdlService needs to be foregrounded in Android O and above
+            // This will prevent apps in the background from crashing when they try to start SdlService
+            // Because Android O doesn't allow background apps to start background services
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent);
+            } else {
+                context.startService(intent);
+            }
         }
     }
 
