@@ -1,6 +1,5 @@
 package com.sdl.mobileweather.weather;
 
-import android.os.Build;
 import java.util.Calendar;
 
 import android.app.AlarmManager;
@@ -149,15 +148,10 @@ public class WeatherAlarmManager {
 		if (mAlarmManager != null && mAlarmIntent != null) {
 			mAlarmManager.cancel(mAlarmIntent);
 		}
-
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-			mAlarmIntent = PendingIntent.getBroadcast(context, PENDING_INTENT_ID, mUpdateIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-		}
-		else {
-			mAlarmIntent = PendingIntent.getBroadcast(context, PENDING_INTENT_ID, mUpdateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-		}
-
-		Calendar cal = Calendar.getInstance();
+		
+		mAlarmIntent = PendingIntent.getBroadcast(context, PENDING_INTENT_ID, mUpdateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+		
+        Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(System.currentTimeMillis());
         cal.add(Calendar.MINUTE, mUpdateInterval);
         Log.d(SdlApplication.TAG, "restartAlarm mUpdateInterval = " + mUpdateInterval);
