@@ -75,6 +75,7 @@ import com.smartdevicelink.transport.MultiplexTransportConfig;
 import com.smartdevicelink.transport.TCPTransportConfig;
 import com.smartdevicelink.util.DebugTool;
 
+import com.smartdevicelink.util.SystemInfo;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -736,6 +737,11 @@ public class SdlService extends Service {
                     } else {
                         return null;
                     }
+                }
+
+                @Override
+                public boolean onSystemInfoReceived(SystemInfo systemInfo) {
+                    return true;
                 }
             };
 
