@@ -76,6 +76,7 @@ import com.smartdevicelink.transport.TCPTransportConfig;
 import com.smartdevicelink.util.DebugTool;
 import com.smartdevicelink.util.SystemInfo;
 
+import com.smartdevicelink.util.SystemInfo;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
