@@ -21,17 +21,12 @@ import org.json.JSONObject;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-//TODO - Convert WUnderground and ForecastIo specific code to OpenWeatherMap specific code
 public class OpenWeatherMapService extends WeatherService {
 
 	/**
 	 * API key used for OpenWeatherMap API
-	 * <p/>
-	 * I acquired this free one for testing. We may want to use a different one for broader use.
-	 * <p/>
-	 * -Noah Stanford
 	 */
-	private static final String API_KEY = "e81bf4160a279541cdaff8a8fc4cdda1";
+	private static final String API_KEY = "INSERT YOUR OWN API KEY";
 	private static final String URI_SCHEME = "https";
 	/**
 	 * Base request URL for OpenWeatherMap
