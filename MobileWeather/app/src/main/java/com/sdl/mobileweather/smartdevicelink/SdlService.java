@@ -80,6 +80,9 @@ import com.smartdevicelink.transport.TCPTransportConfig;
 import com.smartdevicelink.util.DebugTool;
 import com.smartdevicelink.util.SystemInfo;
 
+
+import com.smartdevicelink.util.SystemInfo;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -745,7 +748,6 @@ public class SdlService extends Service {
                 public boolean onSystemInfoReceived(SystemInfo systemInfo) {
                     return true;
                 }
-
             };
 
             // Create App Icon, this is set in the SdlManager builder
