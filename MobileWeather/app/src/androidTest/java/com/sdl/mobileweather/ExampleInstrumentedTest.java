@@ -9,6 +9,8 @@ import org.junit.runner.RunWith;
 
 import static org.junit.Assert.*;
 
+import com.sdl.mobileweather.openweathermap.OpenWeatherMapService;
+
 /**
  * Instrumented test, which will execute on an Android device.
  *
@@ -22,5 +24,12 @@ public class ExampleInstrumentedTest {
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
         assertEquals("com.sdl.mobileweather", appContext.getPackageName());
+    }
+
+
+    @Test
+    public void openWeatherAPIRequestSuccessful() {
+        OpenWeatherMapService openWeatherMapService = new OpenWeatherMapService();
+        assertEquals(OpenWeatherMapService.REQUEST_SUCCESS, openWeatherMapService.getRequestStatus());
     }
 }

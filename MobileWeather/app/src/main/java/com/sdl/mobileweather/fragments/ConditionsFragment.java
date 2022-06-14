@@ -147,8 +147,8 @@ public class ConditionsFragment extends BaseFragment {
 			mWindSpeedView.setText(wind);
 			mHumidityView.setText(humid);
 			
-			if (conditions.conditionIcon != null)
-				ImageProcessor.setConditionsImage(mConditionsIconView, conditions.conditionIcon, false);
+			if (conditions.conditionId != null)
+				ImageProcessor.setConditionsImage(mConditionsIconView, conditions.conditionId);
 		}
 	}
 }

@@ -1,11 +1,5 @@
 package com.sdl.mobileweather.adapter;
 
-import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Locale;
-
 import android.app.Activity;
 import android.content.Context;
 import android.view.Gravity;
@@ -24,19 +18,26 @@ import com.sdl.mobileweather.weather.Forecast;
 import com.sdl.mobileweather.weather.UnitConverter;
 import com.sdl.mobileweather.weather.WeatherDataManager;
 
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Locale;
+
 public class ForecastListAdapter extends ArrayAdapter<Forecast> {
 	private final Context mContext;
 	private final Forecast[] mForecast;
 	private WeatherDataManager mDataManager;
 	private boolean[] mForecastType;
 	private LayoutInflater mInflater;
+	private Activity parentActivity;
 	
-	public ForecastListAdapter(Context context, Forecast[] forecast) {
+	public ForecastListAdapter(Context context, Forecast[] forecast, Activity parentActivity) {
 		super(context, R.layout.forecast_list_item, forecast);
 		this.mContext = context;
 		this.mForecast = forecast;
 		this.mDataManager = WeatherDataManager.getInstance();
 		this.mForecastType = new boolean[forecast.length];
+		this.parentActivity = parentActivity;
 		Arrays.fill(this.mForecastType, false);
 		mInflater = ((Activity) this.mContext).getLayoutInflater();
 	}
@@ -80,12 +81,12 @@ public class ForecastListAdapter extends ArrayAdapter<Forecast> {
 					precipTextView.setText(day.conditionTitle);
 					forecastImageView.setImageBitmap(null);
 				}
-				else if((day.conditionIcon != null) &&
+				else if((day.conditionId != null) &&
 						(day.precipitationChance != null) &&
 						(day.highTemperature != null) &&
 						(day.lowTemperature != null) &&
 						(day.date != null)) {
-					URL conditionURL = day.conditionIcon;
+					String conditionId = day.conditionId;
 					Integer precip = day.precipitationChance;
 					Float highTemperature = day.highTemperature;
 					Float lowTemperature = day.lowTemperature;
@@ -118,25 +119,11 @@ public class ForecastListAdapter extends ArrayAdapter<Forecast> {
 					precipTextView.setText(precipChance);
 					lowTempTextView.setText(lowTemp);
 					highTempTextView.setText(highTemp);
-					if (conditionURL != null)
-						ImageProcessor.setConditionsImage(forecastImageView, conditionURL, true);
+					if (conditionId != null)
+						ImageProcessor.setConditionsImage(forecastImageView, conditionId);
 				}
-				/*else {
-					forecastImageView.setImageBitmap(null);
-					shortDayTextView.setText("");
-					precipTextView.setText("");
-					lowTempTextView.setText("");
-					highTempTextView.setText("");
-				}*/
 			}
-			/*
-			else {
-				forecastImageView.setImageBitmap(null);
-				shortDayTextView.setText("");
-				precipTextView.setText("");
-				lowTempTextView.setText("");
-				highTempTextView.setText("");
-			}*/
+
 		}
 		else {
 			rowView = mInflater.inflate(R.layout.forecast_list_item, null, true);

@@ -53,8 +53,7 @@
         <activity android:name="com.smartdevicelink.managers.lockscreen.SDLLockScreenActivity"
             android:launchMode="singleTop"/>
 
-        <service android:name="com.sdl.mobileweather.wunderground.WUndergroundService"/>
-        <service android:name="com.sdl.mobileweather.forecastio.ForecastIoService"/>
+        <service android:name="com.sdl.mobileweather.openweathermap.OpenWeatherMapService"/>
         <activity android:name="com.smartdevicelink.transport.USBAccessoryAttachmentActivity"
             android:launchMode="singleTop"
             android:exported="true">
@@ -72,7 +71,6 @@
           android:enabled="true"
           android:foregroundServiceType="connectedDevice"
           />
-
 
         <service
             android:name="com.sdl.mobileweather.smartdevicelink.SdlRouterService"
