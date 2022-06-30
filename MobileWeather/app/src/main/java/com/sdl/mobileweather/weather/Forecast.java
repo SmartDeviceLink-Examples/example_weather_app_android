@@ -1,12 +1,11 @@
 package com.sdl.mobileweather.weather;
 
-import java.net.URL;
 import java.util.Calendar;
 
 public class Forecast {
 	public Calendar date;
 	public String conditionTitle;
-	public URL conditionIcon;
+	public String conditionId;
 	public Float temperature = (float)0;
 	public Float highTemperature = (float)0;
 	public Float lowTemperature = (float)0;

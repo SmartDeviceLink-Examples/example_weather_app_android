@@ -1,13 +1,14 @@
-package com.sdl.mobileweather.wunderground;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+package com.sdl.mobileweather.openweathermap;
 
 import com.sdl.mobileweather.artifact.GPSLocation;
 import com.sdl.mobileweather.artifact.WeatherLocation;
 import com.sdl.mobileweather.location.LocationJsonProcessor;
 
-public class WUndergroundLocationJsonProcessor implements LocationJsonProcessor {
+import org.json.JSONException;
+import org.json.JSONObject;
+
+//TODO - Convert WUnderground specific code to OpenWeatherMap specific code
+public class OpenWeatherMapLocationJsonProcessor implements LocationJsonProcessor {
 	private static final String LOCATION = "location";
 	private static final String STATE = "state";
 	private static final String CITY = "city";

@@ -1,10 +1,8 @@
 package com.sdl.mobileweather.weather;
 
-import java.net.URL;
-
 public class WeatherConditions {
 	public String conditionTitle;
-	public URL conditionIcon;
+	public String conditionId;
 	public Float temperature;
 	public Float humidity;
 	public Float windSpeed;

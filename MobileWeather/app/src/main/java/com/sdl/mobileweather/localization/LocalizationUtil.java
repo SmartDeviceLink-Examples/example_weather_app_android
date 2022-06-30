@@ -7,8 +7,9 @@ import android.content.Intent;
 import android.content.res.Configuration; 
 
 import com.sdl.mobileweather.R;
+import com.sdl.mobileweather.openweathermap.OpenWeatherMapService;
 import com.smartdevicelink.proxy.rpc.enums.Language;
-import com.sdl.mobileweather.forecastio.ForecastIoService;
+//import com.sdl.mobileweather.forecastio.ForecastIoService;
 import com.sdl.mobileweather.smartdevicelink.SdlApplication;
 import com.sdl.mobileweather.weather.WeatherDataManager;
 import com.sdl.mobileweather.weather.WeatherUpdateWakefulReceiver;
@@ -224,7 +225,8 @@ public class LocalizationUtil {
 		}
 		Context mAppContext =  SdlApplication.getInstance().getApplicationContext();
 		Intent mUpdateIntent = new Intent(mAppContext, WeatherUpdateWakefulReceiver.class);
-    	mUpdateIntent.putExtra("weather_update_service", ForecastIoService.class.getName());
+    	//mUpdateIntent.putExtra("weather_update_service", ForecastIoService.class.getName());
+		mUpdateIntent.putExtra("weather_update_service", OpenWeatherMapService.class.getName());
     	mAppContext.sendBroadcast(mUpdateIntent);
 		return;
 	}
