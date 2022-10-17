@@ -7,7 +7,6 @@ import com.sdl.mobileweather.artifact.WeatherLocation;
 import com.sdl.mobileweather.weather.Forecast;
 import com.sdl.mobileweather.weather.WeatherDataManager;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -97,8 +96,7 @@ public class ForecastFragment extends BaseFragment {
 	 */
 	public void setForecast(Forecast[] forecast, String units) {
 		if (forecast != null) {
-			Activity context = getActivity();
-			mAdapter = new ForecastListAdapter(context, forecast, context);
+			mAdapter = new ForecastListAdapter(getActivity(), forecast);
 			mForecastListView.setAdapter(mAdapter);
 			mForecastListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 	            @Override
