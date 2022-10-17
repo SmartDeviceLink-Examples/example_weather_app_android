@@ -14,6 +14,8 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 import androidx.legacy.app.ActionBarDrawerToggle;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -37,12 +39,14 @@ import com.sdl.mobileweather.smartdevicelink.SdlActivity;
 import com.sdl.mobileweather.smartdevicelink.SdlApplication;
 import com.sdl.mobileweather.smartdevicelink.SdlReceiver;
 
+import java.util.ArrayList;
+
 
 public class MainActivity extends SdlActivity implements ActionBar.TabListener {
 
 	private static final String SELECTED_NAVIGATION_ITEM = "selected_navigation_item";
 	private static final String APP_ID = "bf2c3a7bad6b0c79152f50cc42ba1ace";
-	private static final int PERMISSIONS_REQUEST_CODE = 100;
+	private static final int PERMISSIONS_REQUEST_CODE = 200;
 
     private Fragment mCurrentFragment;
     private DrawerLayout mDrawerLayout;
@@ -137,20 +141,24 @@ public class MainActivity extends SdlActivity implements ActionBar.TabListener {
     	mDrawerList.setItemChecked(position, false);
         mDrawerLayout.closeDrawer(mDrawerList);
     }
-	
-    
-    
+
 	private void checkForCrashes() {}
 
 	private void checkForUpdates() {}
 
-	private boolean checkPermissions() {
+	private boolean checkPermission() {
 		boolean permissionsGranted;
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
 			boolean bluetoothGranted = PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.BLUETOOTH_CONNECT);
 			boolean locationGranted = PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION);
 			permissionsGranted =  (BuildConfig.TRANSPORT.equals("TCP") || bluetoothGranted) && locationGranted;
+		}
+		else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+			boolean bluetoothGranted = PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.BLUETOOTH_CONNECT);
+			boolean locationGranted = PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION);
+			boolean postNotificationsGranted = PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.POST_NOTIFICATIONS);
+			permissionsGranted =  (BuildConfig.TRANSPORT.equals("TCP") || bluetoothGranted) && locationGranted && postNotificationsGranted;
 		}
 		else {
 			permissionsGranted = PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION);
@@ -165,11 +173,28 @@ public class MainActivity extends SdlActivity implements ActionBar.TabListener {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
 			permissions = new String[]{Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.ACCESS_FINE_LOCATION};
 		}
+		else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+			permissions = new String[]{Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.POST_NOTIFICATIONS};
+
+		}
 		else {
 			permissions = new String[]{Manifest.permission.ACCESS_FINE_LOCATION};
 		}
 
 		ActivityCompat.requestPermissions(this, permissions, PERMISSIONS_REQUEST_CODE);
+	}
+
+	private @NonNull
+	String[] permissionsNeeded() {
+		ArrayList<String> result = new ArrayList<>();
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+			result.add(Manifest.permission.BLUETOOTH_CONNECT);
+		}
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+			result.add(Manifest.permission.POST_NOTIFICATIONS);
+		}
+		result.add(Manifest.permission.ACCESS_FINE_LOCATION);
+		return (result.toArray(new String[result.size()]));
 	}
 
 	@Override
@@ -238,13 +263,20 @@ public class MainActivity extends SdlActivity implements ActionBar.TabListener {
         lbManager.registerReceiver(mHourlyForecastReceiver, new IntentFilter("com.sdl.mobileweather.HourlyForecast"));
 
 		// Ask for permissions
-		if (!checkPermissions()) {
-			requestPermissions();
+		if (!checkPermission()) {
+			String[] permissionsNeeded = permissionsNeeded();
+			if (permissionsNeeded.length > 0) {
+				requestPermissions();
+				for (String permission : permissionsNeeded) {
+					if (Manifest.permission.BLUETOOTH_CONNECT.equals(permission)) {
+						// We need to request BLUETOOTH_CONNECT permission to connect to SDL via Bluetooth
+						return;
+					}
+				}
+			}
 		} else {
 			startServices();
 		}
-
-
 	}
 
 	private void startServices() {
@@ -400,10 +432,28 @@ public class MainActivity extends SdlActivity implements ActionBar.TabListener {
 	@Override
 	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
 		if (requestCode == PERMISSIONS_REQUEST_CODE) {
-			if (!checkPermissions()) {
+			if (!checkPermission()) {
 				Toast.makeText(this, "The app cannot run without these permissions!", Toast.LENGTH_SHORT).show();
 				finish();
 			} else {
+				if (grantResults.length > 0) {
+					for (int i = 0; i < grantResults.length; i++) {
+						if (permissions[i].equals(Manifest.permission.BLUETOOTH_CONNECT)) {
+							boolean btConnectGranted =
+									grantResults[i] == PackageManager.PERMISSION_GRANTED;
+							if (btConnectGranted) {
+								SdlReceiver.queryForConnectedService(this);
+							}
+						} else if (permissions[i].equals(Manifest.permission.POST_NOTIFICATIONS)) {
+							boolean postNotificationGranted =
+									grantResults[i] == PackageManager.PERMISSION_GRANTED;
+							if (!postNotificationGranted) {
+								// User denied permission, Notifications for SDL will not appear
+								// on Android 13 devices.
+							}
+						}
+					}
+				}
 				startServices();
 			}
 		}
