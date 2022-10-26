@@ -8,4 +8,3 @@ Please visit the [wiki](https://github.com/smartdevicelink/sdl_mobileweather_tut
 
 1. Sign up and get your own [OpenWeather API Key](https://home.openweathermap.org/api_keys).
 2. Set the value of `API_KEY`in `OpenWeatherMapService.java` to your API key
-2. Set the value of `API_KEY`in `OpenWeatherMapService.java` to your API key

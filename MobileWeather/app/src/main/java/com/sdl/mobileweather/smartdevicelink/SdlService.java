@@ -80,7 +80,6 @@ import com.smartdevicelink.transport.TCPTransportConfig;
 import com.smartdevicelink.util.DebugTool;
 import com.smartdevicelink.util.SystemInfo;
 
-
 import com.smartdevicelink.util.SystemInfo;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -1029,18 +1028,7 @@ public class SdlService extends Service {
                             getResources().getString(R.string.weather_conditions_speak),
                             title, temperature, humidity, windSpeed, speedUnitsFull);
                 }
-                chunk.setText(speakString);
-                chunk.setType(SpeechCapabilities.TEXT);
-                chunks.add(chunk);
-                final Speak speakRequest = new Speak();
-                speakRequest.setTtsChunks(chunks);
-                speakRequest.setCorrelationID(autoIncCorrId++);
-                sdlManager.getScreenManager().commit(new CompletionListener() {
-                    @Override
-                    public void onComplete(boolean b) {
-                        sdlManager.sendRPC(speakRequest);
-                    }
-                });
+                speak(speakString);
             }
         } else {
             showNoConditionsAvail();

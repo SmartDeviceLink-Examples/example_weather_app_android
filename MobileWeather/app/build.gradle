@@ -1,11 +1,11 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 33
     defaultConfig {
         applicationId "com.sdl.mobileweather"
         minSdkVersion 16
-        targetSdkVersion 31
+        targetSdkVersion 33
         versionCode 27
         versionName "1.7.15"
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
@@ -37,7 +37,7 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
-    implementation 'com.smartdevicelink:sdl_android:5.5.0'
+    implementation 'com.smartdevicelink:sdl_android:5.6.0'
     implementation 'net.hockeyapp.android:HockeySDK:5.1.0'
     implementation 'com.google.android.gms:play-services-location:16.0.0'
 }

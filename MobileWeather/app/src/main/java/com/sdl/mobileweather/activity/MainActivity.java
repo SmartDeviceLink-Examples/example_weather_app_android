@@ -1,6 +1,5 @@
 package com.sdl.mobileweather.activity;
 
-
 import android.Manifest;
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
@@ -14,6 +13,8 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 import androidx.legacy.app.ActionBarDrawerToggle;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -35,14 +36,15 @@ import com.sdl.mobileweather.fragments.ConditionsFragment;
 import com.sdl.mobileweather.fragments.ForecastFragment;
 import com.sdl.mobileweather.smartdevicelink.SdlActivity;
 import com.sdl.mobileweather.smartdevicelink.SdlApplication;
-import com.sdl.mobileweather.smartdevicelink.SdlReceiver;
+
+import java.util.ArrayList;
 
 
 public class MainActivity extends SdlActivity implements ActionBar.TabListener {
 
 	private static final String SELECTED_NAVIGATION_ITEM = "selected_navigation_item";
 	private static final String APP_ID = "bf2c3a7bad6b0c79152f50cc42ba1ace";
-	private static final int PERMISSIONS_REQUEST_CODE = 100;
+	private static final int PERMISSIONS_REQUEST_CODE = 200;
 
     private Fragment mCurrentFragment;
     private DrawerLayout mDrawerLayout;
@@ -137,14 +139,12 @@ public class MainActivity extends SdlActivity implements ActionBar.TabListener {
     	mDrawerList.setItemChecked(position, false);
         mDrawerLayout.closeDrawer(mDrawerList);
     }
-	
-    
-    
+
 	private void checkForCrashes() {}
 
 	private void checkForUpdates() {}
 
-	private boolean checkPermissions() {
+	private boolean hasPermissions() {
 		boolean permissionsGranted;
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -159,17 +159,22 @@ public class MainActivity extends SdlActivity implements ActionBar.TabListener {
 		return permissionsGranted;
 	}
 
-	private void requestPermissions() {
-		String[] permissions;
+	private void requestPermission(String[] permissions, int REQUEST_CODE) {
+		ActivityCompat.requestPermissions(this, permissions, REQUEST_CODE);
+	}
 
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-			permissions = new String[]{Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.ACCESS_FINE_LOCATION};
+	private @NonNull String[] permissionsNeeded() {
+		ArrayList<String> result = new ArrayList<>();
+		if (!hasBTPermission()) {
+			result.add(Manifest.permission.BLUETOOTH_CONNECT);
 		}
-		else {
-			permissions = new String[]{Manifest.permission.ACCESS_FINE_LOCATION};
+		if (!hasPNPermission()) {
+			result.add(Manifest.permission.POST_NOTIFICATIONS);
 		}
-
-		ActivityCompat.requestPermissions(this, permissions, PERMISSIONS_REQUEST_CODE);
+		if (!hasLocation()) {
+			result.add(Manifest.permission.ACCESS_FINE_LOCATION);
+		}
+		return (result.toArray(new String[result.size()]));
 	}
 
 	@Override
@@ -238,13 +243,41 @@ public class MainActivity extends SdlActivity implements ActionBar.TabListener {
         lbManager.registerReceiver(mHourlyForecastReceiver, new IntentFilter("com.sdl.mobileweather.HourlyForecast"));
 
 		// Ask for permissions
-		if (!checkPermissions()) {
-			requestPermissions();
-		} else {
-			startServices();
+		String[] permissionsNeeded = permissionsNeeded();
+		if (permissionsNeeded.length > 0) {
+			requestPermission(permissionsNeeded, PERMISSIONS_REQUEST_CODE);
+			for (String permission : permissionsNeeded) {
+				if (Manifest.permission.BLUETOOTH_CONNECT.equals(permission)) {
+					// We need to request BLUETOOTH_CONNECT permission to connect to SDL via Bluetooth
+					return;
+				}
+			}
 		}
+		startServices();
+	}
 
+	/**
+	 * Boolean method that checks API level and check to see if we need to request BLUETOOTH_CONNECT permission
+	 * @return false if we need to request BLUETOOTH_CONNECT permission
+	 */
+	private boolean hasBTPermission() {
+		return Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ? checkPermission(Manifest.permission.BLUETOOTH_CONNECT) : true;
+	}
 
+	/**
+	 * Boolean method that checks API level and check to see if we need to request POST_NOTIFICATIONS permission
+	 * @return false if we need to request POST_NOTIFICATIONS permission
+	 */
+	private boolean hasPNPermission() {
+		return Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ? checkPermission(Manifest.permission.POST_NOTIFICATIONS) : true;
+	}
+
+	private boolean hasLocation() {
+		return PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION);
+	}
+
+	private boolean checkPermission(String permission) {
+		return PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(getApplicationContext(), permission);
 	}
 
 	private void startServices() {
@@ -400,11 +433,23 @@ public class MainActivity extends SdlActivity implements ActionBar.TabListener {
 	@Override
 	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
 		if (requestCode == PERMISSIONS_REQUEST_CODE) {
-			if (!checkPermissions()) {
+			if (!hasPermissions()) {
 				Toast.makeText(this, "The app cannot run without these permissions!", Toast.LENGTH_SHORT).show();
 				finish();
 			} else {
 				startServices();
+				if (grantResults.length > 0) {
+					for (int i = 0; i < grantResults.length; i++) {
+						if (permissions[i].equals(Manifest.permission.POST_NOTIFICATIONS)) {
+							boolean postNotificationGranted =
+									grantResults[i] == PackageManager.PERMISSION_GRANTED;
+							if (!postNotificationGranted) {
+								// User denied permission, Notifications for SDL will not appear
+								// on Android 13 devices.
+							}
+						}
+					}
+				}
 			}
 		}
 	}
