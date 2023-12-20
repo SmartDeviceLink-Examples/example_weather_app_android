@@ -556,16 +556,22 @@ public class SdlService extends Service {
     @SuppressLint("NewApi")
     private void enterForeground() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel("MobileWeather", "SmartDeviceLink", NotificationManager.IMPORTANCE_DEFAULT);
-            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            if (notificationManager != null) {
-                notificationManager.createNotificationChannel(channel);
-                Notification serviceNotification = new Notification.Builder(this, channel.getId())
-                        .setContentTitle("SmartDeviceLink")
-                        .setSmallIcon(R.drawable.ic_sdl)
-                        .setTicker("SmartDeviceLink")
-                        .build();
-                startForeground(FOREGROUND_SERVICE_ID, serviceNotification);
+            try {
+                NotificationChannel channel = new NotificationChannel("MobileWeather", "SmartDeviceLink", NotificationManager.IMPORTANCE_DEFAULT);
+                NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                if (notificationManager != null) {
+                    notificationManager.createNotificationChannel(channel);
+                    Notification serviceNotification = new Notification.Builder(this, channel.getId())
+                            .setContentTitle("SmartDeviceLink")
+                            .setSmallIcon(R.drawable.ic_sdl)
+                            .setTicker("SmartDeviceLink")
+                            .build();
+                    startForeground(FOREGROUND_SERVICE_ID, serviceNotification);
+                }
+            } catch (Exception e) {
+                // This should only occur when using TCP connections on Android 14+ due to needing
+                // specific connected devices for permissions regarding ForegroundServiceType
+                // ConnectedDevice where a TCP connection doesn't apply
             }
         }
     }
